@@ -15,7 +15,15 @@ Hardening should be studied on a second iteration.
 These guides is taken as reference:
 
 - [How to Setup Raspberry Pi NFS Server](https://pimylifeup.com/raspberry-pi-nfs/)
-- [The /etc/exports Configuration File](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/deployment_guide/s1-nfs-server-config-exports)
+- [Connecting to an NFS Share on the Raspberry
+  Pi](https://pimylifeup.com/raspberry-pi-nfs-client/)
+- [The /etc/exports Configuration
+  File](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/deployment_guide/s1-nfs-server-config-exports)
+
+**NOTE**: This guide assumes the master Raspberry Pi runs at `192.168.1.76` in the
+network.
+
+## Server Setup
 
 ```
 sudo apt-get update
@@ -39,6 +47,16 @@ id cooper
 
 # TODO: Do not allow anonymous access. Sould it be the following?
 # /mnt/nfs/anesofi 192.168.1.0/24(rw)
+```
+
+## Connecting from Other Raspberry Pi
+
+```
+sudo apt update
+sudo apt full-upgrade
+sudo apt install nfs-common
+mount -t nfs -o proto=tcp,port=2049 192.168.1.76:/mnt/nfs/anesofi /mnt/nfs/anesofi
+# TODO: Check the portion that comes after `76:` and before the ` ` empty space in the above line.
 ```
 
 ## Connecting from macOS & Windows

@@ -34,3 +34,14 @@ This is intended to be run in a group of Raspberry Pi
 ## Architecture
 
 ![Diagram](/docs/anesofi.svg)
+
+## TODO: Provisioning
+
+An Ansible Playbook is provided to provision master and slave Raspberry Pi systems after
+flashing out new SD cards with the OS.
+
+## TODO: Service Discovery
+
+Should I configure my home router to give static IP to each Raspberry Pi or should I
+leverage the bonjour zero-configuration domain name resolution: e.g.
+`anesofi-master.local`, `anesofi-slave-1.local`, etc...
