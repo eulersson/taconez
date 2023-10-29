@@ -33,4 +33,4 @@ This is intended to be run in a group of Raspberry Pi
 
 ## Architecture
 
-(TODO: Attach here the diagram)
+![Diagram](/docs/anesofi.svg)
