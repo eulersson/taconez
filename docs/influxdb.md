@@ -13,7 +13,7 @@ with those commands since it's done with an Ansible playbook. This is for me to 
 the steps before writing the Ansible Playbook. Read
 [Provisioning](/docs/provisioning.md) for more.
 
-# Instalation
+# Installation
 
 ```
 sudo apt update
