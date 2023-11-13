@@ -23,25 +23,53 @@ This project is composed of various pieces:
 
 This is intended to be run in a group of Raspberry Pi
 
-| Tool | Purpose | Why (Reason) |
-|------|---------|-----|
-| TensorFlow (Python) | Audio detection | It provides even a higher level API (Keras) that simplifies ML workflows. |
-| Next.js (JavaScript) | Data visualization webapp. | It is a full-stack solution that allows to split a React application between server and client components, allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, removing any interaction between the browser and the database. We can also have simple REST-style API endpoints that can be listening to the sound detector and writing to database as well as small endpoints for small controls exposed in the frontend. |
-| InfluxDB | Record storage. | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences! |
-| NFS | Sharing a volume with the audio data. | The database should not get bloated with binary data. Once the audio file is producted, we hash it and store it in the NFS-shared file system |
-| 0mq | Communication between the audio detector and the playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashionn of a queue. The detector places an element and all playback receivers react playing back the sound. I didn't want another centralized service in the master raspberry pi, so a brokerless solution is more appealing.
+| Tool                 | Purpose                                                              | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| TensorFlow (Python)  | Audio detection                                                      | It provides even a higher level API (Keras)                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|                      |                                                                      | that simplifies ML workflows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Next.js (JavaScript) | Data visualization webapp.                                           | It is a full-stack solution that allows to split a React application between server and client components, allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, removing any interaction between the browser and the database. We can also have simple REST-style API endpoints that can be listening to the sound detector and writing to database as well as small endpoints for small controls exposed in the frontend. |
+| InfluxDB             | Record storage.                                                      | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                                                                                                                                                    |
+| NFS                  | Sharing a volume with the audio data.                                | The database should not get bloated with binary data. Once the audio file is producted, we hash it and store it in the NFS-shared file system                                                                                                                                                                                                                                                                                                                                                          |
+| 0mq                  | Communication between the audio detector and the playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashionn of a queue. The detector places an element and all playback receivers react playing back the sound. I didn't want another centralized service in the master raspberry pi, so a brokerless solution is more appealing.                                                                                                                                                   |
+
+## Documentation
+
+| Page                                         | Description                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------- |
+| [InfluxDB](/docs/influxdb.md)                | Why InfluxDB is chosen, what for, and how to test it works.               |
+| [NFS Volumes](/docs/nfs.md)                  | How to set up NFS shares so all slaves can read from the master's volume. |
+| [Provisioning](/docs/provisioning.md)        | How to provision new Raspberry Pis and deploying using Ansible Playbooks. |
+| [Sound & Speakers Setup](/docs/sound.md)     | How to use sound on Raspberry Pi 4, 3B & Zero.                            |
+| [Development Workflow](/docs/development.md) | How to use sound on Raspberry Pi 4, 3B & Zero.                            |
 
 ## Architecture
 
 ![Diagram](/docs/anesofi.svg)
 
-## TODO: Provisioning
+### Audio Detection
 
-An Ansible Playbook is provided to provision master and slave Raspberry Pi systems after
-flashing out new SD cards with the OS.
+TODO: Explain how to setup.
 
-## TODO: Service Discovery
+### Sound Distributor
 
-Should I configure my home router to give static IP to each Raspberry Pi or should I
-leverage the bonjour zero-configuration domain name resolution: e.g.
-`anesofi-master.local`, `anesofi-slave-1.local`, etc...
+TODO: Explain how to setup.
+
+### Sound Player
+
+```
+# Install CMake for building Makefiles.
+sudo apt install cmake
+
+# If the Raspberry Pi is older than 4 (uses Debian bullseye intead of bookworm) you
+# will need to install libpulse-dev.
+sudo apt install libpulse-dev
+```
+
+Compile with:
+
+```
+cd sound-player
+cmake -S . -B build
+cmake --build build --verbose
+./sound_player /usr/share/sounds/alsa/Front_Center.wav
+```

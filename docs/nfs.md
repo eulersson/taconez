@@ -23,82 +23,67 @@ These guides is taken as reference:
 **NOTE**: This guide assumes the master Raspberry Pi runs at `192.168.1.76` in the
 network.
 
+**NOTE**: This document is a reference, and you don't need to provision new Raspberry Pis
+with those commands since it's done with an Ansible playbook. This is for me to remember
+the steps before writing the Ansible Playbook. Read
+[Provisioning](/docs/provisioning.md) for more.
+
 ## Server Setup
+
+Run this on the Raspberry Pi:
 
 ```
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install nfs-kernel-server -y
-sudo mkdir /mnt/nfs/anesofi
+sudo mkdir -p /mnt/nfs/anesofi
 sudo chown -R cooper:cooper /mnt/nfs/anesofi
 sudo find /mnt/nfs/anesofi/ -type d -exec chmod 755 {} \;
 sudo find /mnt/nfs/anesofi/ -type f -exec chmod 644 {} \;
+
 ```
+
+Get the user that will be used on anonymous users.
 
 ```
 # TODO: Do not allow anonymous access.
-id cooper 
+id cooper
 # Output: <cooper-id>
 ```
 
+Open file `/etc/exports` and set this line, replacing `192.168.1/24` with your local 
+network CIDR. This determines from where connections will be accepted:
 ```
-# File: /etc/exports
-/mnt/nfs/anesofi *(rw,all_squash,insecure,async,no_subtree_check,anonuid=<cooper-id>,anongid=<cooper-id>)
+/mnt/nfs/anesofi 192.168.1.0/24(rw,all_squash,insecure,no_subtree_check,anonuid=1000,anongid=1000)
+```
 
-# TODO: Do not allow anonymous access. Sould it be the following?
-# /mnt/nfs/anesofi 192.168.1.0/24(rw)
+- `insecure` is needed otherwise from macOS I cannot connect from macOS.
+
+Export the changes:
+
 ```
+sudo exportfs -ra
+```
+
+## Connecting from a macOS
+
+To connect using _File Explorer > Go > Connect to Server_ (<kbd>⌘</kbd> + <kbd>K</kbd>)
+and type in `nfs://neptune.local/mnt/nfs/anesofi`.
 
 ## Connecting from Other Raspberry Pi
+
+If nfs-common is not installed, install it (it usually is installed by default).
 
 ```
 sudo apt update
 sudo apt full-upgrade
 sudo apt install nfs-common
-mount -t nfs -o proto=tcp,port=2049 192.168.1.76:/mnt/nfs/anesofi /mnt/nfs/anesofi
-# TODO: Check the portion that comes after `76:` and before the ` ` empty space in the above line.
 ```
 
-## Connecting from macOS & Windows
+Then create a folder and mount the network volume to that folder:
 
-### Windows
-
-From Windows:
-
-1. To interact with NFS shares on Windows, we need first to enable the NFS client. By
-   default, this feature is disabled on Windows installations. To do this, you must
-   search for “turn windows features on or off” within Windows and click the “Turn
-   Windows features on or off” option that appears
-2. Within this menu, search for the “Services for NFS” (1.) folder and click the
-   checkbox to enable all available features. Once done, click the “OK” button (2.) to
-   finalize the settings. Your windows installation will proceed to set up everything
-   that is required to connect with an NFS share.
-3. Now open up file explorer, and you should be able to see the “Map network drive”
-   option. Click this option to continue the process of connecting your Raspberry Pi’s
-   NFS share to your computer.
-4. On this screen, you need to enter your Raspberry Pi’s IP address followed by the
-   folder we mounted to the NFS Share (1.). For example, with our Raspberry Pi’s IP
-   address being “192.168.0.159” and the folder we set up is at “\mnt\nfsshare“. The
-   “folder” that we will be “\\192.168.0.159\mnt\nfsshare“. Once entered, click the
-   “Finish” button (2.) to finalize the connection.
-5. You should now be able to see your shared Raspberry Pi NFS folder under “Network
-   Locations” or “Network” on your Windows device.
-
-### macOS
-
-1. Now it’s time to connect to your Raspberry Pi’s NFS Share on MAC OS X, and you will
-   have to start by opening up the Finder application.
-2. With the “Finder” application open, click “Go” (1.) in the toolbar at the top of the
-   screen and then click the “Connect to Server...” (2.) option.
-3. Next, you will be required to enter the address that you want to connect to (1.). The
-   address that you need to enter into this is a combination of the “nfs:\\” protocol,
-   followed by your Raspberry Pi’s IP address. Lastly, it ends with the directory that
-   you are trying to access. For example, with the IP “192.168.0.159” and the folder we
-   shared on the Pi being “\mnt\nfsshare” the address we would enter is
-   “nfs:\\192.168.0.159\mnt\nfsshare“ Once done, click the “Connect” button (2.) to link
-   the shared volume.
-4. If a connection is successful, you will see a new window that shows you the inside of
-   the folder that you shared using the NFS Protocol on your Raspberry Pi.
-
-You can also find the folder again by looking in the “Locations” section in the Finder
-sidebar.
+```
+sudo mkdir -p /mnt/nfs/anesofi
+sudo chmod 755 /mnt/nfs/anesofi
+sudo mount -t nfs neptune.local:/mnt/nfs/anesofi /mnt/nfs/anesofi
+```

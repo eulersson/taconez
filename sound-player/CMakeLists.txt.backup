@@ -1,0 +1,53 @@
+# NOTE: Tweak this if it doesn't work because it's too recent of a version.
+cmake_minimum_required(VERSION 3.10)
+
+project(Sound\ Player)
+
+# Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
+# C++ language server) so it works with Neovim's language server feature:
+#
+#   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
+#
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Ensures we compile with C++ 11 features: flag -std=c++11 flag (or -std=gnu++11).
+set(CMAKE_CXX_STANDARD 11)
+
+# Define the main program binary that will need to be run.
+add_executable(server server.cpp)
+add_executable(client client.cpp)
+
+# Assumes the system has available the ZeroMQ library and the C++ bindings.
+#
+# macOS:
+#
+#   brew install zeromq cppzmq
+#
+# Debian:
+#
+#   sudo apt install libzmq3-dev cppzmq-dev
+#
+find_package(cppzmq)
+
+# The `cppzmq-dev` package brings with it CMake configuration so it can be included as
+# a library. See the *.cmake files in `/usr/share/cmake/cppzmq` (Debian) or
+# `/usr/local/share/cmake/cppzmq` (macOS).
+target_link_libraries(server cppzmq)
+target_link_libraries(client cppzmq)
+
+# If the CMake files wouldn't be shipped by ZeroMQ then we would need to handle it
+# ourselves like that:
+
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(ZEROMQ REQUIRED cppzmq)
+# target_include_directories(sound_player PUBLIC ${ZEROMQ_INCLUDE_DIRS})
+# target_link_libraries(sound_player PUBLIC ${ZEROMQ_LIBRARIES})
+# target_compile_options(sound_player PUBLIC ${ZEROMQ_CFLAGS_OTHER})
+
+# include(CMakePrintHelpers)
+# cmake_print_variables(ZEROMQ_INCLUDE_DIRS)
+# cmake_print_variables(ZEROMQ_LIBRARIES)
+# cmake_print_variables(ZEROMQ_LINK_LIBRARIES)
+# cmake_print_variables(ZEROMQ_LIBRARY_DIRS)
+# cmake_print_variables(ZEROMQ_LDFLAGS)
+# cmake_print_variables(ZEROMQ_CFLAGS_OTHER)

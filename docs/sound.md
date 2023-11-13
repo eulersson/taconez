@@ -256,3 +256,4 @@ Do it with the combined sink too if you want:
 ```
 $ pactl set-sink-volume combined-sink 65536
 ```
+
