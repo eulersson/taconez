@@ -34,13 +34,13 @@ This is intended to be run in a group of Raspberry Pi
 
 ## Documentation
 
-| Page                                         | Description                                                               |
-| -------------------------------------------- | ------------------------------------------------------------------------- |
-| [InfluxDB](/docs/influxdb.md)                | Why InfluxDB is chosen, what for, and how to test it works.               |
-| [NFS Volumes](/docs/nfs.md)                  | How to set up NFS shares so all slaves can read from the master's volume. |
-| [Provisioning](/docs/provisioning.md)        | How to provision new Raspberry Pis and deploying using Ansible Playbooks. |
-| [Sound & Speakers Setup](/docs/sound.md)     | How to use sound on Raspberry Pi 4, 3B & Zero.                            |
-| [Development Workflow](/docs/development.md) | How to use sound on Raspberry Pi 4, 3B & Zero.                            |
+| Page                                         | Description                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [InfluxDB](/docs/influxdb.md)                | Why InfluxDB is chosen, what for, and how to test it works.                                  |
+| [NFS Volumes](/docs/nfs.md)                  | How to set up NFS shares so all slaves can read from the master's volume.                    |
+| [Provisioning](/docs/provisioning.md)        | How to provision new Raspberry Pis and deploying using Ansible Playbooks.                    |
+| [Sound & Speakers Setup](/docs/sound.md)     | How to setup bluetooth speakers and use multiple speaker sound on Raspberry Pi 4, 3B & Zero. |
+| [Development Workflow](/docs/development.md) | Comfortable development when working on Raspberry Pi.                                        |
 
 ## Architecture
 
