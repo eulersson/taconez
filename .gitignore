@@ -1,3 +1,11 @@
+.DS_Store
+
+.git/
+
 *.drawio.bkp
+.python-version
+
 sound-player/.cache/
 sound-player/build/
+
+sound-detector/.ipynb_checkpoints/
