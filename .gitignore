@@ -4,6 +4,7 @@
 
 *.drawio.bkp
 .python-version
+pyrightconfig.json
 
 sound-player/.cache/
 sound-player/build/

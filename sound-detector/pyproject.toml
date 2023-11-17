@@ -20,6 +20,7 @@ black = "^23.11.0"
 ruff = "^0.1.5"
 ipython = "^8.17.2"
 notebook = "^7.0.6"
+pynvim = "^0.4.3"
 
 [build-system]
 requires = ["poetry-core"]
