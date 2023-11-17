@@ -18,6 +18,29 @@ To run the Jupyter Notebook you will need the pip `notebook` package installed, 
 jupyter notebook transfer_learning.ipynb
 ```
 
+## Dependencies
+
+This Python project uses the [poetry](https://python-poetry.org/) packaging and
+dependency management tool.
+
+In my case my LSP of my editor won't pick up the dependencies because `poetry`
+encapsulates them.
+
+You can either run a `poetry shell` and open the text editor or install them with pip
+on your python installation (`pyenv` in my case):
+
+```
+pyenv install 3.11.5
+pyenv global 3.11.5
+pyenv virtualenv my_env_for_this_project
+pyenv global my_env_for_this_project
+
+poetry export --format=requirements.txt > requirements.txt
+pip install -r requirements.txt
+
+nvim
+```
+
 ## Adapting
 
 - [ ] Record some high-heel samples with the same specs the model was trained with.
