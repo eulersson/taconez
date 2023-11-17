@@ -20,7 +20,6 @@ jupyter notebook transfer_learning.ipynb
 
 ## Adapting
 
-- [ ] See the specs of the audio data YAMNet model was trained with.
 - [ ] Record some high-heel samples with the same specs the model was trained with.
 - [ ] Run the transference learning and check its results.
 - [ ] Save out the model.
