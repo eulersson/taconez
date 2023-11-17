@@ -41,10 +41,8 @@ pip install -r requirements.txt
 nvim
 ```
 
-## Adapting
+### Deps
 
-- [ ] Record some high-heel samples with the same specs the model was trained with.
-- [ ] Run the transference learning and check its results.
-- [ ] Save out the model.
-- [ ] Prepare the live microphone inference to feed 1-2 second samples to the model.
-- [ ] React on matches to the high-heel sound.
+```
+sudo apt install portaudio19-dev
+```
