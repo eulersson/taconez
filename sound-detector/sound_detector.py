@@ -96,8 +96,8 @@ def detect_specific_sounds(detect_sounds=["Clip-clop"]):
 
     print(f"The main sound is: {inferred_class}")
 
-    # TODO Calibrate this value.
-    if clip_clop_prediction > 0.001:
+    # TODO: Calibrate this value.
+    if clip_clop_prediction > 0.0001:
         print("DETECTED")
         write_audio(waveform_binary)
 

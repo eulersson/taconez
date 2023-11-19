@@ -21,7 +21,7 @@ rsync \
 - It's a manual action.
 - Only syncs towards a single target machine.
 
-### Discarded Alternative Method 1: lsyncd
+### Discarded Alternative 1: lsyncd
 
 Lsyncd (Live Syncing Daemon) synchronizes local directories with remote targets.
 
@@ -38,7 +38,7 @@ I discarded it because the mantainer himself said it is not reliable on macOS:
 >   Source: https://github.com/lsyncd/lsyncd/issues/204#issuecomment-1794164518
 >
 
-### Discarded Alternative Method 2: Distant + distant.nvim
+### Discarded Alternative 2: Distant + distant.nvim
 
 - https://distant.dev/
 - https://distant.dev/editors/neovim/installation/
@@ -62,7 +62,7 @@ them up with your local Neovim resources.
 - Code would not reside in my powerful computer.
 - I would have to sync from that Raspberry Pi to the rest of them.
 
-### Discarded Alternative Method 3: Network Volume Binding
+### Discarded Alternative 3: Network Volume Binding
 
 We could bind a folder from the Raspberry Pi and make it available in the LAN (local)
 network with `NFS` or `SMB` or if I'm outside the local network I could use an encrypted

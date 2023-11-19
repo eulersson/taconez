@@ -6,12 +6,27 @@ authors = ["Ramon Blanquer <blanquer.ramon@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11,<3.12"
-tensorflow = "~2.13"
-tensorflow-io = "~0.34"
-tensorflow-hub = "~0.15"
-pyaudio = "^0.2.14"
+python = "^3.10,<3.11"
 
+# Issue between poetry and tensorflow metadata since >=2.11. This is a temporary
+# workaround. Inspired from https://github.com/tensorflow/tensorflow/blob/adb39b04e9cb116df4659a7e2de9eea27e62f25c/tensorflow/tools/pip_package/setup.py#L148-L162
+#
+#   https://github.com/python-poetry/poetry/issues/8271
+#
+tensorflow = {version = "~2.13.0" }
+tensorflow-macos = { version = "~2.13.0", platform = "darwin", markers = "platform_machine=='arm64'" }
+tensorflow-intel = { version = "~2.13.0", platform = "win32" }
+tensorflow-cpu = [
+    { version = "~2.13.0", platform = "linux", markers = "platform_machine!='arm64' and platform_machine!='aarch64'" },
+    { version = "~2.13.0", platform = "darwin", markers = "platform_machine!='arm64' and platform_machine!='aarch64'" }
+]
+# TODO: Once packaged and ready to run in TensorFlow Lite, on Raspberry Pi (linux arm64)
+# do not install tensorflow-cpu-aws and install only tflite-runtime instead.
+tensorflow-cpu-aws = { version = "~2.13.0", platform = "linux", markers = "platform_machine=='arm64' or platform_machine=='aarch64'" }
+tflite-runtime = { version = "~2.13.0", platform = "linux", markers = "platform_machine=='arm64' or platform_machine=='aarch64'"}
+tensorflow-io = "~0.34.0"
+tensorflow-hub = "~0.15.0"
+pyaudio = "^0.2.14"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "^3.8.1"

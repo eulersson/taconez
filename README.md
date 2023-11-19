@@ -1,7 +1,7 @@
-# anesofi: (A)nnoying (Ne)ighbour (So)und (Fi)ghter
+# anesowa: (A)nnoying (Ne)ighbour (So)nic (Wa)rfare
 
-IoT Raspberry Pi powered solution to detect, analyse and react against discomforting
-sounds.
+AI IoT Raspberry Pi powered solution to detect, analyse and react against discomforting
+high heel sounds.
 
 ## Motivation
 
