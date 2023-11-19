@@ -7,14 +7,14 @@ Iteration 1:
 - [ ] Upon sound detection, save the .wav file in the NFS share.
 - [ ] Instead of the alarm.wav now the sound-player should play the actual recorded
       sound.
-- [ ] Package Python project into a package using poetry.
+- [x] Package Python project into a package using poetry.
 - [ ] Package things up into services that start on boot.
 - [ ] Use tensorflow lite instead of tensorflow.
 - [ ] https://www.tensorflow.org/lite/guide
 - [ ] https://www.tensorflow.org/lite/guide/python
 - [ ] Docker and nvim to play nice?
 - [ ] Run the detector from the container.
-- [ ] Recognize audio devices from docker.
+- [x] Recognize audio devices from docker.
 
 Iteration 2:
 
