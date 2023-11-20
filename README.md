@@ -24,15 +24,15 @@ This project is composed of various pieces:
 
 This is intended to be run in a group of Raspberry Pi
 
-| Tool                 | Purpose                                                              | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
-| TensorFlow (Python)  | Audio detection                                                      | It provides even a higher level API (Keras) that simplifies ML workflows.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Next.js (JavaScript) | Data visualization webapp.                                           | It is a full-stack solution that allows to split a React application between server and client components, allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, removing any interaction between the browser and the database. We can also have simple REST-style API endpoints that can be listening to the sound detector and writing to database as well as small endpoints for small controls exposed in the frontend. |
-| InfluxDB             | Record storage.                                                      | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                                                                                                                                                    |
-| NFS                  | Sharing a volume with the audio data.                                | The database should not get bloated with binary data. Once the audio file is producted, we hash it and store it in the NFS-shared file system.                                                                                                                                                                                                                                                                                                                                                         |
-| ZeroMQ               | Communication between the audio detector and the playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashionn of a queue. The detector places an element and all playback receivers react playing back the sound. I didn't want another centralized service in the master raspberry pi, so a brokerless solution is more appealing.                                                                                                                                                   |
-| Docker               | Containerization.                                                    | Protect against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                                                                                                                                                      |     |
-| Ansible              | Provisioning.                                                        | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Tool                 | Purpose                                              | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| TensorFlow (Python)  | Audio detection                                      | It provides even a higher level API (Keras) that simplifies ML workflows.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Next.js (JavaScript) | Data visualization webapp.                           | It is a full-stack solution that allows to split a React application between server and client components, allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, removing any interaction between the browser and the database. We can also have simple REST-style API endpoints that can be listening to the sound detector and writing to database as well as small endpoints for small controls exposed in the frontend. |
+| InfluxDB             | Record storage.                                      | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                                                                                                                                                    |
+| NFS                  | Sharing a volume with the audio data.                | The database should not get bloated with binary data. Once the audio file is producted, we hash it and store it in the NFS-shared file system.                                                                                                                                                                                                                                                                                                                                                         |
+| ZeroMQ               | Communication audio detector <-> playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashionn of a queue. The detector places an element and all playback receivers react playing back the sound. I didn't want another centralized service in the master raspberry pi, so a brokerless solution is more appealing.                                                                                                                                                   |
+| Docker               | Containerization.                                    | Protect against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Ansible              | Provisioning.                                        | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## Architecture
 
@@ -107,15 +107,15 @@ rsync \
 Then running the corresponding `docker run` volume-binding the project folder:
 
 ```
-
+pi@raspberry1:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
 ```
 
-**PROS**:
+PROS:
 
 - Only the changed files are synced.
 - It is secure and encrypted.
 
-**CONS**:
+CONS:
 
 - It's a manual action.
 - Only syncs towards a single target machine.
@@ -145,14 +145,14 @@ Installing a **distant** service on the Raspberry Pi and connecting to it via **
 is possible. You would be able to browse through the remote files from Neovim and open
 them up with your local Neovim resources.
 
-**PROS**:
+PROS:
 
 - Good for connecting to resources that might be outside of the network.
 - The communication is efficient and fast because it goes through custom TCP _distant_
   protocol between the _distant_ client and _distant_ server.
 - It's encrypted.
 
-**CONS**:
+CONS:
 
 - I couldn't get the language server features working, it seemed to rely on me
   installing all the intellisense tooling on the Raspberry Pi, which I prefer not
@@ -167,12 +167,12 @@ network with `NFS` or `SMB` or if I'm outside the local network I could use an e
 ssh-filesystem connection `sshfs` or tunnel into my LAN NFS with OpenVPN (that would
 make me have to install VPN software on my LAN and client machine).
 
-**PROS**:
+PROS:
 
 - Transparent to navigate the mounted remote volume.
 - Intellisense (LSP) would work.
 
-**CONS**:
+CONS:
 
 - The actual code would reside in a Raspberry Pi machine instead of my local filesystem.
 - If the Raspberry Pi gets corrupted I lose all the code.
@@ -785,7 +785,7 @@ jupyter notebook transfer_learning.ipynb
 ## Docker
 
 ```
-cooper@neptune $ docker build -t anesowa/sound-detector:1.0.0 .
+cooper@neptune $ docker build
 ```
 
 ```
