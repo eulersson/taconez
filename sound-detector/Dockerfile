@@ -1,4 +1,4 @@
-FROM python:3.10.13-slim
+FROM python:3.10.13-slim-bookworm
 
 WORKDIR /anesowa/sound-detector/
 
@@ -9,7 +9,8 @@ WORKDIR /anesowa/sound-detector/
 # The --no-install-recommends helps limit some of the install so that you can be more
 # explicit about what gets installed.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libc-dev portaudio19-dev
+    && apt-get install -y --no-install-recommends \
+    gcc libc-dev portaudio19-dev pulseaudio-utils
 
 # TODO: Cleanup gcc and libc-dev and other build-time dependencies after installing poetry depenencies?
 
