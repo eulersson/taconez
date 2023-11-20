@@ -21,6 +21,7 @@ Iteration 1:
 - [ ] Docker and nvim to play nice?
 - [ ] Test infrastructure.
 - [ ] Clean organized README.
+- [ ] README TOC-tree
 
 Iteration 2:
 

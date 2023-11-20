@@ -1,13 +1,14 @@
 # anesowa: (A)nnoying (Ne)ighbour (So)nic (Wa)rfare
 
 AI IoT Raspberry Pi powered solution to detect, analyse and react against discomforting
-high heel sounds.
+high heel sounds by projecting them back to their source.
 
 ## Motivation
 
 My neighbour upstairs decided to walk on high heels. I expressed my discomfort and she
 took it as a personal attack, rejecting all kind of mediation. Since I received insults
-I decided to use the mirror strategy to see if she realizes how unpleasant it becomes.
+I decided to use the mirror strategy to see if she realizes how unpleasant it becomes:
+to bounce back her sounds.
 
 ## Description
 
@@ -16,27 +17,27 @@ This project is composed of various pieces:
 | Module               | Purpose                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Sound Detector       | Discriminate and pick up specific sounds using AI.                                                                 |
-| Playback Distributor | Route the detected sound and bounce it back.                                                                       |
-| Sound Player         | Play any given sound by the distributor.                                                                           |
-| Journal              | Visualize the sound occurrences. Useful to have an objective overview. If case gets to lawyers it might be useful. |
+| Playback Distributor | Route the detected sound and bounce it back from multiple speakers on multiple locations.                          |
+| Sound Player         | Play any given sound when told by the distributor.                                                                 |
+| Journal (Web App)    | Visualize the sound occurrences. Useful to have an objective overview. If case gets to lawyers it might be useful. |
 
 ## Technology
 
 This is intended to be run in a group of Raspberry Pi
 
-| Tool                 | Purpose                                              | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| TensorFlow (Python)  | Audio detection                                      | It provides even a higher level API (Keras) that simplifies ML workflows.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Next.js (JavaScript) | Data visualization webapp.                           | It is a full-stack solution that allows to split a React application between server and client components, allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, removing any interaction between the browser and the database. We can also have simple REST-style API endpoints that can be listening to the sound detector and writing to database as well as small endpoints for small controls exposed in the frontend. |
-| InfluxDB             | Record storage.                                      | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                                                                                                                                                    |
-| NFS                  | Sharing a volume with the audio data.                | The database should not get bloated with binary data. Once the audio file is producted, we hash it and store it in the NFS-shared file system.                                                                                                                                                                                                                                                                                                                                                         |
-| ZeroMQ               | Communication audio detector <-> playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashionn of a queue. The detector places an element and all playback receivers react playing back the sound. I didn't want another centralized service in the master raspberry pi, so a brokerless solution is more appealing.                                                                                                                                                   |
-| Docker               | Containerization.                                    | Protect against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Ansible              | Provisioning.                                        | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Tool                 | Purpose                                              | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TensorFlow (Python)  | Audio detection                                      | Provides even a higher level API (Keras) that simplifies machine learning workflows. Also provides a lightweight runtime (TF Lite) for running only inference (feeding the input and getting the output on a saved model).                                                                                                                                                   |
+| Next.js (JavaScript) | Data visualization web application.                  | Allows splitting a React application between server and client components (full-stack framework), allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, encapsulating database interaction only server-side. Allows writing REST-style API endpoints that can be listening to the sound detector. |
+| InfluxDB             | Noise occurrence log.                                | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                          |
+| NFS                  | Sharing a volume with the audio data.                | The database should not get bloated with binary data. Once the audio file is producted, it gets hashed it and stored in the NFS-shared file system so it can get played by the `sound-player`.                                                                                                                                                                               |
+| ZeroMQ               | Communication audio detector <-> playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashion of a queue. The detector places an element and all playback receivers react playing back the sound. A full queue broker installation might be overkill for a simple IoT communication channel.                                                 |
+| Docker               | Containerization.                                    | Protects against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                           |
+| Ansible              | Provisioning and deployment.                         | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                           |
 
 ## Architecture
 
-![Diagram](anesofi.svg)
+![Diagram](anesowa.svg)
 
 Under each folder in this repository you will find more information about the particular
 piece.
@@ -45,10 +46,42 @@ piece.
 - [sound-player](sound-player)
 - [playback-distributor](playback-distributor)
 
+## Preparing SD for Raspberry Pi
+
+Use the official [Raspberry Pi Imager](https://www.raspberrypi.com/software/) to create
+microSD cards with Raspberry OS.
+
+First create a keypair to use when connecting to the Raspberry Pis:
+
+```
+ssh-keygen -t ed25519 -C "anesowa@raspberrypi"
+```
+
+Before flashing the card it asks you if you want OS customization, click "Edit
+settings".
+
+- Hostname: `rpi-master`, `rpi-slave-1`, `rpi-slave-2`, ...
+- Set username: `anesowa`.
+- Set password.
+- Configure wireless LAN.
+- Services > Enable SSH: ON
+- Allow public-key authentication only > Set authorized_keys for 'anesowa': copy the
+  public key from the keypair you created (`~/.ssh/raspberrypi_key.pub`) (e.g.
+  `ssh-ed25519 AAAAC3... anesowa@raspberrypi`)
+
+Always a good idea to upgrade it to the latest and reboot the Raspberry Pi:
+
+```
+eulersson@macbook:~ $ ssh -i ~/.ssh/raspberrypi_key anesowa@rpi-master.local
+ansesowa@rpi-master:~ $ sudo apt update
+ansesowa@rpi-master:~ $ sudo apt full-upgrade
+ansesowa@rpi-master:~ $ sudo reboot
+```
+
 ## Sound & Multiple Bluetooth Speaker Setup
 
 If you have some USB or Bluetooth speakers you want to use this guide explains how to
-set them up using `Raspberry Pi OS` (based on `Debian bookworm` at the time).
+set them up using `Raspberry Pi OS` (based on `Debian bookworm` at the time of writing).
 
 If you use Raspberry Pi 4 the audio system uses [PipeWire](https://pipewire.org/), for
 older versions you should use
@@ -69,43 +102,52 @@ sound to so it can be played in various sound devices at once.
 ### Installation
 
 Usually you should have the **PulseAudio** server running by default, check that with
-`ps -e | grep pulseaudio` and check if there is the server process.
+`ps -e | grep pulse` and check if there is the server process. Note that you might have
+**PipeWire** running (`pipewire-pulse`).
 
 If not (in the case of older Raspberry Pi devices) you want to install **PulseAudio** as
 well as the package that allows **PulseAudio** to setup Bluetooth audio:
 
 ```
-# Only on older Raspberry Pi
-sudo apt update
-sudo apt full-upgrade
-sudo apt install pulseaudio pulseaudio-module-bluetooth
+ansesowa@rpi-master:~ $ sudo apt install pulseaudio pulseaudio-module-bluetooth
 ```
 
 ### Configuration
+
+You will be playing with the various PulseAudio utils such as `pactl`, `paplay`, ...
 
 #### USB Speaker
 
 Plug the USB speaker and you should see it listed to be used as an audio sink:
 
 ```
-$ pactl list sinks short
+ansesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 ```
 
 #### Bluetooth Speaker
 
-Connect your Bluetooth speakers by using `bluetoothctl`.
+Connect your Bluetooth speakers by using `bluetoothctl`. This is an interactive process
+which would need to be done manually on each Raspberry Pi. In the following example you
+can see how to connect a bluetooth device `JBL GO 2` with MAC ` F8:5C:7D:0F:6D:46`:
 
 ```
-$ bluetoothctl
+ansesowa@rpi-master:~ $ bluetoothctl
+
+# Power on and start scanning until you find the JBL GO 2 you are looking for:
+
 [bluetooth]# power on
 [bluetooth]# scan on
 [NEW] Device F8:5C:7D:0F:6D:46 JBL GO 2
 
+# Scanning can be turned off:
+
 [bluetooth]# scan off
 [CHG] Controller DC:A6:32:50:10:F5 Discovering: no
 Discovery stopped
+
+# Pair, trust, and connect the device:
 
 [bluetooth]# pair F8:5C:7D:0F:6D:46
 Attempting to pair with F8:5C:7D:0F:6D:46
@@ -136,19 +178,30 @@ Connection successful
 [JBL GO 2]# exit
 ```
 
-If you have problems connecting the Bluetooth speaker check the logs:
+If you have problems connecting the Bluetooth speaker check the service's logs:
 
 ```
-journalctl -u bluetooth.service
+ansesowa@rpi-master:~ $ journalctl -u bluetooth.service
 ```
 
-Sometimes the connection failed, but after a reboot it connected well.
-
-Then you can see if the audio sink for that device exists. In the following example you
-can see I connected a USB speaker as well as two Bluetooth speakers.
+For instance you might get:
 
 ```
-$ pactl list sinks short
+[bluetooth]# connect F8:5C:7D:0F:6D:46
+Attempting to connect to F8:5C:7D:0F:6D:46
+Failed to connect: org.bluez.Error.Failed br-connection-profile-unavailable
+[DEL] Device 6B:53:9D:87:E4:7A 6B-53-9D-87-E4-7A
+[bluetooth]# exit
+anesowa@rpi-master:~ $ journalctl -u bluetooth.service | tail -n 1
+Nov 20 20:54:27 rpi-master bluetoothd[682]: src/service.c:btd_service_connect() a2dp-sink profile connect failed for F8:5C:7D:0F:6D:46: Protocol not available
+```
+
+This error happened to me the first time I tried to connect the Bluetooth speaker after
+having installed `pulseaudio` and `pulseaudio-module-bluetooth`. It got fixed after
+rebooting!
+
+```
+ansesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 80      bluez_output.F8_5C_7D_0F_6D_46.1        PipeWire        s16le 2ch 48000Hz       SUSPENDED
@@ -158,17 +211,20 @@ $ pactl list sinks short
 Try to play a sound to the new sink:
 
 ```
-$ pactl set-default-sink bluez_output.F8_5C_7D_0F_6D_46.1
-$ speaker-test
+ansesowa@rpi-master:~ $ pactl set-default-sink bluez_output.F8_5C_7D_0F_6D_46.1
+ansesowa@rpi-master:~ $ aplay /usr/share/sounds/alsa/Front_Center.wav # ALSA player
+ansesowa@rpi-master:~ $ paplay /usr/share/sounds/alsa/Front_center.wav # PulseAudio player
+ansesowa@rpi-master:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWire player
+ansesowa@rpi-master:~ $ speaker-test
 ```
 
 ##### Reconnecting
 
-I realized on Raspberry Pi 4 it reconnects if I `reboot`, but not on Raspberry Pi 3,
-which uses an older `bluetoothctl` (5.66 vs 5.55).
+Raspberry Pi 4 seemed to reconnect to the speakers upon `rebooting`, but not on
+Raspberry Pi 3 B+, which uses an older `bluetoothctl` (5.66 vs 5.55).
 
-If you want to reconnect the speaker after reboot, what I found that works with JBL GO 2
-is to turn the speaker off and on. Then it autoconnects.
+If you want to reconnect the speaker after reboot, what worked with JBL GO 2 is to turn
+the speaker off and on. Then it autoconnects.
 
 #### Combining Sinks
 
@@ -176,20 +232,21 @@ To be able to play a sound to two or more speakers you can create a combined sin
 
 ```
 # Combine all available sinks:
-$ pactl load-module module-combine-sink
+
+ansesowa@rpi-master:~ $ pactl load-module module-combine-sink
 536870913
 
 # NOTE: You can pass arguments to the module-combine-sink arguments to select what
 #   devices you want to connect. To see the available sinks use `pactl list sinks short`.
 #
-#   $ pactl load-module module-combine-sink sink_name=combined-sink sink_properties=device.description=Combined slaves=bluez_output.F8_5C_7D_0F_6D_46.1,bluez_output.70_99_1C_51_36_1B.1,alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo
+#   pactl load-module module-combine-sink sink_name=combined-sink sink_properties=device.description=Combined slaves=bluez_output.F8_5C_7D_0F_6D_46.1,bluez_output.70_99_1C_51_36_1B.1,alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo
 #
 ```
 
 Now check if it has been created:
 
 ```
-$ pactl list sinks short
+ansesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 80      bluez_output.F8_5C_7D_0F_6D_46.1        PipeWire        s16le 2ch 48000Hz       SUSPENDED
@@ -200,14 +257,13 @@ $ pactl list sinks short
 Select it to be the default sink:
 
 ```
-$ pactl set-default-sink bluez_output.F8_5C_7D_0F_6D_46.1
+ansesowa@rpi-master:~ $ pactl set-default-sink combined-sink
 ```
 
 To play sound to it:
 
 ```
-$ speaker-test
-$ aplay /usr/share/sounds/alsa/Front_Center.wav
+ansesowa@rpi-master:~ $ speaker-test
 ```
 
 #### Persisting Configuration
@@ -233,7 +289,7 @@ pipewire/stable,now 0.3.65-3+rpt2 arm64 [installed,automatic]
 
 ##### If PipeWire Available
 
-Create a ~/.config/pipewire/pipewire.conf.d/<name>.conf so **PipeWire** gets it by
+Create a `~/.config/pipewire/pipewire.conf.d/<name>.conf` so **PipeWire** gets it by
 default.
 
 ```
@@ -250,31 +306,69 @@ context.exec = [
 ]
 ```
 
+To enable audio I/O from the Docker container into the host (Raspberry Pi) we need to
+enable PulseAudio's `module-native-protocol-tcp`. To do that everytime we boot the
+Raspberry Pi create another config `~/.config/pipewire/pipewire.conf.d/enable-tcp.conf`:
+
+```
+# Sources:
+#
+#   https://stackoverflow.com/a/39780130/2649699
+#   https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c
+#   https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
+#
+context.exec = [
+    { path = "pactl" args = "load-module module-native-protocol-tcp" }
+]
+```
+
 ##### If PipeWire Not Available
 
-Then you must use the `default.pa` (PulseAudio Sound Server Startup Script).
+Then `default.pa` (PulseAudio Sound Server Startup Script) is what needs to be edited.
 
-Open up `/etc/pulse/default.pa` with `sudo` and add the following contents in the end:
+We can drop files in `/etc/pulse/default.pa.d/` and they will be processed so let's do
+that:
+
+Create `/etc/pulse/default.pa.d/combine-sinks-and-set-default.pa` with these contents:
 
 ```
 load-module module-combine-sink
 set-default-sink combined
 ```
 
+Create `/etc/pulse/default.pa.d/enable-tcp.pa` with these contents:
+
+```
+load-module module-native-protocol-tcp
+```
+
+Now restart the pulse server:
+
+```
+systemctl --user restart pulseaudio.service
+```
+
 #### Persisting Audio Volume Levels
 
 First we need to disable a feature called **flat volumes** that will mess with the rest
-of volumes when you change a particular one. What flat volumes aims to fix is keeping
-the master system audio aligned with all the speakers, that is: if you change the master
-volume to `30%` it would change all the linked speakers to `30%`. I would suggest
-turning that feature off by editing `/etc/pulse/daemon.conf` and uncommenting the line
-so it ends up like this:
+of volumes when you change a particular one. 
+
+> flat-volumes scales the device-volume with the volume of the "loudest" application.
+> For example, raising the VoIP call volume will raise the hardware volume and adjust
+> the music-player volume so it stays where it was, without having to lower the volume
+> of the music-player manually. Defaults to yes upstream, but to no within Arch. Note:
+> The default behavior upstream can sometimes be confusing and some applications,
+> unaware of this feature, can set their volume to 100% at startup, potentially blowing
+> your speakers or your ears. This is why Arch defaults to the classic (ALSA) behavior
+> by setting this to no.
 
 ```
 ...
 flat-volumes = no
 ...
 ```
+
+Then restart the service `systemctl --user restart pulseaudio.service`.
 
 You can read the current audio volume level on each individual speaker as follows:
 
@@ -304,9 +398,12 @@ Do it with the combined sink too if you want:
 $ pactl set-sink-volume combined-sink 65536
 ```
 
+If you reboot, even if the bluetooth speaker disconnects it seems to retain the volume
+level set with the `set-sink-volume` command.
+
 ## Development Workflow
 
-### macOS, Docker & Sound I/O
+### macOS & Docker Container Sound
 
 The apps are containerized so we don't have to depend on the system versions of the
 upcoming Raspberry Pi OS updates.
@@ -317,8 +414,9 @@ and audio playback device.
 I personally use **Rancher Desktop**'s docker daemon, which runs on a linux VM. If I
 were on linux I would simply bind the device with `--device /dev/snd:/dev/snd`.
 
-The workaround is to run a **PulseAudio** server on the macOS and make the container act
-as a client to it.
+To have a corss-platform solution that also doen't involve a PulseAudio service on the
+container is connecting the container as a client to a PulseAudio server running at the
+host.
 
 ```
 brew install pulseaudio
@@ -337,36 +435,40 @@ Restart the service with `brew services restart pulseaudio`.
 Then from the container you can play a sound with `paplay`:
 
 ```
-cd anesowa
-docker run --rm -it \
-  -e PULSE_SERVER=host.docker.internal  \
-  -v $HOME/.config/pulse/cookie:/home/pulseaudio/.config/pulse/cookie \
-  -v ./microphone-sample.wav:/microphone-sample.wav \
-  --entrypoint paplay \
-  jess/pulseaudio /microphone-sample.wav
+eulersson@macbook:~/Devel/anesowa/sound-detector $ docker build -t anesowa/sound-detector:1.0.0 .
+eulersson@macbook:~/Devel/anesowa/sound-detector $ docker run --rm -it \
+  -e PULSE_SERVER=host.docker.internal \
+  -v $HOME/Devel/anesowa/microphone-sample.wav:/sample.wav \
+  anesowa/sound-detector:1.0.0 paplay /sample.wav
 ```
 
-Source:
+You should have heard some sound coming from the container to the Raspberry Pi and then
+into the USB or Bluetooth speaker(s)!
 
-- [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
+Sources:
+
+- https://stackoverflow.com/a/40139001
+- https://stackoverflow.com/a/39780130/2649699
+- https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c
+- https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
 ### Iterative Development
 
-The workflow to develop should:
+During my development from the macOS
 
 Syncing the changes manually with `rsync`:
 
 ```
-rsync \
+eulersson@macbook:~ $ rsync \
   -e "ssh -i ~/.ssh/raspberry_local" -azhP \
-  --exclude "sound-player/build/" --exclude ".git/" --exclude "docs/" --exclude "*.cache*" \
-  . cooper@neptune.local:/home/cooper/anesofi
+  --exclude "sound-player/build/" --exclude ".git/" --exclude "*.cache*" \
+  . ansesowa@rpi-master.local:/home/user/anesowa
 ```
 
 Then running the corresponding `docker run` volume-binding the project folder:
 
 ```
-pi@raspberry1:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
+ansesowa@rpi-master:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
 ```
 
 PROS:
@@ -378,6 +480,7 @@ CONS:
 
 - It's a manual action.
 - Only syncs towards a single target machine.
+- Deleted files are not handled.
 
 I also evaluated other workflows such as `lsyncd`, `distant` and `distant.nvim` or
 simply having a network volume and working on there but each had caveats. I explain why
@@ -385,8 +488,8 @@ I discarded them in [Discarded Tools](#discarded-tools).
 
 ## Database (InfluxDB)
 
-This project uses **InfluxDB**, a times series database is to be used to log noise
-occurrences.
+This project uses **InfluxDB**, a times series database is to be used to log disturbing
+sound occurrences.
 
 These guides are used as reference:
 
@@ -397,128 +500,64 @@ These guides are used as reference:
 **NOTE**: This document is a reference, and you don't need to provision new Raspberry
 Pis with those commands since it's done with an Ansible playbook. This is for me to
 remember the steps before writing the Ansible Playbook. Read
-[Provisioning](/docs/provisioning.md) for more.
+[Provisioning (Ansible)](#provisioning-ansible) for more.
 
 ### Installation
 
-**NOTE**: This will be done in the `Dockerfile.`.
+Installing InfluxDB server:
 
 ```
-sudo apt update
-sudo apt upgrade
-curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
-sudo apt install influxdb2
-sudo systemctl unmask influxdb
-sudo systemctl enable influxdb
-sudo systemctl start influxdb
-```
-
-```
-# influxdata-archive_compat.key GPG fingerprint:
-#     9D53 9D90 D332 8DC7 D6C8 D3B9 D8FF 8E1F 7DF8 B07E
-wget -q https://repos.influxdata.com/influxdata-archive_compat.key
-echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
-echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
-
-sudo apt update && sudo apt install influxdb2
+ansesowa@rpi-master:~ $ sudo apt update
+ansesowa@rpi-master:~ $ sudo apt upgrade
+ansesowa@rpi-master:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
+ansesowa@rpi-master:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+ansesowa@rpi-master:~ $ sudo apt install influxdb2
+ansesowa@rpi-master:~ $ sudo systemctl unmask influxdb
+ansesowa@rpi-master:~ $ sudo systemctl enable influxdb
+ansesowa@rpi-master:~ $ sudo systemctl start influxdb
 ```
 
 ### Configuration
 
 ```
-$ influx setup \
-  --username elohim \
+# Setup instance with initial user, org, bucket.
+ansesowa@rpi-master:~ $ influx setup \
+  --username anesowa \
   --password ">R7#$gjf>2@dLXUU<" \
   --token XwSAJxRKHFkFL9wLiA4pPrDeXed
-  --org anesofi \
-  --bucket anesofi \
+  --org anesowa \
+  --bucket anesowa \
   --force
 
-$ influx auth create \
+# Create an All Access API Token to use when creating resources on the database.
+ansesowa@rpi-master:~ $ influx auth create \
   --all-access \
   --host http://localhost:8086 \
-  --org anesofi \
+  --org anesowa \
   --token XwSAJxRKHFkFL9wLiA4pPrDeXed
-  ID                      Description     Token                                                                                           User Name       User ID                 Permissions
-0c0d6b05a3a6d000                        MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==        elohim          0c0d68543ca6d000        [read:orgs/8e706e7c04613c15/authorizations write:orgs/8e706e7c04613c15/authorizations read:orgs/8e706e7c04613c15/buckets write:orgs/8e706e7c04613c15/buckets read:orgs/8e706e7c04613c15/dashboards write:orgs/8e706e7c04613c15/dashboards read:/orgs/8e706e7c04613c15 read:orgs/8e706e7c04613c15/sources write:orgs/8e706e7c04613c15/sources read:orgs/8e706e7c04613c15/tasks write:orgs/8e706e7c04613c15/tasks read:orgs/8e706e7c04613c15/telegrafs write:orgs/8e706e7c04613c15/telegrafs read:/users/0c0d68543ca6d000 write:/users/0c0d68543ca6d000 read:orgs/8e706e7c04613c15/variables write:orgs/8e706e7c04613c15/variables read:orgs/8e706e7c04613c15/scrapers write:orgs/8e706e7c04613c15/scrapers read:orgs/8e706e7c04613c15/secrets write:orgs/8e706e7c04613c15/secrets read:orgs/8e706e7c04613c15/labels write:orgs/8e706e7c04613c15/labels read:orgs/8e706e7c04613c15/views write:orgs/8e706e7c04613c15/views read:orgs/8e706e7c04613c15/documents write:orgs/8e706e7c04613c15/documents read:orgs/8e706e7c04613c15/notificationRules write:orgs/8e706e7c04613c15/notificationRules read:orgs/8e706e7c04613c15/notificationEndpoints write:orgs/8e706e7c04613c15/notificationEndpoints read:orgs/8e706e7c04613c15/checks write:orgs/8e706e7c04613c15/checks read:orgs/8e706e7c04613c15/dbrp write:orgs/8e706e7c04613c15/dbrp read:orgs/8e706e7c04613c15/notebooks write:orgs/8e706e7c04613c15/notebooks read:orgs/8e706e7c04613c15/annotations write:orgs/8e706e7c04613c15/annotations read:orgs/8e706e7c04613c15/remotes write:orgs/8e706e7c04613c15/remotes read:orgs/8e706e7c04613c15/replications write:orgs/8e706e7c04613c15/replications]
+ID                      Description     Token                                                                                           User Name       User ID                 Permissions
+0c0d6b05a3a6d000                        MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==        supermaster          0c0d68543ca6d000        [read:orgs/8e706e7c04613c15/authorizations write:orgs/8e706e7c04613c15/authorizations read:orgs/8e706e7c04613c15/buckets write:orgs/8e706e7c04613c15/buckets read:orgs/8e706e7c04613c15/dashboards write:orgs/8e706e7c04613c15/dashboards read:/orgs/8e706e7c04613c15 read:orgs/8e706e7c04613c15/sources write:orgs/8e706e7c04613c15/sources read:orgs/8e706e7c04613c15/tasks write:orgs/8e706e7c04613c15/tasks read:orgs/8e706e7c04613c15/telegrafs write:orgs/8e706e7c04613c15/telegrafs read:/users/0c0d68543ca6d000 write:/users/0c0d68543ca6d000 read:orgs/8e706e7c04613c15/variables write:orgs/8e706e7c04613c15/variables read:orgs/8e706e7c04613c15/scrapers write:orgs/8e706e7c04613c15/scrapers read:orgs/8e706e7c04613c15/secrets write:orgs/8e706e7c04613c15/secrets read:orgs/8e706e7c04613c15/labels write:orgs/8e706e7c04613c15/labels read:orgs/8e706e7c04613c15/views write:orgs/8e706e7c04613c15/views read:orgs/8e706e7c04613c15/documents write:orgs/8e706e7c04613c15/documents read:orgs/8e706e7c04613c15/notificationRules write:orgs/8e706e7c04613c15/notificationRules read:orgs/8e706e7c04613c15/notificationEndpoints write:orgs/8e706e7c04613c15/notificationEndpoints read:orgs/8e706e7c04613c15/checks write:orgs/8e706e7c04613c15/checks read:orgs/8e706e7c04613c15/dbrp write:orgs/8e706e7c04613c15/dbrp read:orgs/8e706e7c04613c15/notebooks write:orgs/8e706e7c04613c15/notebooks read:orgs/8e706e7c04613c15/annotations write:orgs/8e706e7c04613c15/annotations read:orgs/8e706e7c04613c15/remotes write:orgs/8e706e7c04613c15/remotes read:orgs/8e706e7c04613c15/replications write:orgs/8e706e7c04613c15/replications]
 
-$ influx config create \
-  --config-name get-started \
+# Configure connection configuration preset to use.
+ansesowa@rpi-master:~ $ influx config create \
+  --config-name anesowa \
   --host-url http://localhost:8086 \
-  --org anesofi \
+  --org anesowa \
   --token MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==
 Active  Name            URL                     Org
-        get-started     http://localhost:8086   anesofi
+        anesowa         http://localhost:8086   anesowa
 
-$ influx bucket create --name get-started
-ID                      Name            Retention       Shard group duration    Organization ID         Schema Type
-a1bc7a05ece4216a        get-started     infinite        168h0m0s                8e706e7c04613c15        implicit
-
-influx write \
-  --bucket get-started \
-  --precision s "
-home,room=Living\ Room temp=21.1,hum=35.9,co=0i 1641024000
-home,room=Kitchen temp=21.0,hum=35.9,co=0i 1641024000
-home,room=Living\ Room temp=21.4,hum=35.9,co=0i 1641027600
-home,room=Kitchen temp=23.0,hum=36.2,co=0i 1641027600
-home,room=Living\ Room temp=21.8,hum=36.0,co=0i 1641031200
-home,room=Kitchen temp=22.7,hum=36.1,co=0i 1641031200
-home,room=Living\ Room temp=22.2,hum=36.0,co=0i 1641034800
-home,room=Kitchen temp=22.4,hum=36.0,co=0i 1641034800
-home,room=Living\ Room temp=22.2,hum=35.9,co=0i 1641038400
-home,room=Kitchen temp=22.5,hum=36.0,co=0i 1641038400
-home,room=Living\ Room temp=22.4,hum=36.0,co=0i 1641042000
-home,room=Kitchen temp=22.8,hum=36.5,co=1i 1641042000
-home,room=Living\ Room temp=22.3,hum=36.1,co=0i 1641045600
-home,room=Kitchen temp=22.8,hum=36.3,co=1i 1641045600
-home,room=Living\ Room temp=22.3,hum=36.1,co=1i 1641049200
-home,room=Kitchen temp=22.7,hum=36.2,co=3i 1641049200
-home,room=Living\ Room temp=22.4,hum=36.0,co=4i 1641052800
-home,room=Kitchen temp=22.4,hum=36.0,co=7i 1641052800
-home,room=Living\ Room temp=22.6,hum=35.9,co=5i 1641056400
-home,room=Kitchen temp=22.7,hum=36.0,co=9i 1641056400
-home,room=Living\ Room temp=22.8,hum=36.2,co=9i 1641060000
-home,room=Kitchen temp=23.3,hum=36.9,co=18i 1641060000
-home,room=Living\ Room temp=22.5,hum=36.3,co=14i 1641063600
-home,room=Kitchen temp=23.1,hum=36.6,co=22i 1641063600
-home,room=Living\ Room temp=22.2,hum=36.4,co=17i 1641067200
-home,room=Kitchen temp=22.7,hum=36.5,co=26i 1641067200
-"
-```
-
-Generate timestamps with:
-
-```
-$ date +%s
+# Generate timestamps with:
+ansesowa@rpi-master:~ $ date +%s
 1698755458
 
-cooper@neptune:~ $ influx write --bucket get-started --precision s "
-tacons,room=neus soroll=\"/path/to/file.wav\" $(date +%s)
+# Create an entry:
+anesowa@rpi-master:~ $ influx write --bucket anesowa --precision s "
+acons,sound=high_heel soundfile=\"/path/to/soundfile.wav\" $(date +%s)
 "
-```
 
-Using the Python client is easy:
-
-```
-import influxdb_client
-from influxdb_client.client.write_api import SYNCHRONOUS
-
-client = influxdb_client.InfluxDBClient(
-url="http://localhost:8086",
-org="anesofi",
-token="MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==",
-)
-
-write_api = client.write_api(write_options=SYNCHRONOUS)
-p = influxdb_client.Point("tacons").tag("room", "tete").field("soroll", "/to/file2.wav")
-write_api.write(bucket="get-started", org="anesofi", record=p)
-```
-
-Querying from the CLI:
-
-```
-(env) cooper@neptune:~ $ influx query 'from(bucket: "get-started") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "tacons")'
+# Querying:
+ansesowa@rpi-master:~ $ influx query 'from(bucket: "anesowa") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "annoying_sounds")'
 Result: \_result
 Table: keys: [_start, _stop, _field, _measurement, room]
 \_start:time \_stop:time \_field:string \_measurement:string room:string \_time:time \_value:string
@@ -532,6 +571,23 @@ Table: keys: [_start, _stop, _field, _measurement, room]
 ---
 
 2020-10-10T08:00:00.000000000Z 2024-10-10T08:00:00.000000000Z soroll tacons tete 2023-10-31T15:11:45.984090516Z /to/file2.wav
+```
+
+Using the Python client (`pip install influxdb-client`) is easy:
+
+```
+import influxdb_client
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+client = influxdb_client.InfluxDBClient(
+url="http://localhost:8086",
+org="anesowa",
+token="MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==",
+)
+
+write_api = client.write_api(write_options=SYNCHRONOUS)
+p = influxdb_client.Point("annoying_sounds").tag("sound", "high_heel").field("soundfile", "/to/file2.wav")
+write_api.write(bucket="anesowa", org="anesowa", record=p)
 
 ```
 
@@ -540,7 +596,7 @@ Table: keys: [_start, _stop, _field, _measurement, room]
 This project uses **NFS** for synchronizing the audio detections so they can be replayed
 in all the Raspberry Pis.
 
-The master Raspberry Pi should set up an NFS share mounted on `/mnt/nfs/anesofi` so that
+The master Raspberry Pi should set up an NFS share mounted on `/mnt/nfs/anesowa` so that
 all slaves can connect to it.
 
 Considerations:
@@ -574,10 +630,10 @@ Run this on the Raspberry Pi:
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install nfs-kernel-server -y
-sudo mkdir -p /mnt/nfs/anesofi
-sudo chown -R cooper:cooper /mnt/nfs/anesofi
-sudo find /mnt/nfs/anesofi/ -type d -exec chmod 755 {} \;
-sudo find /mnt/nfs/anesofi/ -type f -exec chmod 644 {} \;
+sudo mkdir -p /mnt/nfs/anesowa
+sudo chown -R cooper:cooper /mnt/nfs/anesowa
+sudo find /mnt/nfs/anesowa/ -type d -exec chmod 755 {} \;
+sudo find /mnt/nfs/anesowa/ -type f -exec chmod 644 {} \;
 
 ```
 
@@ -593,7 +649,7 @@ Open file `/etc/exports` and set this line, replacing `192.168.1/24` with your l
 network CIDR. This determines from where connections will be accepted:
 
 ```
-/mnt/nfs/anesofi 192.168.1.0/24(rw,all_squash,insecure,no_subtree_check,anonuid=1000,anongid=1000)
+/mnt/nfs/anesowa 192.168.1.0/24(rw,all_squash,insecure,no_subtree_check,anonuid=1000,anongid=1000)
 ```
 
 - `insecure` is needed otherwise from macOS I cannot connect from macOS.
@@ -607,7 +663,7 @@ sudo exportfs -ra
 ### Connecting from a macOS
 
 To connect using _File Explorer > Go > Connect to Server_ (<kbd>⌘</kbd> + <kbd>K</kbd>)
-and type in `nfs://neptune.local/mnt/nfs/anesofi`.
+and type in `nfs://neptune.local/mnt/nfs/anesowa`.
 
 ### Connecting from Other Raspberry Pi
 
@@ -622,9 +678,9 @@ sudo apt install nfs-common
 Then create a folder and mount the network volume to that folder:
 
 ```
-sudo mkdir -p /mnt/nfs/anesofi
-sudo chmod 755 /mnt/nfs/anesofi
-sudo mount -t nfs neptune.local:/mnt/nfs/anesofi /mnt/nfs/anesofi
+sudo mkdir -p /mnt/nfs/anesowa
+sudo chmod 755 /mnt/nfs/anesowa
+sudo mount -t nfs neptune.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
 ```
 
 ## Provisioning (Ansible)
@@ -732,32 +788,24 @@ jupyter notebook transfer_learning.ipynb
 cooper@neptune $ docker build
 ```
 
-```
-cooper@neptune $ read LOWERPORT UPPERPORT < /proc/sys/net/ipv4/ip_local_port_range
-cooper@neptune $ while : ; do   PULSE_PORT="`shuf -i $LOWERPORT-$UPPERPORT -n 1`";   ss -lpn | grep -q ":$PULSE_PORT " || break; done
-cooper@neptune $ echo $PULSE_PORT
-46412
-cooper@neptune $ ip -4 -o a | grep docker0 | awk '{print $4}'
-172.17.0.1/16
-```
-
 On one shell:
 
 ```
-cooper@neptune:~ $ pactl load-module module-native-protocol-tcp port=46412 auth-ip-acl=172.17.0.1/16
+cooper@neptune:~ $ pactl load-module module-native-protocol-tcp
 ```
 
 On the other:
 
 ```
-docker run --rm -it -e PULSE_SERVER=tcp:172.17.0.1:46412 \
+docker run --rm -it \
+  --add-host="host.docker.internal:host-gateway" \
+  -e PULSE_SERVER=host.docker.internal \
   -v /home/cooper/anesowa/microphone-sample.wav:/sample.wav \
-  anesowa/sound-detector:1.0.0 bash
-(inside docker) $  root@a40e6334361f:/anesowa/sound-detector# paplay /sample.wav
-(now it sounds on the speaker of the host!)
+  anesowa/sound-detector:1.0.0 paplay /sample.wav
 ```
 
-TODO: Move to config file so it runs at startup.
+You should have heard some sound coming from the container to the Raspberry Pi and then
+into the USB or Bluetooth speaker(s)!
 
 Sources:
 
