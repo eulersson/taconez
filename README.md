@@ -351,16 +351,16 @@ systemctl --user restart pulseaudio.service
 #### Persisting Audio Volume Levels
 
 First we need to disable a feature called **flat volumes** that will mess with the rest
-of volumes when you change a particular one. 
+of volumes when you change a particular one.
 
-> flat-volumes scales the device-volume with the volume of the "loudest" application.
-> For example, raising the VoIP call volume will raise the hardware volume and adjust
-> the music-player volume so it stays where it was, without having to lower the volume
-> of the music-player manually. Defaults to yes upstream, but to no within Arch. Note:
-> The default behavior upstream can sometimes be confusing and some applications,
-> unaware of this feature, can set their volume to 100% at startup, potentially blowing
-> your speakers or your ears. This is why Arch defaults to the classic (ALSA) behavior
-> by setting this to no.
+> **flat-volumes** scales the device-volume with the volume of the "loudest"
+> application. For example, raising the VoIP call volume will raise the hardware volume
+> and adjust the music-player volume so it stays where it was, without having to lower
+> the volume of the music-player manually. Defaults to yes upstream, but to no within
+> Arch. Note: The default behavior upstream can sometimes be confusing and some
+> applications, unaware of this feature, can set their volume to 100% at startup,
+> potentially blowing your speakers or your ears. This is why Arch defaults to the
+> classic (ALSA) behavior by setting this to no.
 
 ```
 ...
@@ -419,9 +419,9 @@ container is connecting the container as a client to a PulseAudio server running
 host.
 
 ```
-brew install pulseaudio
-brew services start pulseaudio
-paplay microphone-sample.wav
+eulersson@macbook:~ $ brew install pulseaudio
+eulersson@macbook:~ $ brew services start pulseaudio
+eulersson@macbook:~ $ paplay microphone-sample.wav
 ```
 
 Open `/usr/local/Cellar/pulseaudio/14.2_1/etc/pulse/default.pa` and uncomment:
@@ -438,8 +438,12 @@ Then from the container you can play a sound with `paplay`:
 eulersson@macbook:~/Devel/anesowa/sound-detector $ docker build -t anesowa/sound-detector:1.0.0 .
 eulersson@macbook:~/Devel/anesowa/sound-detector $ docker run --rm -it \
   -e PULSE_SERVER=host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
   -v $HOME/Devel/anesowa/microphone-sample.wav:/sample.wav \
   anesowa/sound-detector:1.0.0 paplay /sample.wav
+
+# NOTE: The host.docker.internal would not resolve in the Raspberry Pi, for that you
+# would need to pass the flag `--add-host="host.docker.internal:host-gateway"`
 ```
 
 You should have heard some sound coming from the container to the Raspberry Pi and then
@@ -507,7 +511,7 @@ remember the steps before writing the Ansible Playbook. Read
 Installing InfluxDB server:
 
 ```
-ansesowa@rpi-master:~ $ sudo apt update
+ansesowa@rpi-master:~ $ uudo apt update
 ansesowa@rpi-master:~ $ sudo apt upgrade
 ansesowa@rpi-master:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
 ansesowa@rpi-master:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
@@ -515,6 +519,19 @@ ansesowa@rpi-master:~ $ sudo apt install influxdb2
 ansesowa@rpi-master:~ $ sudo systemctl unmask influxdb
 ansesowa@rpi-master:~ $ sudo systemctl enable influxdb
 ansesowa@rpi-master:~ $ sudo systemctl start influxdb
+```
+
+```
+curl -O https://dl.influxdata.com/influxdb/releases/influxdb2_2.7.4-1_arm64.deb
+sudo dpkg -i influxdb2_2.7.4-1_arm64.deb
+sudo service influxdb start
+
+
+```
+
+```
+# amd64
+wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.3-linux-amd64.tar.gz
 ```
 
 ### Configuration
@@ -602,7 +619,7 @@ all slaves can connect to it.
 Considerations:
 
 - Only allow connecting within the local network.
-- Only allow the operating user of the stack (in my case `cooper`) to connect to it.
+- Only allow the operating user of the stack (in my case `anesowa`) to connect to it.
   When trying to connect from another environment the UNIX user and password will then
   be required instead of allowing anonymous connections.
 
@@ -631,7 +648,7 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install nfs-kernel-server -y
 sudo mkdir -p /mnt/nfs/anesowa
-sudo chown -R cooper:cooper /mnt/nfs/anesowa
+sudo chown -R anesowa:anesowa /mnt/nfs/anesowa
 sudo find /mnt/nfs/anesowa/ -type d -exec chmod 755 {} \;
 sudo find /mnt/nfs/anesowa/ -type f -exec chmod 644 {} \;
 
@@ -641,8 +658,8 @@ Get the user that will be used on anonymous users.
 
 ```
 # TODO: Do not allow anonymous access.
-id cooper
-# Output: <cooper-id>
+id anesowa
+# Output: <anesowa-id>
 ```
 
 Open file `/etc/exports` and set this line, replacing `192.168.1/24` with your local
@@ -663,7 +680,7 @@ sudo exportfs -ra
 ### Connecting from a macOS
 
 To connect using _File Explorer > Go > Connect to Server_ (<kbd>⌘</kbd> + <kbd>K</kbd>)
-and type in `nfs://neptune.local/mnt/nfs/anesowa`.
+and type in `nfs://rpi-master.local/mnt/nfs/anesowa`.
 
 ### Connecting from Other Raspberry Pi
 
@@ -680,7 +697,7 @@ Then create a folder and mount the network volume to that folder:
 ```
 sudo mkdir -p /mnt/nfs/anesowa
 sudo chmod 755 /mnt/nfs/anesowa
-sudo mount -t nfs neptune.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
+sudo mount -t nfs rpi-master.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
 ```
 
 ## Provisioning (Ansible)
@@ -749,6 +766,9 @@ sudo apt install cmake
 # If the Raspberry Pi is older than 4 (uses Debian bullseye intead of bookworm) you
 # will need to install libpulse-dev.
 sudo apt install libpulse-dev
+
+# On macOS you would need the pulse audio libraries too
+brew install pulseaudio
 ```
 
 Compile with:
@@ -785,13 +805,13 @@ jupyter notebook transfer_learning.ipynb
 ### Docker
 
 ```
-cooper@neptune $ docker build
+anesowa@rpi-master $ docker build
 ```
 
 On one shell:
 
 ```
-cooper@neptune:~ $ pactl load-module module-native-protocol-tcp
+anesowa@rpi-master:~ $ pactl load-module module-native-protocol-tcp
 ```
 
 On the other:
@@ -800,7 +820,8 @@ On the other:
 docker run --rm -it \
   --add-host="host.docker.internal:host-gateway" \
   -e PULSE_SERVER=host.docker.internal \
-  -v /home/cooper/anesowa/microphone-sample.wav:/sample.wav \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  -v $HOME/anesowa/microphone-sample.wav:/sample.wav \
   anesowa/sound-detector:1.0.0 paplay /sample.wav
 ```
 

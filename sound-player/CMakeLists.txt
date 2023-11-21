@@ -17,14 +17,18 @@ cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
 find_library(PULSEAUDIO_LIBRARY pulse)
 cmake_print_variables(PULSEAUDIO_LIBRARY)
 
+find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
+cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
+
 find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
-include_directories(${PULSEAUDIO_INCLUDE_DIRS})
+include_directories(${PULSEAUDIO_INCLUDE_DIR})
 
 set(SOURCE_FILES sound_player.c)
 
 add_executable(sound_player ${SOURCE_FILES})
 
-target_link_libraries(sound_player pulse-simple pulse)
+target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
+target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${ZMQ_LIBRARY})
