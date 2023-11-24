@@ -218,6 +218,20 @@ ansesowa@rpi-master:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWi
 ansesowa@rpi-master:~ $ speaker-test
 ```
 
+Get / set default sink (speaker output):
+
+```
+pactl get-default-sink
+pactl set-default-sink <sink-name>
+```
+
+Get / set default source (microphone input):
+
+```
+pactl get-default-source
+pactl set-default-source <sink-name>
+```
+
 ##### Reconnecting
 
 Raspberry Pi 4 seemed to reconnect to the speakers upon `rebooting`, but not on
@@ -494,8 +508,8 @@ I discarded them in [Discarded Tools](#discarded-tools).
 
 #### Poetry
 
-The `sound-detector` Python project uses `poetry` to handle dependencies. To develop
-on your local machine:
+The `sound-detector` Python project uses `poetry` to handle dependencies. To develop on
+your local machine:
 
 ```
 # Install dependencies. Poetry will place them on a virtual environment.
@@ -519,8 +533,10 @@ Path:       /Users/eulersson/.pyenv/versions/3.10.13
 Executable: /Users/eulersson/.pyenv/versions/3.10.13/bin/python3.10
 ```
 
-Now that you know the virtual env lives in `/Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10`
-add a `pyrightconfig.json` on the root of the Python project `~/Devel/anesowa/sound-detector/pyrightconfig.json`:
+Now that you know the virtual env lives in
+`/Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10`
+add a `pyrightconfig.json` on the root of the Python project
+`~/Devel/anesowa/sound-detector/pyrightconfig.json`:
 
 ```
 {
@@ -942,12 +958,22 @@ of the dependency resolution. Follow the
 [official instructions](https://python-poetry.org/docs/#installation):
 
 ```
+# On macOS / Linux:
+pip install
+
+
+# On Raspberry:
 pip install --upgrade pip \
  && pip install --upgrade keyrings.alt \ # TODO: Needed?
  && pip install poetry \
  && poetry config virtualenvs.create false \
  && poetry install --no-interaction
 ```
+
+**NOTE**: This will install only tflite-runtime and will not install the tensorflow core
+packages. If you want to install core packages (for development) then pass the
+dependency group on the CLI command `poetry install --with tensorflow-dev` (see
+`pyproject.toml`) to see the `tensorflow-dev` group.
 
 Now to install the dependencies on Raspberry Pi:
 
@@ -957,8 +983,14 @@ Now to install the dependencies on Raspberry Pi:
 #   https://stackoverflow.com/a/60804443
 #
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-poetry install
+poetry install # Choose whether you want tensorflow core packages with `--with tensorflow-dev`.
 ```
+
+### TensorFlow Lite
+
+- [Saving a Model](https://www.tensorflow.org/guide/keras/serialization_and_saving)
+- [Converting to a Lite Model](https://www.tensorflow.org/lite/models/convert/convert_models)
+- [Running Inference](https://www.tensorflow.org/lite/guide/python)
 
 ## Discarded Tools
 
