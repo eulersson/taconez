@@ -421,7 +421,7 @@ host.
 ```
 eulersson@macbook:~ $ brew install pulseaudio
 eulersson@macbook:~ $ brew services start pulseaudio
-eulersson@macbook:~ $ paplay microphone-sample.wav
+eulersson@macbook:~ $ paplay sample.wav
 ```
 
 Open `/usr/local/Cellar/pulseaudio/14.2_1/etc/pulse/default.pa` and uncomment:
@@ -439,7 +439,7 @@ eulersson@macbook:~/Devel/anesowa/sound-detector $ docker build -t anesowa/sound
 eulersson@macbook:~/Devel/anesowa/sound-detector $ docker run --rm -it \
   -e PULSE_SERVER=host.docker.internal \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
-  -v $HOME/Devel/anesowa/microphone-sample.wav:/sample.wav \
+  -v $HOME/Devel/anesowa/sample.wav:/sample.wav \
   anesowa/sound-detector:1.0.0 paplay /sample.wav
 
 # NOTE: The host.docker.internal would not resolve in the Raspberry Pi, for that you
@@ -464,7 +464,7 @@ Syncing the changes manually with `rsync`:
 
 ```
 eulersson@macbook:~ $ rsync \
-  -e "ssh -i ~/.ssh/raspberry_local" -azhP \
+  -e "ssh -i ~/.ssh/raspberrypi_key.pub" -azhP \
   --exclude "sound-player/build/" --exclude ".git/" --exclude "*.cache*" \
   . ansesowa@rpi-master.local:/home/user/anesowa
 ```
@@ -489,6 +489,47 @@ CONS:
 I also evaluated other workflows such as `lsyncd`, `distant` and `distant.nvim` or
 simply having a network volume and working on there but each had caveats. I explain why
 I discarded them in [Discarded Tools](#discarded-tools).
+
+### LSP Features
+
+#### Poetry
+
+The `sound-detector` Python project uses `poetry` to handle dependencies. To develop
+on your local machine:
+
+```
+# Install dependencies. Poetry will place them on a virtual environment.
+eulersson@macbook:~/Devel/anesowa $ poetry install
+
+# See where the virtual environment is installed.
+eulersson@macbook:~/Devel/anesowa $ poetry env info
+
+Virtualenv
+Python:         3.10.13
+Implementation: CPython
+Path:           /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10
+Executable:     /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10/bin/python
+Valid:          True
+
+System
+Platform:   darwin
+OS:         posix
+Python:     3.10.13
+Path:       /Users/eulersson/.pyenv/versions/3.10.13
+Executable: /Users/eulersson/.pyenv/versions/3.10.13/bin/python3.10
+```
+
+Now that you know the virtual env lives in `/Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10`
+add a `pyrightconfig.json` on the root of the Python project `~/Devel/anesowa/sound-detector/pyrightconfig.json`:
+
+```
+{
+   "venv" : "sound-detector-oq1WgInS-py3.11",
+   "venvPath" : "/Users/ramon/Library/Caches/pypoetry/virtualenvs"
+}
+```
+
+This will help `pyright` LSP to be able to understand and resolve the project.
 
 ## Database (InfluxDB)
 
@@ -817,12 +858,12 @@ anesowa@rpi-master:~ $ pactl load-module module-native-protocol-tcp
 On the other:
 
 ```
-docker run --rm -it \
+anesowa@rpi-master:~ $ docker run --rm -it \
   --add-host="host.docker.internal:host-gateway" \
   -e PULSE_SERVER=host.docker.internal \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
-  -v $HOME/anesowa/microphone-sample.wav:/sample.wav \
-  anesowa/sound-detector:1.0.0 paplay /sample.wav
+  -v /home/anesowa/sample.wav:/sample.wav \
+  anesowa/sound-player:1.0.0 paplay /sample.wav
 ```
 
 You should have heard some sound coming from the container to the Raspberry Pi and then
