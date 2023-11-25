@@ -12,13 +12,44 @@ import pandas as pd
 USE_TFLITE = os.getenv("USE_TFLITE", "True")
 USE_TFLITE = USE_TFLITE == "True" or USE_TFLITE == "1"
 
-FRAMES_PER_BUFFER = 3200
+FRAMES_PER_BUFFER = 3900
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-SECONDS = 1
+SECONDS = 0.975
 
 p = pyaudio.PyAudio()
+
+
+def model_predict(model, labels, waveform):
+    """
+    Args:
+        model (model or interpreter) TODO DOCUMENT THIS.
+        waveform (numpy.NDArray) An array with 0.975 seconds of silence as mono 16 kHz,
+            waveform samples, that is of shape (15600,) where each value is normalized
+            between -1.0 and 1.0.
+    """
+    if USE_TFLITE:
+        interpreter = model
+
+        input_details = interpreter.get_input_details()
+        waveform_input_index = input_details[0]["index"]
+        output_details = interpreter.get_output_details()
+        scores_output_index = output_details[0]["index"]
+
+        interpreter.set_tensor(waveform_input_index, waveform)
+        interpreter.invoke()
+
+        scores = interpreter.get_tensor(scores_output_index)
+        print(scores.shape)  # Should print (1, 521)
+
+        top_class_index = scores.argmax()
+        print(len(labels))  # Should print 521
+        print(labels[top_class_index])  # Should print 'Silence'.
+    else:
+        scores, embeddings, spectrogram = model(waveform)
+
+    return scores
 
 
 def load_model_and_labels():
@@ -34,7 +65,11 @@ def load_model_and_labels():
 
         import tflite_runtime.interpreter as tflite
 
+        labels_file = zipfile.ZipFile(model_path).open("yamnet_label_list.txt")
+        labels = [lab.decode("utf-8").strip() for lab in labels_file.readlines()]
+
         interpreter = tflite.Interpreter(model_path)
+
         input_details = interpreter.get_input_details()
         waveform_input_index = input_details[0]["index"]
         output_details = interpreter.get_output_details()
@@ -48,16 +83,7 @@ def load_model_and_labels():
             waveform_input_index, [waveform.size], strict=True
         )
         interpreter.allocate_tensors()
-        interpreter.set_tensor(waveform_input_index, waveform)
-        interpreter.invoke()
-        scores = interpreter.get_tensor(scores_output_index)
-        print(scores.shape)  # Should print (1, 521)
-
-        top_class_index = scores.argmax()
-        labels_file = zipfile.ZipFile(model_path).open("yamnet_label_list.txt")
-        labels = [lab.decode("utf-8").strip() for lab in labels_file.readlines()]
-        print(len(labels))  # Should print 521
-        print(labels[top_class_index])  # Should print 'Silence'.
+        model_predict(interpreter, labels, waveform)
 
         return interpreter, labels
     else:
@@ -70,6 +96,7 @@ def load_model_and_labels():
         class_names = list(pd.read_csv(class_map_path)["display_name"])
 
         return yamnet_model, class_names
+
 
 
 def write_audio(frames):
@@ -101,7 +128,10 @@ def record_audio():
     )
 
     frames = []
-    for i in range(0, RATE // FRAMES_PER_BUFFER * SECONDS):
+    # TODO: Improve this since now 16000 / 3900 * 0.975 = 4 (4.0), but if you change any
+    # variable it would lead to floating point values which would then skip reading the
+    # last needed chunk.
+    for i in range(0, int(RATE / FRAMES_PER_BUFFER * SECONDS) + 1):
         data = stream.read(FRAMES_PER_BUFFER)
         frames.append(data)
 
@@ -112,37 +142,30 @@ def record_audio():
 
     waveform = np.frombuffer(waveform_binary, dtype=np.int16)
     waveform = waveform / 32768
-    waveform = tf.convert_to_tensor(waveform, dtype=tf.float32)
+    waveform = waveform.astype(np.float32)
 
     return waveform, waveform_binary
 
 
-def detect_specific_sounds(detect_sounds=["Clip-clop"]):
+# TODO: Implement detect_sounds.
+def detect_specific_sounds(model, labels, detect_sounds=["Clip-clop"]):
     """
     Continuously records audio segments form the microphone and passes it to the model
     to see if the prediction catches the specific sound.
     """
     waveform, waveform_binary = record_audio()
 
-    prediction = model(waveform)
+    scores = model_predict(model, labels, waveform)
 
-    if USE_TFLITE:
-        scores = prediction
-    else:
-        scores, embeddings, spectrogram = prediction
-
-    import pdb
-
-    pdb.set_trace()
-    class_scores = tf.reduce_mean(scores, axis=0)
-    clip_clop_index = class_names.index("Clip-clop")
+    class_scores = np.mean(scores, axis=0)
+    clip_clop_index = labels.index("Clip-clop")
     print("Clip-clop index", clip_clop_index)
 
     clip_clop_prediction = class_scores[clip_clop_index]
     print("Clip-clop prediction", clip_clop_prediction)
 
-    top_class = tf.math.argmax(class_scores)
-    inferred_class = class_names[top_class]
+    top_class = np.argmax(class_scores)
+    inferred_class = labels[top_class]
 
     print(f"The main sound is: {inferred_class}")
 
@@ -153,5 +176,7 @@ def detect_specific_sounds(detect_sounds=["Clip-clop"]):
 
 
 if __name__ == "__main__":
+    model, labels = load_model_and_labels()
+
     while True:
-        command = detect_specific_sounds()
+        command = detect_specific_sounds(model, labels)
