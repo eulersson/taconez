@@ -73,9 +73,9 @@ Always a good idea to upgrade it to the latest and reboot the Raspberry Pi:
 
 ```
 eulersson@macbook:~ $ ssh -i ~/.ssh/raspberrypi_key anesowa@rpi-master.local
-ansesowa@rpi-master:~ $ sudo apt update
-ansesowa@rpi-master:~ $ sudo apt full-upgrade
-ansesowa@rpi-master:~ $ sudo reboot
+anesowa@rpi-master:~ $ sudo apt update
+anesowa@rpi-master:~ $ sudo apt full-upgrade
+anesowa@rpi-master:~ $ sudo reboot
 ```
 
 ## Sound & Multiple Bluetooth Speaker Setup
@@ -101,8 +101,8 @@ sound to so it can be played in various sound devices at once.
 
 Since our app will run on Docker containers that will use PyAudio to interact with the
 microphone and speakers we will have a bit of a challenge depending on whether the
-container host is Linux or non-Linux this is explained in
-[Docker Container Sound on Non-Linux Host](#docker-container-sound-on-non-linux-host).
+container host is Raspberry Pi OS or macOS this is explained in
+[Docker Container Sound on macOS Host](#docker-container-sound-on-macos-host).
 
 ### Installation
 
@@ -114,7 +114,7 @@ If not (in the case of older Raspberry Pi devices) you want to install **PulseAu
 well as the package that allows **PulseAudio** to setup Bluetooth audio:
 
 ```
-ansesowa@rpi-master:~ $ sudo apt install pulseaudio pulseaudio-module-bluetooth
+anesowa@rpi-master:~ $ sudo apt install pulseaudio pulseaudio-module-bluetooth
 ```
 
 ### Configuration
@@ -131,7 +131,7 @@ anesowa@rpi-master:~ $ sudo apt install pulseaudio-utils
 Plug the USB speaker and you should see it listed to be used as an audio sink:
 
 ```
-ansesowa@rpi-master:~ $ pactl list sinks short
+anesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 ```
@@ -143,7 +143,7 @@ which would need to be done manually on each Raspberry Pi. In the following exam
 can see how to connect a bluetooth device `JBL GO 2` with MAC ` F8:5C:7D:0F:6D:46`:
 
 ```
-ansesowa@rpi-master:~ $ bluetoothctl
+anesowa@rpi-master:~ $ bluetoothctl
 
 # Power on and start scanning until you find the JBL GO 2 you are looking for:
 
@@ -191,7 +191,7 @@ Connection successful
 If you have problems connecting the Bluetooth speaker check the service's logs:
 
 ```
-ansesowa@rpi-master:~ $ journalctl -u bluetooth.service
+anesowa@rpi-master:~ $ journalctl -u bluetooth.service
 ```
 
 For instance you might get:
@@ -211,7 +211,7 @@ having installed `pulseaudio` and `pulseaudio-module-bluetooth`. It got fixed af
 rebooting!
 
 ```
-ansesowa@rpi-master:~ $ pactl list sinks short
+anesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 80      bluez_output.F8_5C_7D_0F_6D_46.1        PipeWire        s16le 2ch 48000Hz       SUSPENDED
@@ -221,11 +221,11 @@ ansesowa@rpi-master:~ $ pactl list sinks short
 Try to play a sound to the new sink:
 
 ```
-ansesowa@rpi-master:~ $ pactl set-default-sink bluez_output.F8_5C_7D_0F_6D_46.1
-ansesowa@rpi-master:~ $ aplay /usr/share/sounds/alsa/Front_Center.wav # ALSA player
-ansesowa@rpi-master:~ $ paplay /usr/share/sounds/alsa/Front_center.wav # PulseAudio player
-ansesowa@rpi-master:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWire player
-ansesowa@rpi-master:~ $ speaker-test
+anesowa@rpi-master:~ $ pactl set-default-sink bluez_output.F8_5C_7D_0F_6D_46.1
+anesowa@rpi-master:~ $ aplay /usr/share/sounds/alsa/Front_Center.wav # ALSA player
+anesowa@rpi-master:~ $ paplay /usr/share/sounds/alsa/Front_center.wav # PulseAudio player
+anesowa@rpi-master:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWire player
+anesowa@rpi-master:~ $ speaker-test
 ```
 
 #### Default Sink (Sound Output) & Default Source (Sound Input)
@@ -235,8 +235,8 @@ Get sinks and get / set default sink (speaker output):
 ```
 pactl list sinks short # Omit `short` for a more detailed output.
 
-pactl get-default-sink
-pactl set-default-sink <sink-name>
+anesowa@rpi-master:~ $ pactl get-default-sink
+anesowa@rpi-master:~ $ pactl set-default-sink <sink-name>
 ```
 
 Get / set default source (microphone input):
@@ -244,8 +244,8 @@ Get / set default source (microphone input):
 ```
 pactl list sources short # Omit `short` for a more detailed output.
 
-pactl get-default-source
-pactl set-default-source <sink-name>
+anesowa@rpi-master:~ $ pactl get-default-source
+anesowa@rpi-master:~ $ pactl set-default-source <sink-name>
 ```
 
 ##### Reconnecting
@@ -263,7 +263,7 @@ To be able to play a sound to two or more speakers you can create a combined sin
 ```
 # Combine all available sinks:
 
-ansesowa@rpi-master:~ $ pactl load-module module-combine-sink
+anesowa@rpi-master:~ $ pactl load-module module-combine-sink
 536870913
 
 # NOTE: You can pass arguments to the module-combine-sink arguments to select what
@@ -276,7 +276,7 @@ ansesowa@rpi-master:~ $ pactl load-module module-combine-sink
 Now check if it has been created:
 
 ```
-ansesowa@rpi-master:~ $ pactl list sinks short
+anesowa@rpi-master:~ $ pactl list sinks short
 67      alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo  PipeWire        s16le 2ch 48000Hz       SUSPENDED
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 80      bluez_output.F8_5C_7D_0F_6D_46.1        PipeWire        s16le 2ch 48000Hz       SUSPENDED
@@ -287,13 +287,13 @@ ansesowa@rpi-master:~ $ pactl list sinks short
 Select it to be the default sink:
 
 ```
-ansesowa@rpi-master:~ $ pactl set-default-sink combined-sink
+anesowa@rpi-master:~ $ pactl set-default-sink combined-sink
 ```
 
 To play sound to it:
 
 ```
-ansesowa@rpi-master:~ $ speaker-test
+anesowa@rpi-master:~ $ speaker-test
 ```
 
 #### Persisting Configuration
@@ -431,6 +431,8 @@ $ pactl set-sink-volume combined-sink 65536
 If you reboot, even if the bluetooth speaker disconnects it seems to retain the volume
 level set with the `set-sink-volume` command.
 
+## Docker Container Sound
+
 ### Docker Container Sound on Raspberry Pi
 
 Make sure the PulseAudio server process is running on the host and that you have placed
@@ -441,19 +443,40 @@ protocol:
 load-module module-native-protocol-tcp
 ```
 
+Make sure the correct microphone and speakers are set as default sink and source. Read
+the following section of this README.md to see how to configure it:
+
+- [Default Sink (Sound Output) & Default Source (Sound Input)](#default-sink-sound-output--default-source-sound-input)
+
+If you want to test that that the PulseAudio on the host is setup correctly try to
+record a microphone sample and play it back:
+
+```
+anesowa@rpi-master:~/anesowa $ parecord hello.wav
+anesowa@rpi-master:~/anesowa $ paplay hello.wav
+```
+
 If so you can use the PulseAudio server on the host and the container be its client:
 
 ```
-anesowa@rpi-master:~/anesowa/sound-detector $ docker build -t anesowa/sound-detector:1.0.0 .
-anesowa@rpi-master:~/anesowa/sound-detector $ docker run --rm -it \
-  --add-host="host.docker.internal:host-gateway" \
-  -e PULSE_SERVER=host.docker.internal \
-  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
-  -v $HOME/Devel/anesowa/sample.wav:/sample.wav \
-  anesowa/sound-detector:1.0.0 paplay /sample.wav
+anesowa@rpi-master:~/anesowa $ docker build -t anesowa/sound-detector:1.0.0 ./sound-detector
 
 # NOTE: The host.docker.internal would not resolve in the Raspberry Pi, for that you
 # would need to pass the flag `--add-host`.
+anesowa@rpi-master:~/anesowa $ docker run --rm -it \
+  --add-host host.docker.internal:host-gateway \
+  -e PULSE_SERVER host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  anesowa/sound-detector:1.0.0 bash
+
+# From this point on we are inside the container. Try to record and play from it!
+root@460b1452b6ba:/anesowa/sound-detector# apt-get install pulseaudio-utils
+root@460b1452b6ba:/anesowa/sound-detector# parecord hello.wav
+root@460b1452b6ba:/anesowa/sound-detector# paplay hello.wav
+
+# You can run the app if it went good! Run it like this or simply do not pass anything
+# after the `anesowa/sound-detector:1.0.0` argument in the `docker run` command.
+root@460b1452b6ba:/anesowa/sound-detector# python sound_detector.py
 ```
 
 Sources:
@@ -462,9 +485,7 @@ Sources:
 - [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
 - [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
 
-## Development Workflow
-
-### Docker Container Sound on Non-Linux Host
+### Docker Container Sound on macOS Host
 
 If you are developing on a macOS you might find trouble accessing the host microphone
 and audio playback device.
@@ -486,6 +507,19 @@ Open `/usr/local/Cellar/pulseaudio/14.2_1/etc/pulse/default.pa` and uncomment:
 
 ```
 load-module module-native-protocol-tcp
+```
+
+Make sure the correct microphone and speakers are set as default sink and source. Read
+the following section of this README.md to see how to configure it:
+
+- [Default Sink (Sound Output) & Default Source (Sound Input)](#default-sink-sound-output--default-source-sound-input)
+
+If you want to test that that the PulseAudio on the host is setup correctly try to
+record a microphone sample and play it back:
+
+```
+eulersson@macbook:~ $ parecord hello.wav
+eulersson@macbook:~ $ paplay hello.wav
 ```
 
 Now the PulseAudio server is reachable through TCP, so the container can speak to it.
@@ -528,24 +562,43 @@ eulersson@macbook:~ $ pactl set-default-source Channel_1.2
 Then from the container you can play a sound with `paplay`:
 
 ```
-eulersson@macbook:~/Devel/anesowa/sound-detector $ docker build -t anesowa/sound-detector:1.0.0 .
-eulersson@macbook:~/Devel/anesowa/sound-detector $ docker run --rm -it \
-  -e PULSE_SERVER=host.docker.internal \
-  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
-  -v $HOME/Devel/anesowa/sample.wav:/sample.wav \
-  anesowa/sound-detector:1.0.0 paplay /sample.wav
+eulersson@macbook:~/Devel/anesowa $ docker build \
+  -t anesowa/sound-detector:1.0.0 \
+  --build-arg DEBUG=1 \
+  --build-arg INSTALL_DEV_DEPS=1 \
+  --build-arg USE_TFLITE=0 \
+  ./sound-detector
 
 # NOTE: The host.docker.internal would not resolve in the Raspberry Pi, for that you
 # would need to pass the flag `--add-host="host.docker.internal:host-gateway"`
-```
+eulersson@macbook:~/Devel/anesowa $ docker run --rm -it \
+  -e PULSE_SERVER=host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  anesowa/sound-detector:1.0.0 bash
 
-You should have heard some sound coming from the container to the macOS speakers!
+# From this point on we are inside the container. Try to record and play from it!
+root@460b1452b6ba:/anesowa/sound-detector# apt-get install pulseaudio-utils
+root@460b1452b6ba:/anesowa/sound-detector# parecord hello.wav
+root@460b1452b6ba:/anesowa/sound-detector# paplay hello.wav
+
+# You can run the app if it went good! Run it like this or simply do not pass anything
+# after the `anesowa/sound-detector:1.0.0` argument in the `docker run` command.
+root@460b1452b6ba:/anesowa/sound-detector# python sound_detector.py
+```
 
 Sources:
 
 - [Container sound: ALSA or Pulseaudio](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
 - [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
 - [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
+
+## Development Workflow
+
+### Microphone & Speaker
+
+Read the guide on [Docker Container Sound](#docker-container-sound) to make sure you
+have PulseAudio installed on your host machine with the `module-native-protocol-tcp`
+enabled.
 
 ### Iterative Development
 
@@ -557,13 +610,13 @@ Syncing the changes manually with `rsync`:
 eulersson@macbook:~ $ rsync \
   -e "ssh -i ~/.ssh/raspberrypi_key.pub" -azhP \
   --exclude "sound-player/build/" --exclude ".git/" --exclude "*.cache*" \
-  . ansesowa@rpi-master.local:/home/user/anesowa
+  . anesowa@rpi-master.local:/home/user/anesowa
 ```
 
 Then running the corresponding `docker run` volume-binding the project folder:
 
 ```
-ansesowa@rpi-master:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
+anesowa@rpi-master:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
 ```
 
 PROS:
@@ -645,14 +698,14 @@ remember the steps before writing the Ansible Playbook. Read
 Installing InfluxDB server:
 
 ```
-ansesowa@rpi-master:~ $ uudo apt update
-ansesowa@rpi-master:~ $ sudo apt upgrade
-ansesowa@rpi-master:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
-ansesowa@rpi-master:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
-ansesowa@rpi-master:~ $ sudo apt install influxdb2
-ansesowa@rpi-master:~ $ sudo systemctl unmask influxdb
-ansesowa@rpi-master:~ $ sudo systemctl enable influxdb
-ansesowa@rpi-master:~ $ sudo systemctl start influxdb
+anesowa@rpi-master:~ $ uudo apt update
+anesowa@rpi-master:~ $ sudo apt upgrade
+anesowa@rpi-master:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
+anesowa@rpi-master:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+anesowa@rpi-master:~ $ sudo apt install influxdb2
+anesowa@rpi-master:~ $ sudo systemctl unmask influxdb
+anesowa@rpi-master:~ $ sudo systemctl enable influxdb
+anesowa@rpi-master:~ $ sudo systemctl start influxdb
 ```
 
 ```
@@ -672,7 +725,7 @@ wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.3-linux-am
 
 ```
 # Setup instance with initial user, org, bucket.
-ansesowa@rpi-master:~ $ influx setup \
+anesowa@rpi-master:~ $ influx setup \
   --username anesowa \
   --password ">R7#$gjf>2@dLXUU<" \
   --token XwSAJxRKHFkFL9wLiA4pPrDeXed
@@ -681,7 +734,7 @@ ansesowa@rpi-master:~ $ influx setup \
   --force
 
 # Create an All Access API Token to use when creating resources on the database.
-ansesowa@rpi-master:~ $ influx auth create \
+anesowa@rpi-master:~ $ influx auth create \
   --all-access \
   --host http://localhost:8086 \
   --org anesowa \
@@ -690,7 +743,7 @@ ID                      Description     Token                                   
 0c0d6b05a3a6d000                        MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==        supermaster          0c0d68543ca6d000        [read:orgs/8e706e7c04613c15/authorizations write:orgs/8e706e7c04613c15/authorizations read:orgs/8e706e7c04613c15/buckets write:orgs/8e706e7c04613c15/buckets read:orgs/8e706e7c04613c15/dashboards write:orgs/8e706e7c04613c15/dashboards read:/orgs/8e706e7c04613c15 read:orgs/8e706e7c04613c15/sources write:orgs/8e706e7c04613c15/sources read:orgs/8e706e7c04613c15/tasks write:orgs/8e706e7c04613c15/tasks read:orgs/8e706e7c04613c15/telegrafs write:orgs/8e706e7c04613c15/telegrafs read:/users/0c0d68543ca6d000 write:/users/0c0d68543ca6d000 read:orgs/8e706e7c04613c15/variables write:orgs/8e706e7c04613c15/variables read:orgs/8e706e7c04613c15/scrapers write:orgs/8e706e7c04613c15/scrapers read:orgs/8e706e7c04613c15/secrets write:orgs/8e706e7c04613c15/secrets read:orgs/8e706e7c04613c15/labels write:orgs/8e706e7c04613c15/labels read:orgs/8e706e7c04613c15/views write:orgs/8e706e7c04613c15/views read:orgs/8e706e7c04613c15/documents write:orgs/8e706e7c04613c15/documents read:orgs/8e706e7c04613c15/notificationRules write:orgs/8e706e7c04613c15/notificationRules read:orgs/8e706e7c04613c15/notificationEndpoints write:orgs/8e706e7c04613c15/notificationEndpoints read:orgs/8e706e7c04613c15/checks write:orgs/8e706e7c04613c15/checks read:orgs/8e706e7c04613c15/dbrp write:orgs/8e706e7c04613c15/dbrp read:orgs/8e706e7c04613c15/notebooks write:orgs/8e706e7c04613c15/notebooks read:orgs/8e706e7c04613c15/annotations write:orgs/8e706e7c04613c15/annotations read:orgs/8e706e7c04613c15/remotes write:orgs/8e706e7c04613c15/remotes read:orgs/8e706e7c04613c15/replications write:orgs/8e706e7c04613c15/replications]
 
 # Configure connection configuration preset to use.
-ansesowa@rpi-master:~ $ influx config create \
+anesowa@rpi-master:~ $ influx config create \
   --config-name anesowa \
   --host-url http://localhost:8086 \
   --org anesowa \
@@ -699,7 +752,7 @@ Active  Name            URL                     Org
         anesowa         http://localhost:8086   anesowa
 
 # Generate timestamps with:
-ansesowa@rpi-master:~ $ date +%s
+anesowa@rpi-master:~ $ date +%s
 1698755458
 
 # Create an entry:
@@ -708,7 +761,7 @@ acons,sound=high_heel soundfile=\"/path/to/soundfile.wav\" $(date +%s)
 "
 
 # Querying:
-ansesowa@rpi-master:~ $ influx query 'from(bucket: "anesowa") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "annoying_sounds")'
+anesowa@rpi-master:~ $ influx query 'from(bucket: "anesowa") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "annoying_sounds")'
 Result: \_result
 Table: keys: [_start, _stop, _field, _measurement, room]
 \_start:time \_stop:time \_field:string \_measurement:string room:string \_time:time \_value:string
@@ -944,7 +997,7 @@ jupyter notebook transfer_learning.ipynb
 ### Docker
 
 ```
-anesowa@rpi-master $ docker build
+anesowa@rpi-master:~/anesowa $ docker build -t anesowa/sound-player:1.0.0 ./sound-player
 ```
 
 On one shell:
@@ -957,11 +1010,10 @@ On the other:
 
 ```
 anesowa@rpi-master:~ $ docker run --rm -it \
-  --add-host="host.docker.internal:host-gateway" \
-  -e PULSE_SERVER=host.docker.internal \
+  --add-host host.docker.internal:host-gateway \
+  -e PULSE_SERVER host.docker.internal \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
-  -v /home/anesowa/sample.wav:/sample.wav \
-  anesowa/sound-player:1.0.0 paplay /sample.wav
+  anesowa/sound-detector:1.0.0
 ```
 
 You should have heard some sound coming from the container to the Raspberry Pi and then

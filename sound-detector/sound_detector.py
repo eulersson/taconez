@@ -72,8 +72,6 @@ def load_model_and_labels():
 
         input_details = interpreter.get_input_details()
         waveform_input_index = input_details[0]["index"]
-        output_details = interpreter.get_output_details()
-        scores_output_index = output_details[0]["index"]
 
         # Input: 0.975 seconds of silence as mono 16 kHz waveform samples.
         waveform = np.zeros(int(round(0.975 * 16000)), dtype=np.float32)
