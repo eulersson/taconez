@@ -596,6 +596,104 @@ Sources:
 
 ## Development Workflow
 
+### Container Development
+
+Thanks to this
+[reddit comment](https://www.reddit.com/r/neovim/comments/y1hryr/comment/iry6c0q/) we
+see it's possible to run a language server within our app's container and tell our IDE
+to connect to it.
+
+First build the container:
+
+```
+eulersson@macbook:~/Devel/anesowa $ docker build \
+  --build-arg="DEBUG=1" \
+  --build-arg="INSTALL_DEV_DEPS=1" \
+  --build-arg="USE_TFLITE=0" \
+  -t anesowa/sound-detector:1.0.0-dev \
+  ./sound-detector
+```
+
+Then run a container as follows:
+
+```
+eulersson@macbook:~/Devel/anesowa $ docker run -it \
+  --name anesowa-pyright-dev-container \
+  -v $(pwd):/anesowa/sound-detector \
+  --add-host dev-hack:127.0.0.1 \
+  --net host \
+  --hostname dev-hack \
+  --entrypoint /bin/bash \
+  --init \
+  --detach \
+  anesowa/sound-detector:1.0.0-dev
+```
+
+When you are done you working remember to stop and delete the container:
+
+```
+eulersson@macbook:~ $ docker stop --time 0 anesowa-pyright-dev-container
+eulersson@macbook:~ $ docker rm anesowa-pyright-dev-container
+```
+
+Now depending on your IDE the steps will differ, but basically you need to configure the
+pyright language server command to be the one from the container using `docker exec`:
+
+#### LunarVim / NeoVim
+
+If using LunarVim open up `~/.config/lvim/config.lua` and add these lines:
+
+```lua
+require("lvim.lsp.manager").setup("pyright", {
+  -- TODO: I still haven't figured out yet is how to switch the cmd out on a per project
+  -- basis. I'd like to only use this weird pyright setup in my main dev project, but
+  -- then use regular (Mason installed) pyright outside of docker in general.
+  cmd = {
+    "docker",
+    "exec",
+    "-i",
+    "anesowa-pyright-dev-container",
+    "pyright-langserver",
+    "--stdio",
+  },
+  single_file_support = true,
+  settings = {
+    pyright = {
+      disableLanguageServices = false,
+      disableOrganizeImports = false
+    },
+    python = {
+      analysis = {
+        autoImportCompletions = true,
+        autoSearchPaths = true,
+        diagnosticMode = "workspace", -- openFilesOnly, workspace
+        typeCheckingMode = "basic",   -- off, basic, strict
+        useLibraryCodeForTypes = true
+      }
+    }
+  },
+  before_init = function(params)
+    -- LSP spec has a default flag that will cause you some trouble; if an LSP server
+    -- can't find its parent's processId, it will shut itself down after a second or so.
+    -- You need to tell it to ignore the processId shutdown behaviour (or start your
+    -- docker container to share the process space with your host).
+    params.processId = vim.NIL
+  end,
+})
+```
+
+**TODO**: Chose the pyright container execution on a per-project basis, and if not
+defined then use the regular way by using the one installed by the Mason in LunarVim.
+
+If using NeoVim open up your lua file, e.g. `~/.config/nvim/init.lua` and add:
+
+```
+local lspconfig = require('lspconfig')
+lspconfig.pyright.setup {
+  ... <PUT HERE THE { cmd {...}, settings {...}, python {...} ... } AFOREMENTIONED> ...
+}
+```
+
 ### Microphone & Speaker
 
 Read the guide on [Docker Container Sound](#docker-container-sound) to make sure you
