@@ -481,6 +481,7 @@ root@460b1452b6ba:/anesowa/sound-detector# python sound_detector.py
 
 Sources:
 
+- [Using pulseaudio in docker container ](https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c)
 - [Container sound: ALSA or Pulseaudio](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
 - [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
 - [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
@@ -588,6 +589,7 @@ root@460b1452b6ba:/anesowa/sound-detector# python sound_detector.py
 
 Sources:
 
+- [Using pulseaudio in docker container ](https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c)
 - [Container sound: ALSA or Pulseaudio](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
 - [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
 - [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
@@ -969,7 +971,7 @@ cmake --build build --verbose
 
 ## Sound Detector
 
-ADVICE: Generate the `poetry.lock` from the container running in the Raspberry Pi.
+**ADVICE**: Generate the `poetry.lock` from the container running in the Raspberry Pi.
 
 Live recording the microphone with
 [pyaudio](https://people.csail.mit.edu/hubert/pyaudio/) feeding it to a TensorFlow
@@ -1015,15 +1017,6 @@ anesowa@rpi-master:~ $ docker run --rm -it \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
   anesowa/sound-detector:1.0.0
 ```
-
-You should have heard some sound coming from the container to the Raspberry Pi and then
-into the USB or Bluetooth speaker(s)!
-
-Sources:
-
-- https://stackoverflow.com/a/39780130/2649699
-- https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c
-- https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
 ### Dependencies
 
