@@ -1,12 +1,15 @@
-.DS_Store
-
 .git/
 
+.DS_Store
+
 *.drawio.bkp
+
+__pycache__/
+.ipynb_checkpoints/
 .python-version
 pyrightconfig.json
 
-sound-player/.cache/
-sound-player/build/
+.cache/
+build/
 
-sound-detector/.ipynb_checkpoints/
+yamnet-classification.tflite

@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10,<3.11"
 pyaudio = "^0.2.14"
-tflite-runtime = { version = "~2.13.0", platform = "linux", markers = "platform_machine=='arm64' or platform_machine=='aarch64'"}
+tflite-runtime = "~2.13.0"
 
 # You can install all the tensorflow (not only the tensorflow lite) by passing `--with tensorflow-dev`
 # when running `poetry install`.

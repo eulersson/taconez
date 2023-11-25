@@ -99,6 +99,11 @@ both to manage the sound pipelines better.
 What we are interested in this guide is to create a combined audio sink that send the
 sound to so it can be played in various sound devices at once.
 
+Since our app will run on Docker containers that will use PyAudio to interact with the
+microphone and speakers we will have a bit of a challenge depending on whether the
+container host is Linux or non-Linux this is explained in
+[Docker Container Sound on Non-Linux Host](#docker-container-sound-on-non-linux-host).
+
 ### Installation
 
 Usually you should have the **PulseAudio** server running by default, check that with
@@ -114,7 +119,12 @@ ansesowa@rpi-master:~ $ sudo apt install pulseaudio pulseaudio-module-bluetooth
 
 ### Configuration
 
-You will be playing with the various PulseAudio utils such as `pactl`, `paplay`, ...
+You will be playing with the various PulseAudio utils such as `pactl`, `paplay`, ... so
+make sure the `pulseaudio-utils` are installed, which should be:
+
+```
+anesowa@rpi-master:~ $ sudo apt install pulseaudio-utils
+```
 
 #### USB Speaker
 
@@ -218,9 +228,13 @@ ansesowa@rpi-master:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWi
 ansesowa@rpi-master:~ $ speaker-test
 ```
 
-Get / set default sink (speaker output):
+#### Default Sink (Sound Output) & Default Source (Sound Input)
+
+Get sinks and get / set default sink (speaker output):
 
 ```
+pactl list sinks short # Omit `short` for a more detailed output.
+
 pactl get-default-sink
 pactl set-default-sink <sink-name>
 ```
@@ -228,6 +242,8 @@ pactl set-default-sink <sink-name>
 Get / set default source (microphone input):
 
 ```
+pactl list sources short # Omit `short` for a more detailed output.
+
 pactl get-default-source
 pactl set-default-source <sink-name>
 ```
@@ -415,12 +431,40 @@ $ pactl set-sink-volume combined-sink 65536
 If you reboot, even if the bluetooth speaker disconnects it seems to retain the volume
 level set with the `set-sink-volume` command.
 
+### Docker Container Sound on Raspberry Pi
+
+Make sure the PulseAudio server process is running on the host and that you have placed
+a file on `/etc/pulse/default.pa.d/enable-tcp.pa` and specified to enable the `tcp`
+protocol:
+
+```
+load-module module-native-protocol-tcp
+```
+
+If so you can use the PulseAudio server on the host and the container be its client:
+
+```
+anesowa@rpi-master:~/anesowa/sound-detector $ docker build -t anesowa/sound-detector:1.0.0 .
+anesowa@rpi-master:~/anesowa/sound-detector $ docker run --rm -it \
+  --add-host="host.docker.internal:host-gateway" \
+  -e PULSE_SERVER=host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  -v $HOME/Devel/anesowa/sample.wav:/sample.wav \
+  anesowa/sound-detector:1.0.0 paplay /sample.wav
+
+# NOTE: The host.docker.internal would not resolve in the Raspberry Pi, for that you
+# would need to pass the flag `--add-host`.
+```
+
+Sources:
+
+- [Container sound: ALSA or Pulseaudio](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
+- [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
+- [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
+
 ## Development Workflow
 
-### macOS & Docker Container Sound
-
-The apps are containerized so we don't have to depend on the system versions of the
-upcoming Raspberry Pi OS updates.
+### Docker Container Sound on Non-Linux Host
 
 If you are developing on a macOS you might find trouble accessing the host microphone
 and audio playback device.
@@ -444,7 +488,42 @@ Open `/usr/local/Cellar/pulseaudio/14.2_1/etc/pulse/default.pa` and uncomment:
 load-module module-native-protocol-tcp
 ```
 
+Now the PulseAudio server is reachable through TCP, so the container can speak to it.
+
 Restart the service with `brew services restart pulseaudio`.
+
+Make sure to configure the `MacBook Pro Speakers` and `MacBook Pro Microphone` as the
+default sink and source respectively:
+
+```
+# Find out the identifier for the MacBook Pro Speakers sink:
+eulersson@macbook:~ $ pactl list sinks
+Sink #0
+        ...
+        Name: 1__2
+        Description: MacBook Pro Speakers
+        ...
+Sink #1
+...
+Sink #4
+
+# Set it as default sink:
+eulersson@macbook:~ $ pactl set-default-sink 1__2
+
+# Find out the identifier for the MacBook Pro Microphone source:
+$eulersson@macbook:~ $ pactl list sources
+Source #1
+Source #2
+        ...
+        Name: Channel_1.2
+        Description: MacBook Pro Microphone
+        ...
+...
+Source #14
+
+# Set it as default source:
+eulersson@macbook:~ $ pactl set-default-source Channel_1.2
+```
 
 Then from the container you can play a sound with `paplay`:
 
@@ -460,15 +539,13 @@ eulersson@macbook:~/Devel/anesowa/sound-detector $ docker run --rm -it \
 # would need to pass the flag `--add-host="host.docker.internal:host-gateway"`
 ```
 
-You should have heard some sound coming from the container to the Raspberry Pi and then
-into the USB or Bluetooth speaker(s)!
+You should have heard some sound coming from the container to the macOS speakers!
 
 Sources:
 
-- https://stackoverflow.com/a/40139001
-- https://stackoverflow.com/a/39780130/2649699
-- https://gist.github.com/janvda/e877ee01686697ceaaabae0f3f87da9c
-- https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
+- [Container sound: ALSA or Pulseaudio](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
+- [How to expose audio from Docker container to a Mac?](https://stackoverflow.com/a/40139001)
+- [Run apps using audio in a docker container](https://stackoverflow.com/a/39780130/2649699)
 
 ### Iterative Development
 
@@ -839,6 +916,8 @@ cmake --build build --verbose
 
 ## Sound Detector
 
+ADVICE: Generate the `poetry.lock` from the container running in the Raspberry Pi.
+
 Live recording the microphone with
 [pyaudio](https://people.csail.mit.edu/hubert/pyaudio/) feeding it to a TensorFlow
 YAMNet retrained model.
@@ -852,6 +931,9 @@ it down to my particular case of high heel detection.
 - [Realtime Voice Command Recognition](https://github.com/AssemblyAI-Examples/realtime-voice-command-recognition)
 - [Quickstart for Linux-based devices with Python](https://www.tensorflow.org/lite/guide/python)
 - [Simple Audio Recognition on a Raspberry Pi using Machine Learning (I2S, TensorFlow Lite)](https://electronut.in/audio-recongnition-ml/)
+- [Download TF Lite from TF Hubt](https://www.kaggle.com/models/google/yamnet/frameworks/tfLite)
+- [TensorFlow Lite Python audio classification example with Raspberry Pi](https://github.com/tensorflow/examples/tree/master/lite/examples/audio_classification/raspberry_pi)
+- [Model I/O](https://www.tensorflow.org/lite/guide/inference#load_and_run_a_model_in_python)
 
 To run the Jupyter Notebook you will need the pip `notebook` package installed, then:
 

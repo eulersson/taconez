@@ -1,15 +1,16 @@
-import time
+import os
 import datetime
+import urllib.request
+import wave
+import zipfile
 
 import pyaudio
+
 import numpy as np
 import pandas as pd
 
-import wave
-
-import tensorflow as tf
-import tensorflow_hub as tfhub
-import tensorflow_io as tfio
+USE_TFLITE = os.getenv("USE_TFLITE", "True")
+USE_TFLITE = USE_TFLITE == "True" or USE_TFLITE == "1"
 
 FRAMES_PER_BUFFER = 3200
 FORMAT = pyaudio.paInt16
@@ -21,14 +22,54 @@ p = pyaudio.PyAudio()
 
 
 def load_model_and_labels():
-    yamnet_model_handle = "https://tfhub.dev/google/yamnet/1"
-    yamnet_model = tfhub.load(yamnet_model_handle)
-    class_map_path = yamnet_model.class_map_path().numpy().decode("utf-8")
-    class_names = list(pd.read_csv(class_map_path)["display_name"])
-    return yamnet_model, class_names
+    if USE_TFLITE:
+        model_path = os.path.join(
+            os.path.dirname(__file__), "yamnet-classification.tflite"
+        )
+        if not os.path.exists(model_path):
+            urllib.request.urlretrieve(
+                "https://www.kaggle.com/models/google/yamnet/frameworks/TfLite/variations/classification-tflite/versions/1/download",
+                model_path,
+            )
 
+        import tflite_runtime.interpreter as tflite
 
-model, class_names = load_model_and_labels()
+        interpreter = tflite.Interpreter(model_path)
+        input_details = interpreter.get_input_details()
+        waveform_input_index = input_details[0]["index"]
+        output_details = interpreter.get_output_details()
+        scores_output_index = output_details[0]["index"]
+
+        # Input: 0.975 seconds of silence as mono 16 kHz waveform samples.
+        waveform = np.zeros(int(round(0.975 * 16000)), dtype=np.float32)
+        print(waveform.shape)  # Should print (15600,)
+
+        interpreter.resize_tensor_input(
+            waveform_input_index, [waveform.size], strict=True
+        )
+        interpreter.allocate_tensors()
+        interpreter.set_tensor(waveform_input_index, waveform)
+        interpreter.invoke()
+        scores = interpreter.get_tensor(scores_output_index)
+        print(scores.shape)  # Should print (1, 521)
+
+        top_class_index = scores.argmax()
+        labels_file = zipfile.ZipFile(model_path).open("yamnet_label_list.txt")
+        labels = [lab.decode("utf-8").strip() for lab in labels_file.readlines()]
+        print(len(labels))  # Should print 521
+        print(labels[top_class_index])  # Should print 'Silence'.
+
+        return interpreter, labels
+    else:
+        import tensorflow_hub as tfhub
+
+        yamnet_model_handle = "https://tfhub.dev/google/yamnet/1"
+        yamnet_model = tfhub.load(yamnet_model_handle)
+
+        class_map_path = yamnet_model.class_map_path().numpy().decode("utf-8")
+        class_names = list(pd.read_csv(class_map_path)["display_name"])
+
+        return yamnet_model, class_names
 
 
 def write_audio(frames):
@@ -83,7 +124,16 @@ def detect_specific_sounds(detect_sounds=["Clip-clop"]):
     """
     waveform, waveform_binary = record_audio()
 
-    scores, embeddings, spectrogram = model(waveform)
+    prediction = model(waveform)
+
+    if USE_TFLITE:
+        scores = prediction
+    else:
+        scores, embeddings, spectrogram = prediction
+
+    import pdb
+
+    pdb.set_trace()
     class_scores = tf.reduce_mean(scores, axis=0)
     clip_clop_index = class_names.index("Clip-clop")
     print("Clip-clop index", clip_clop_index)
