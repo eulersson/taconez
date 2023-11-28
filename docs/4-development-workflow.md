@@ -9,7 +9,7 @@ this is what's discussed in this document.
 
 - [Sound Detector | Development Workflow](docs/sound-detector#development-workflow)
 - [Sound Player | Development Workflow](docs/sound-player#development-workflow)
-- [Playback Distributor Development Workflow](docs/playback-distributor#development-workflow)
+- [Playback Distributor | Development Workflow](docs/playback-distributor#development-workflow)
 
 What I found works well for me is to work with my laptop on a folder that is exported as
 an NFS share. The Raspberry Pis then mount that NFS share and get the filesystem. This
