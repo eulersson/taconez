@@ -167,8 +167,8 @@ anesowa@raspberrypi:~ $ pactl get-default-source
 anesowa@raspberrypi:~ $ pactl set-default-source <sink-name>
 ```
 
-**NOTE**: Raspberry Pi 4 seemed to reconnect to the speakers upon `rebooting`, but not
-on Raspberry Pi 3 B+, which uses an older `bluetoothctl` (5.66 vs 5.55).
+**NOTE**: Raspberry Pi 4 seemed to reconnect to the speakers upon rebooting, but not on
+Raspberry Pi 3 B+, which uses an older `bluetoothctl` (5.66 vs 5.55).
 
 If you want to reconnect the speaker after reboot, what worked with JBL GO 2 is to turn
 the speaker off and on. Then it autoconnects.
@@ -182,6 +182,8 @@ To be able to play a sound to two or more speakers you can create a combined sin
 
 anesowa@raspberrypi:~ $ pactl load-module module-combine-sink
 536870913
+
+# Now if you wished to unload that module: `pactl unload-module 536870913`.
 
 # NOTE: You can pass arguments to the module-combine-sink arguments to select what
 #   devices you want to connect. To see the available sinks use `pactl list sinks short`.
@@ -239,7 +241,7 @@ pipewire/stable,now 0.3.65-3+rpt2 arm64 [installed,automatic]
 `default.pa` (PulseAudio Sound Server Startup Script) is what needs to be edited.
 
 We can drop files in `/etc/pulse/default.pa.d/` and they will be processed always, even
-if we reboot. So let's do that:
+if we reboot.
 
 Create `/etc/pulse/default.pa.d/combine-sinks-and-set-default.pa` with these contents:
 

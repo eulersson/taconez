@@ -6,7 +6,7 @@ See the [Architecture](/#architecture) section on the root [README.md](/) for mo
 
 ### Local Development
 
-If it's not the case use pyenv to install the right version.
+If it's not the case use **pyenv** to install the right version.
 
 Follow the
 [official installation instructions](https://github.com/pyenv/pyenv#installation):

@@ -1,19 +1,34 @@
-## Development Workflow
+# Development Workflow
 
 Depending on the module you are working on the workflow might differ due to the nature
 of their language and environment but in any of them you have three choices: (1) using
 your workstation, (2) using the Raspberry Pi or (3) using containers on workstation
-and/or Raspberry Pi.
+and/or Raspberry Pi. But all of them will have something in common: to be able to have
+the project files available and up to date between the laptop and the Raspberry Pis, and
+this is what's discussed in this document.
 
 - [Sound Detector Development Workflow](sound-detector#development-workflow)
 - [Sound Player Development Workflow](sound-player#development-workflow)
 - [Playback Distributor Development Workflow](playback-distributor#development-workflow)
 
-#### Network Volume
+What I found works well for me is to work with my laptop on a folder that is exported as
+an NFS share. The Raspberry Pis then mount that NFS share and get the filesystem. This
+made it easier for me than having to synch the files up and down or developing remotely.
 
-We could bind a volume on the host machine (macOS) and Raspberry Pi could mount it with
-NFS or SMB. If I'm outside the local network I could use an encrypted ssh-filesystem
-connection `sshfs` or tunnel into my LAN NFS with OpenVPN.
+After that I would use docker to compile the bits and bobs on both my local laptop as
+well as on the Raspberry Pi.
+
+This guide is written considering the NFS host is a macOS machine. If you are on Linux
+is way easier since it's not the Apple opinionated stuff, and you should search for the
+equivalent commands and syntaxes. If I ever set it up on a Linux I will do it myself.
+
+## Network Volume Approach Overview
+
+A volume could be bound on the host machine (macOS) and Raspberry Pi could mount it with
+NFS or SMB. When outside the home LAN then an OpenVPN solution should be set up which is
+outside of the scope of this guide.
+
+An alternative to the NFS + OpenVPN would be something like `sshfs`.
 
 PROS:
 
@@ -28,9 +43,7 @@ I also evaluated other workflows such as `lsyncd`, `distant` and `distant.nvim` 
 had caveats. I explain why I discarded them in
 [Discarded Tools](4-development-workflow#discarded-tools).
 
-##### Configuration
-
-###### Create a Sharing User & Group on the maOS Host
+## Create a Sharing User & Group on the maOS Host
 
 When mounting NFS shares we want a specific user **remotedevuser** with a specific
 **remotedevgroup** group to be used when writing on that share from the client. That
@@ -67,7 +80,7 @@ Sources:
 - [Why can't I use my newly created user with chown?](https://superuser.com/a/923843)
 - [dscl Manual](https://www.unix.com/man-page/osx/1/dscl/)
 
-###### Change Project Folder Permissions on the macOS Host
+## Change Project Folder Permissions on the macOS Host
 
 Change the owning group of the `/Users/eulersson/Devel/anesowa` project folder from
 `eulersson:eulersson` to `eulersson:remotedevgroup` so all users from **remotedevgroup**
@@ -81,7 +94,7 @@ sudo chown -R eulersson:remotedevgroup /Users/eulersson/Devel/anesowa
 sudo chmod -R g+w /Users/eulersson/Devel/anesowa
 ```
 
-###### Set NFS Share on the macOS Host
+## Set NFS Share on the macOS Host
 
 We will now export the project folder as an NFS share.
 
@@ -110,11 +123,17 @@ More information on the `/etc/exports` format on its manual: `man exports`.
 
 If you are out of home use a VPN to connect to your home LAN.
 
-Then on the Raspberry Pi mount the volume (`192.168.3.2` is the IP of the MacBook NFS
-server):
+Sources:
+
+- [exports Manual](https://ss64.com/osx/export.html)
+
+## Mounting the NFS Share from the Raspberry Pi
+
+Then on the Raspberry Pi mount the volume (`192.168.1.22` is the IP of the MacBook that
+runs the NFS service):
 
 ```
-sudo mount --types nfs --verbose 192.168.3.2:/Users/eulersson/Devel/anesowa /mnt/nfs/anesowa
+sudo mount --types nfs --verbose 192.168.1.22:/Users/eulersson/Devel/anesowa /mnt/nfs/anesowa
 ```
 
 You can check it mounted correctly with `df -h` or by listing the mounted folder
@@ -128,11 +147,7 @@ anesowa@raspberrypi $:~ umount /mnt/nfs/anesowa --lazy
 
 And stop exporting it from the server by removing the line we added on `/etc/exports`.
 
-Sources:
-
-- [exports Manual](https://ss64.com/osx/export.html)
-
-## Discarded Tools
+## Discarded Tools for Remote Development
 
 ### Discarded Alternative 1: lsyncd
 

@@ -24,22 +24,20 @@ remember the steps before writing the Ansible Playbook. Read
 Installing InfluxDB server:
 
 ```
-anesowa@rpi-master:~ $ uudo apt update
-anesowa@rpi-master:~ $ sudo apt upgrade
-anesowa@rpi-master:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
-anesowa@rpi-master:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
-anesowa@rpi-master:~ $ sudo apt install influxdb2
-anesowa@rpi-master:~ $ sudo systemctl unmask influxdb
-anesowa@rpi-master:~ $ sudo systemctl enable influxdb
-anesowa@rpi-master:~ $ sudo systemctl start influxdb
+anesowa@raspberrypi:~ $ uudo apt update
+anesowa@raspberrypi:~ $ sudo apt upgrade
+anesowa@raspberrypi:~ $ curl https://repos.influxdata.com/influxdata-archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/influxdb-archive-keyring.gpg >/dev/null
+anesowa@raspberrypi:~ $ echo "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+anesowa@raspberrypi:~ $ sudo apt install influxdb2
+anesowa@raspberrypi:~ $ sudo systemctl unmask influxdb
+anesowa@raspberrypi:~ $ sudo systemctl enable influxdb
+anesowa@raspberrypi:~ $ sudo systemctl start influxdb
 ```
 
 ```
 curl -O https://dl.influxdata.com/influxdb/releases/influxdb2_2.7.4-1_arm64.deb
 sudo dpkg -i influxdb2_2.7.4-1_arm64.deb
 sudo service influxdb start
-
-
 ```
 
 ```
@@ -51,7 +49,7 @@ wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.3-linux-am
 
 ```
 # Setup instance with initial user, org, bucket.
-anesowa@rpi-master:~ $ influx setup \
+anesowa@raspberrypi:~ $ influx setup \
   --username anesowa \
   --password ">R7#$gjf>2@dLXUU<" \
   --token XwSAJxRKHFkFL9wLiA4pPrDeXed
@@ -60,7 +58,7 @@ anesowa@rpi-master:~ $ influx setup \
   --force
 
 # Create an All Access API Token to use when creating resources on the database.
-anesowa@rpi-master:~ $ influx auth create \
+anesowa@raspberrypi:~ $ influx auth create \
   --all-access \
   --host http://localhost:8086 \
   --org anesowa \
@@ -69,7 +67,7 @@ ID                      Description     Token                                   
 0c0d6b05a3a6d000                        MkNsrWGwIpZEZvyRGK49-ftUgqoQCmY4rmisobotxxPr_M_Cx_IBxjge_KgOQUswdQr2tmFjzDLmRetkfg0qcg==        supermaster          0c0d68543ca6d000        [read:orgs/8e706e7c04613c15/authorizations write:orgs/8e706e7c04613c15/authorizations read:orgs/8e706e7c04613c15/buckets write:orgs/8e706e7c04613c15/buckets read:orgs/8e706e7c04613c15/dashboards write:orgs/8e706e7c04613c15/dashboards read:/orgs/8e706e7c04613c15 read:orgs/8e706e7c04613c15/sources write:orgs/8e706e7c04613c15/sources read:orgs/8e706e7c04613c15/tasks write:orgs/8e706e7c04613c15/tasks read:orgs/8e706e7c04613c15/telegrafs write:orgs/8e706e7c04613c15/telegrafs read:/users/0c0d68543ca6d000 write:/users/0c0d68543ca6d000 read:orgs/8e706e7c04613c15/variables write:orgs/8e706e7c04613c15/variables read:orgs/8e706e7c04613c15/scrapers write:orgs/8e706e7c04613c15/scrapers read:orgs/8e706e7c04613c15/secrets write:orgs/8e706e7c04613c15/secrets read:orgs/8e706e7c04613c15/labels write:orgs/8e706e7c04613c15/labels read:orgs/8e706e7c04613c15/views write:orgs/8e706e7c04613c15/views read:orgs/8e706e7c04613c15/documents write:orgs/8e706e7c04613c15/documents read:orgs/8e706e7c04613c15/notificationRules write:orgs/8e706e7c04613c15/notificationRules read:orgs/8e706e7c04613c15/notificationEndpoints write:orgs/8e706e7c04613c15/notificationEndpoints read:orgs/8e706e7c04613c15/checks write:orgs/8e706e7c04613c15/checks read:orgs/8e706e7c04613c15/dbrp write:orgs/8e706e7c04613c15/dbrp read:orgs/8e706e7c04613c15/notebooks write:orgs/8e706e7c04613c15/notebooks read:orgs/8e706e7c04613c15/annotations write:orgs/8e706e7c04613c15/annotations read:orgs/8e706e7c04613c15/remotes write:orgs/8e706e7c04613c15/remotes read:orgs/8e706e7c04613c15/replications write:orgs/8e706e7c04613c15/replications]
 
 # Configure connection configuration preset to use.
-anesowa@rpi-master:~ $ influx config create \
+anesowa@raspberrypi:~ $ influx config create \
   --config-name anesowa \
   --host-url http://localhost:8086 \
   --org anesowa \
@@ -78,16 +76,16 @@ Active  Name            URL                     Org
         anesowa         http://localhost:8086   anesowa
 
 # Generate timestamps with:
-anesowa@rpi-master:~ $ date +%s
+anesowa@raspberrypi:~ $ date +%s
 1698755458
 
 # Create an entry:
-anesowa@rpi-master:~ $ influx write --bucket anesowa --precision s "
+anesowa@raspberrypi:~ $ influx write --bucket anesowa --precision s "
 acons,sound=high_heel soundfile=\"/path/to/soundfile.wav\" $(date +%s)
 "
 
 # Querying:
-anesowa@rpi-master:~ $ influx query 'from(bucket: "anesowa") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "annoying_sounds")'
+anesowa@raspberrypi:~ $ influx query 'from(bucket: "anesowa") |> range(start: 2020-10-10T08:00:00Z, stop: 2024-10-10T08:00:00Z) |> filter(fn: (r) => r.\_measurement == "annoying_sounds")'
 Result: \_result
 Table: keys: [_start, _stop, _field, _measurement, room]
 \_start:time \_stop:time \_field:string \_measurement:string room:string \_time:time \_value:string
@@ -193,7 +191,7 @@ sudo exportfs -ra
 ### Connecting from a macOS
 
 To connect using _File Explorer > Go > Connect to Server_ (<kbd>⌘</kbd> + <kbd>K</kbd>)
-and type in `nfs://rpi-master.local/mnt/nfs/anesowa`.
+and type in `nfs://raspberrypi.local/mnt/nfs/anesowa`.
 
 ### Connecting from Other Raspberry Pi
 
@@ -211,5 +209,5 @@ Raspberry Pi would connect to the master as follows:
 ```
 sudo mkdir -p /mnt/nfs/anesowa
 sudo chmod 755 /mnt/nfs/anesowa
-sudo mount -t nfs rpi-master.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
+sudo mount -t nfs raspberrypi.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
 ```
