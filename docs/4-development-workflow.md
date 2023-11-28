@@ -7,9 +7,9 @@ and/or Raspberry Pi. But all of them will have something in common: to be able t
 the project files available and up to date between the laptop and the Raspberry Pis, and
 this is what's discussed in this document.
 
-- [Sound Detector | Development Workflow](/docs/sound-detector/README.md#development-workflow)
-- [Sound Player | Development Workflow](/docs/sound-player/README.md#development-workflow)
-- [Playback Distributor | Development Workflow](/docs/playback-distributor/README.md#development-workflow)
+- [Sound Detector | Development Workflow](/sound-detector#development-workflow)
+- [Sound Player | Development Workflow](/sound-player#development-workflow)
+- [Playback Distributor | Development Workflow](/playback-distributor#development-workflow)
 
 What I found works well for me is to work with my laptop on a folder that is exported as
 an NFS share. The Raspberry Pis then mount that NFS share and get the filesystem. This
