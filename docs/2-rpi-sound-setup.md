@@ -1,32 +1,31 @@
-# Raspberry Pi Sound Setup
-
-## Sound & Multiple Bluetooth Speaker Setup
+# Raspberry Pi Sound & Multiple Bluetooth Speaker Setup
 
 If you have some USB or Bluetooth speakers you want to use this guide explains how to
-set them up using `Raspberry Pi OS` (based on `Debian bookworm` at the time of writing).
-
-If you use Raspberry Pi 4 the audio system uses [PipeWire](https://pipewire.org/), for
-older versions you should use
-[PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) (you might have to
-install it).
+set them up using **Raspberry Pi OS** (based on **Debian bookworm** at the time of
+writing).
 
 To my understanding **PulseAudio** is a higher framework built to manage
 [ALSA](https://www.alsa-project.org/wiki/Main_Page) which is the lowest level layer.
 Without **PulseAudio** for instance, you wouldn't be able to mix sounds from two
-applications to `ALSA`.
+applications to ALSA.
 
-However **PulseAudio** can be a bit Frankenstein and **PipeWire** is built on top of
-both to manage the sound pipelines better.
+However PulseAudio can be a bit Frankenstein and PipeWire is built on top of both to
+manage the sound pipelines better. Many users want PulseAudio out of the map but I don't
+for now because it allows me two features I don't know how to migrate: (1) Combining
+sinks to play simultaneous sound on various speakers or (2) easily setup Bluetooth
+sound.
 
-What we are interested in this guide is to create a combined audio sink that send the
-sound to so it can be played in various sound devices at once.
+This guide explains how to setup Bluetooth devices and combine various of them to create
+a speaker group.
 
-Since our app will run on Docker containers that will use PyAudio to interact with the
-microphone and speakers we will have a bit of a challenge depending on whether the
-container host is Raspberry Pi OS or macOS this is explained in
-[Docker Container Sound on macOS Host](#docker-container-sound-on-macos-host).
+Since our app will run on Docker containers that will use
+[PyAudio](https://people.csail.mit.edu/hubert/pyaudio/)
+([PortAudio](https://people.csail.mit.edu/hubert/pyaudio/)'s Python bindings) to
+interact with the microphone and speakers we will have a bit of a challenge depending on
+whether the host running the container is Raspberry Pi OS or macOS. This is explained in
+[Docker Container Sound on macOS Host](3-docker-container-sound).
 
-### Installation
+### Dependencies
 
 Usually you should have the **PulseAudio** server running by default, check that with
 `ps -e | grep pulse` and check if there is the server process. Note that you might have
@@ -39,8 +38,6 @@ well as the package that allows **PulseAudio** to setup Bluetooth audio:
 anesowa@raspberrypi:~ $ sudo apt install pulseaudio pulseaudio-module-bluetooth
 ```
 
-### Configuration
-
 You will be playing with the various PulseAudio utils such as `pactl`, `paplay`, ... so
 make sure the `pulseaudio-utils` are installed, which should be:
 
@@ -48,7 +45,7 @@ make sure the `pulseaudio-utils` are installed, which should be:
 anesowa@raspberrypi:~ $ sudo apt install pulseaudio-utils
 ```
 
-#### USB Speaker
+### USB Speaker
 
 Plug the USB speaker and you should see it listed to be used as an audio sink:
 
@@ -58,7 +55,7 @@ anesowa@raspberrypi:~ $ pactl list sinks short
 69      alsa_output.platform-bcm2835_audio.stereo-fallback      PipeWire        s16le 2ch 48000Hz       SUSPENDED
 ```
 
-#### Bluetooth Speaker
+### Bluetooth Speaker
 
 Connect your Bluetooth speakers by using `bluetoothctl`. This is an interactive process
 which would need to be done manually on each Raspberry Pi. In the following example you
@@ -150,7 +147,7 @@ anesowa@raspberrypi:~ $ pw-play /usr/share/sounds/alsa/Front_center.wav # PipeWi
 anesowa@raspberrypi:~ $ speaker-test
 ```
 
-#### Default Sink (Sound Output) & Default Source (Sound Input)
+### Default Sink (Sound Output) & Default Source (Sound Input)
 
 Get sinks and get / set default sink (speaker output):
 
@@ -170,15 +167,13 @@ anesowa@raspberrypi:~ $ pactl get-default-source
 anesowa@raspberrypi:~ $ pactl set-default-source <sink-name>
 ```
 
-##### Reconnecting
-
-Raspberry Pi 4 seemed to reconnect to the speakers upon `rebooting`, but not on
-Raspberry Pi 3 B+, which uses an older `bluetoothctl` (5.66 vs 5.55).
+**NOTE**: Raspberry Pi 4 seemed to reconnect to the speakers upon `rebooting`, but not
+on Raspberry Pi 3 B+, which uses an older `bluetoothctl` (5.66 vs 5.55).
 
 If you want to reconnect the speaker after reboot, what worked with JBL GO 2 is to turn
 the speaker off and on. Then it autoconnects.
 
-#### Combining Sinks
+### Combining Sinks
 
 To be able to play a sound to two or more speakers you can create a combined sink:
 
@@ -218,7 +213,7 @@ To play sound to it:
 anesowa@raspberrypi:~ $ speaker-test
 ```
 
-#### Persisting Configuration
+### Persisting Configuration
 
 If you restart the default sink might not be `combined-sink` anymore. You need to
 persist that sink.
@@ -239,7 +234,35 @@ pipewire-pulse/stable,now 0.3.65-3+rpt2 arm64 [installed,automatic]
 pipewire/stable,now 0.3.65-3+rpt2 arm64 [installed,automatic]
 ```
 
-##### If PipeWire Available
+#### If PipeWire Not Available
+
+`default.pa` (PulseAudio Sound Server Startup Script) is what needs to be edited.
+
+We can drop files in `/etc/pulse/default.pa.d/` and they will be processed always, even
+if we reboot. So let's do that:
+
+Create `/etc/pulse/default.pa.d/combine-sinks-and-set-default.pa` with these contents:
+
+```
+load-module module-combine-sink
+set-default-sink combined
+```
+
+To enable audio I/O from the Docker container into the host (Raspberry Pi) we need to
+enable PulseAudio's `module-native-protocol-tcp`. To do that everytime we boot the
+Raspberry Pi create `/etc/pulse/default.pa.d/enable-tcp.pa` with these contents:
+
+```
+load-module module-native-protocol-tcp
+```
+
+Now restart the pulse server:
+
+```
+systemctl --user restart pulseaudio.service
+```
+
+#### If PipeWire Available
 
 Create a `~/.config/pipewire/pipewire.conf.d/<name>.conf` so **PipeWire** gets it by
 default.
@@ -258,9 +281,7 @@ context.exec = [
 ]
 ```
 
-To enable audio I/O from the Docker container into the host (Raspberry Pi) we need to
-enable PulseAudio's `module-native-protocol-tcp`. To do that everytime we boot the
-Raspberry Pi create another config `~/.config/pipewire/pipewire.conf.d/enable-tcp.conf`:
+Create another config `~/.config/pipewire/pipewire.conf.d/enable-tcp.conf`:
 
 ```
 # Sources:
@@ -274,33 +295,7 @@ context.exec = [
 ]
 ```
 
-##### If PipeWire Not Available
-
-Then `default.pa` (PulseAudio Sound Server Startup Script) is what needs to be edited.
-
-We can drop files in `/etc/pulse/default.pa.d/` and they will be processed so let's do
-that:
-
-Create `/etc/pulse/default.pa.d/combine-sinks-and-set-default.pa` with these contents:
-
-```
-load-module module-combine-sink
-set-default-sink combined
-```
-
-Create `/etc/pulse/default.pa.d/enable-tcp.pa` with these contents:
-
-```
-load-module module-native-protocol-tcp
-```
-
-Now restart the pulse server:
-
-```
-systemctl --user restart pulseaudio.service
-```
-
-#### Persisting Audio Volume Levels
+### Persisting Audio Volume Levels
 
 First we need to disable a feature called **flat volumes** that will mess with the rest
 of volumes when you change a particular one.
@@ -352,4 +347,3 @@ $ pactl set-sink-volume combined-sink 65536
 
 If you reboot, even if the bluetooth speaker disconnects it seems to retain the volume
 level set with the `set-sink-volume` command.
-

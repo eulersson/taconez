@@ -19,21 +19,7 @@ This project is composed of various pieces:
 | Sound Detector       | Discriminate and pick up specific sounds using AI.                                                                 |
 | Playback Distributor | Route the detected sound and bounce it back from multiple speakers on multiple locations.                          |
 | Sound Player         | Play any given sound when told by the distributor.                                                                 |
-| Journal (Web App)    | Visualize the sound occurrences. Useful to have an objective overview. If case gets to lawyers it might be useful. |
-
-## Technology
-
-This is intended to be run in a group of Raspberry Pi
-
-| Tool                 | Purpose                                                      | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TensorFlow (Python)  | Audio detection                                              | Provides even a higher level API (Keras) that simplifies machine learning workflows. Also provides a lightweight runtime (TF Lite) for running only inference (feeding the input and getting the output on a saved model).                                                                                                                                                   |
-| Next.js (JavaScript) | Data visualization web application.                          | Allows splitting a React application between server and client components (full-stack framework), allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, encapsulating database interaction only server-side. Allows writing REST-style API endpoints that can be listening to the sound detector. |
-| InfluxDB             | Noise occurrence log.                                        | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                          |
-| NFS                  | Sharing a volume with the audio data.                        | The database should not get bloated with binary data. Once the audio file is producted, it gets hashed it and stored in the NFS-shared file system so it can get played by the `sound-player`.                                                                                                                                                                               |
-| ZeroMQ               | Communication between audio detector and playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashion of a queue. The detector places an element and all playback receivers react playing back the sound. A full queue broker installation might be overkill for a simple IoT communication channel.                                                 |
-| Docker               | Containerization.                                            | Protects against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                           |
-| Ansible              | Provisioning and deployment.                                 | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                           |
+| Journal Web App      | Visualize the sound occurrences. Useful to have an objective overview. If case gets to lawyers it might be useful. |
 
 ## Architecture
 
@@ -42,20 +28,34 @@ This is intended to be run in a group of Raspberry Pi
   <img alt="Architecture Diagram" src="./anesowa.drawio.light.svg">
 </picture>
 
+## Technology
+
+This is intended to be run in a group of Raspberry Pi
+
+| Tool                 | Purpose                                                      | Why (Reason)                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TensorFlow (Python)  | Audio detection.                                             | Provides even a higher level API (Keras) that simplifies machine learning workflows. Also provides a lightweight runtime (TF Lite) for running only inference (feeding the input and getting the output on a saved model).                                                                                                                                                   |
+| Next.js (JavaScript) | Data visualization web application.                          | Allows splitting a React application between server and client components (full-stack framework), allowing you to dispatch the database queries from the server and return a rendered React component with all the data displayed, encapsulating database interaction only server-side. Allows writing REST-style API endpoints that can be listening to the sound detector. |
+| InfluxDB             | Noise occurrence log.                                        | A time-series database seems very appropiate considering the nature of the data (timestamped). Chosen in favour of Prometheus because it supports `string` data types and it's PUSH-based instead of PULL-based. We don't want to lose occurrences!                                                                                                                          |
+| NFS                  | Sharing a volume with the audio data.                        | The database should not get bloated with binary data. Once the audio file is producted, it gets hashed it and stored in the NFS-shared file system so it can get played by the `sound-player`.                                                                                                                                                                               |
+| ZeroMQ               | Communication between audio detector and playback receivers. | Instead of having to implement an API, since it's only one instruction, it's simpler to use a PUB-SUB pipeline in the fashion of a queue. The detector places an element and all playback receivers react playing back the sound. A full queue broker installation might be overkill for a simple IoT communication channel.                                                 |
+| Docker               | Containerization.                                            | Protects against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                           |
+| Ansible              | Provisioning and deployment.                                 | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                           |
+
 ## Documentation
 
 Under each folder in this repository you will find more information about the particular
 piece.
 
 - [Sound Detector](sound-detector)
-- [Sound Player](sound-detector)
+- [Sound Player](sound-player)
 - [Playback Distributor](playback-distributor)
 
 If you are only interested in the deployment of the architecture:
 
 | Document                                              | Explains How To...                                                                                  |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Provisioning](docs/1-provisioning.md)                | Flash a new card, plug into a Raspberry Pi and provision it as **master** or **slave**              |
+| [Provisioning](docs/1-provisioning.md)                | Flash a new card, plug into a Raspberry Pi and provision it as **master** or **slave**.             |
 | [Raspberry Pi Sound Setup](docs/2-rpi-sound-setup.md) | Connect multiple Bluetooth speakers, create a combined sink of various speakers, set up microphone. |
 
 Further information on how to get a development environment and how the issues of
@@ -72,4 +72,4 @@ Other documentation:
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | [Stack Recipes](docs/5-stack-recipes.md)             | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible. |
 | [AI: Transfer Learning](docs/6-transfer-learning.md) | Repurpose an already trained classification neural network to classify specific sounds.                 |
-| [Maintenance Notes](docs/7-maintenance.md)           | Keep the project up to date with the latest security and functional updates.                            |
+| [Maintenance Notes](docs/7-maintenance-notes.md)     | Keep the project up to date with the latest security and functional updates.                            |
