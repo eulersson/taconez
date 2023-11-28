@@ -1,8 +1,14 @@
-# anesowa: Sound Detector
+# Sound Detector
 
 Identifies a specific sound and notifies the [Sound Distributor](/sound-distributor).
 
 See the [Architecture](/#architecture) section on the root [README.md](/) for more.
+
+## Development Workflow
+
+I recommend having a look at the general document first:
+
+- [General Development Workflow](4-development-workflow)
 
 ### Local Development
 

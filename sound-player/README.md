@@ -1,8 +1,14 @@
-# anesowa: Sound Player
+# Sound Player
 
 Plays a specific sound when the [Sound Distributor](/sound-distributor) notifies it.
 
 See the [Architecture](/#architecture) section on the root [README.md](/) for more.
+
+## Development Workflow
+
+I recommend having a look at the general document first:
+
+- [General Development Workflow](4-development-workflow)
 
 TODO: Translate the following into Dockerfile and document how to get sound from it
 from the container to the host.
