@@ -73,5 +73,5 @@ Other documentation:
 | Document                                             | Explains How To...                                                                                      |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | [Stack Recipes](docs/5-stack-recipes.md)             | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible. |
-| [AI: Transfer Learning](docs/6-transfer-learning.md) | Repurpose an already trained classification neural network to classify specific sounds.                 |
+| [AI: Transfer Learning](docs/6-ai-transfer-learning.md) | Repurpose an already trained classification neural network to classify specific sounds.                 |
 | [Maintenance Notes](docs/7-maintenance-notes.md)     | Keep the project up to date with the latest security and functional updates.                            |

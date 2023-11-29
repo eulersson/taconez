@@ -25,9 +25,14 @@ cmake_print_variables(ZMQ_LIBRARY)
 
 include_directories(${PULSEAUDIO_INCLUDE_DIR})
 
-set(SOURCE_FILES sound_player.c)
+set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
+set(TEST_PLAY_SOURCE_FILES test_play.c)
 
-add_executable(sound_player ${SOURCE_FILES})
+add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
+add_executable(test_play ${TEST_PLAY_SOURCE_FILES})
+
+target_link_libraries(test_play ${PULSEAUDIO_LIBRARY})
+target_link_libraries(test_play ${PULSEAUDIO_SIMPLE_LIBRARY})
 
 target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})

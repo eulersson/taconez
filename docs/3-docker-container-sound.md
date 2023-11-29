@@ -48,7 +48,6 @@ anesowa@rpi-master:~/anesowa $ docker run --rm -it \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
   anesowa/sound-detector:1.0.0 bash
 
-
 # From this point on we are inside the container. Try to record and play from it!
 root@460b1452b6ba:/anesowa/sound-detector# parecord hello.wav
 root@460b1452b6ba:/anesowa/sound-detector# paplay hello.wav

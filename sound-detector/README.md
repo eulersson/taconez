@@ -5,11 +5,34 @@ Identifies a specific sound and notifies the
 
 See the [Architecture](/#architecture) section on the root [README.md](/) for more.
 
+I recommend having a look at the general documents first:
+
+- [General Development Workflow](/docs/4-development-workflow.md)
+- [Docker Container Sound](/docs/3-docker-container-sound.md)
+
+## Build & Run
+
+Build:
+
+```
+anesowa@rpi-master:~/anesowa $ docker build -t anesowa/sound-detector:1.0.0 ./sound-detector
+```
+
+Run:
+
+```
+anesowa@rpi-master:~/anesowa $ docker run --rm -it \
+  --add-host host.docker.internal:host-gateway \
+  -e PULSE_SERVER host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  anesowa/sound-detector:1.0.0
+```
+
+## Deploy
+
+- [Provisioning & Deployment](/docs/1-provisioning-and-deployment.md)
+
 ## Development Workflow
-
-I recommend having a look at the general document first:
-
-- [General Development Workflow](4-development-workflow)
 
 You can choose to either develop using a container or not. It's easier to develop using
 a container (running the IDE from the host), you can still have LSP features like
@@ -173,15 +196,26 @@ eulersson@macbook:~/Devel/anesowa $ docker build \
   --build-arg="DEBUG=1" \
   --build-arg="INSTALL_DEV_DEPS=1" \
   --build-arg="USE_TFLITE=0" \
-  -t anesowa/sound-detector:1.0.0-dev \
+  -t anesowa/sound-detector:1.0.0 \
   ./sound-detector
 ```
 
-Then run a container as follows:
+To run an app container:
+
+```
+eulersson@macbook:~/Devel/anesowa $ docker run \
+  --rm -it \
+  --add-host host.docker.internal:host-gateway \
+  -e PULSE_SERVER host.docker.internal \
+  -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+  --name anesowa-sound-detector-app-container \
+  anesowa/sound-detector:1.0.0
+```
+
+Then run a container LSP server:
 
 ```
 eulersson@macbook:~/Devel/anesowa $ docker run -it \
-  --name anesowa-pyright-dev-container \
   -v $(pwd):/anesowa/sound-detector \
   --add-host dev-hack:127.0.0.1 \
   --net host \
@@ -189,14 +223,15 @@ eulersson@macbook:~/Devel/anesowa $ docker run -it \
   --entrypoint /bin/bash \
   --init \
   --detach \
+  --name anesowa-sound-detector-pyright-dev-container \
   anesowa/sound-detector:1.0.0-dev
 ```
 
 When you are done you working remember to stop and delete the container:
 
 ```
-eulersson@macbook:~ $ docker stop --time 0 anesowa-pyright-dev-container
-eulersson@macbook:~ $ docker rm anesowa-pyright-dev-container
+eulersson@macbook:~ $ docker stop --time 0 anesowa-sound-detector-pyright-dev-container
+eulersson@macbook:~ $ docker rm anesowa-sound-detector-pyright-dev-container
 ```
 
 Now depending on your IDE the steps will differ, but basically you need to configure the
@@ -215,7 +250,7 @@ require("lvim.lsp.manager").setup("pyright", {
     "docker",
     "exec",
     "-i",
-    "anesowa-pyright-dev-container",
+    "anesowa-sound-detector-pyright-dev-container",
     "pyright-langserver",
     "--stdio",
   },

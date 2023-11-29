@@ -5,14 +5,14 @@ require("lvim.lsp.manager").setup("pyright", {
   -- Requires you to have previously built the container:
   --   docker build \
   --     --build-arg="DEBUG=1" --build-arg="INSTALL_DEV_DEPS=1" --build-arg="USE_TFLITE=0" \
-  --     -t anesowa/sound-detector:1.0.0-dev .
+  --     -t anesowa/sound-detector:1.0.0 .
   single_file_support = true,
   cmd = {
     "docker",
     "run",
     "-i",
     "--rm",
-    "anesowa/sound-detector:1.0.0-dev",
+    "anesowa/sound-detector:1.0.0",
     "pyright-langserver",
     "--stdio",
   },
