@@ -10,6 +10,20 @@ I recommend having a look at the general document first:
 
 - [General Development Workflow](4-development-workflow)
 
+You can choose to either develop using a container or not. It's easier to develop using
+a container (running the IDE from the host), you can still have LSP features like
+autocompletion and suggestions! But I realized some of them do not work, like jumping to
+a python library file that's outside the project: if you jump to the definition of a
+third-party import the local Neovim will try to open a file that exists on the container
+and not the host.
+
+So you are free to choose:
+
+| Method                                                          | Advantages                                                                   | Disadvantages                                                                                                                                                                                               |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Local Development](#local-development)                         | Full LSP features, including "Go to definition" on third party libraries     | You have to install some system dependencies: `pyenv`, `poetry`, `portaudio`, ...                                                                                                                           |
+| [Container Development (IDE from Host)](#container-development) | System project dependencies are solved by the container build's instructions | You neeed to configure the IDE to run the container's LSP servers instead of the host's and some features like "Go to definition" on third-party libs don't work because the host doesn't have those files. |
+
 ### Local Development
 
 If it's not the case use **pyenv** to install the right version.
@@ -87,7 +101,64 @@ export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 poetry install # Choose whether you want tensorflow core packages with `--with tensorflow-dev`.
 ```
 
-### Container Development
+Python projects such as the `sound-detector` use the
+[poetry](https://python-poetry.org/) packaging and dependency management tool.
+
+In my case my LSP of my editor won't pick up the dependencies because `poetry`
+encapsulates them.
+
+You can either run a `poetry shell` and open the text editor or install them with pip on
+your python installation (`pyenv` in my case). You can also run a Python console with
+`poetry run python`.
+
+First make sure Python is compliant with the python version specified in
+`pyproject.toml`:
+
+```
+[tool.poetry.dependencies]
+python = "^3.11,<3.12"
+```
+
+The `sound-detector` Python project uses `poetry` to handle dependencies. To develop on
+your local machine:
+
+```
+# Install dependencies. Poetry will place them on a virtual environment.
+eulersson@macbook:~/Devel/anesowa $ poetry install
+
+# See where the virtual environment is installed.
+eulersson@macbook:~/Devel/anesowa $ poetry env info
+
+Virtualenv
+Python:         3.10.13
+Implementation: CPython
+Path:           /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10
+Executable:     /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10/bin/python
+Valid:          True
+
+System
+Platform:   darwin
+OS:         posix
+Python:     3.10.13
+Path:       /Users/eulersson/.pyenv/versions/3.10.13
+Executable: /Users/eulersson/.pyenv/versions/3.10.13/bin/python3.10
+```
+
+Now that you know the virtual env lives in
+`/Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10`
+add a `pyrightconfig.json` on the root of the Python project
+`~/Devel/anesowa/sound-detector/pyrightconfig.json`:
+
+```
+{
+   "venv" : "sound-detector-oq1WgInS-py3.11",
+   "venvPath" : "/Users/ramon/Library/Caches/pypoetry/virtualenvs"
+}
+```
+
+This will help `pyright` LSP to be able to understand and resolve the project.
+
+### Container Development (Running IDE in Host)
 
 Thanks to this
 [reddit comment](https://www.reddit.com/r/neovim/comments/y1hryr/comment/iry6c0q/) we
@@ -185,104 +256,30 @@ lspconfig.pyright.setup {
 }
 ```
 
+### Container Development (Running IDE in Container)
+
+Try to see what the workflow is like to run Neovim in the container instead of running
+it from outside.
+
+Considerations:
+
+- Installing LunarVim first.
+- Binding LunarVim configs.
+- Have a persistent volume where LunarVim stuff gets downloaded to.
+- Checking the RAM consumed by the container.
+
+TBD.
+
 ### Microphone & Speaker
 
-Read the guide on [Docker Container Sound](#docker-container-sound) to make sure you
-have PulseAudio installed on your host machine with the `module-native-protocol-tcp`
-enabled.
+Read the guide on [Docker Container Sound](/docs/3-docker-container-sound.md) to make
+sure you have PulseAudio installed on your host machine with the
+`module-native-protocol-tcp` enabled.
 
 ### Iterative Development
 
-During my development from the macOS I found two workflows worked well:
+During my development from the macOS I found using an NFS share was the easier way to
+develop locally and be able to run code in the remote machine interactively and keeping
+things in sync easily.
 
-- [Synching Changes Manually](#rsync)
-- [Sharing Volume Between Host and Rasberry Pis](#network-volume)
-
-#### rsync
-
-Synching the changes manually with `rsync`:
-
-```
-eulersson@macbook:~ $ rsync \
-  -e "ssh -i ~/.ssh/raspberrypi_key.pub" -azhP \
-  --exclude "sound-player/build/" --exclude ".git/" --exclude "*.cache*" \
-  . anesowa@rpi-master.local:/home/user/anesowa
-```
-
-Then running the corresponding `docker run` volume-binding the project folder:
-
-```
-anesowa@rpi-master:~/anesowa/sound-detector $ docker run ... -v $(pwd):/anesowa/sound-detector ...
-```
-
-PROS:
-
-- Only the changed files are synced.
-- It is secure and encrypted.
-
-CONS:
-
-- It's a manual action.
-- Only syncs towards a single target machine.
-- Deleted files are not handled.
-
-### LSP Features
-
-#### Python
-
-Python projects such as the `sound-detector` use the
-[poetry](https://python-poetry.org/) packaging and dependency management tool.
-
-In my case my LSP of my editor won't pick up the dependencies because `poetry`
-encapsulates them.
-
-You can either run a `poetry shell` and open the text editor or install them with pip on
-your python installation (`pyenv` in my case). You can also run a Python console with
-`poetry run python`.
-
-First make sure Python is compliant with the python version specified in
-`pyproject.toml`:
-
-```
-[tool.poetry.dependencies]
-python = "^3.11,<3.12"
-```
-
-The `sound-detector` Python project uses `poetry` to handle dependencies. To develop on
-your local machine:
-
-```
-# Install dependencies. Poetry will place them on a virtual environment.
-eulersson@macbook:~/Devel/anesowa $ poetry install
-
-# See where the virtual environment is installed.
-eulersson@macbook:~/Devel/anesowa $ poetry env info
-
-Virtualenv
-Python:         3.10.13
-Implementation: CPython
-Path:           /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10
-Executable:     /Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10/bin/python
-Valid:          True
-
-System
-Platform:   darwin
-OS:         posix
-Python:     3.10.13
-Path:       /Users/eulersson/.pyenv/versions/3.10.13
-Executable: /Users/eulersson/.pyenv/versions/3.10.13/bin/python3.10
-```
-
-Now that you know the virtual env lives in
-`/Users/eulersson/Library/Caches/pypoetry/virtualenvs/sound-detector-CXfsoo8U-py3.10`
-add a `pyrightconfig.json` on the root of the Python project
-`~/Devel/anesowa/sound-detector/pyrightconfig.json`:
-
-```
-{
-   "venv" : "sound-detector-oq1WgInS-py3.11",
-   "venvPath" : "/Users/ramon/Library/Caches/pypoetry/virtualenvs"
-}
-```
-
-This will help `pyright` LSP to be able to understand and resolve the project.
+- [Network Volume Approach Overview](/docs/4-development-workflow.md#network-volume-approach-overview)
