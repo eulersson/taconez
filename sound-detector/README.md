@@ -1,6 +1,7 @@
 # Sound Detector
 
-Identifies a specific sound and notifies the [Sound Distributor](/sound-distributor).
+Identifies a specific sound and notifies the
+[Sound Distributor](/docs/sound-distributor).
 
 See the [Architecture](/#architecture) section on the root [README.md](/) for more.
 
@@ -19,10 +20,10 @@ and not the host.
 
 So you are free to choose:
 
-| Method                                                          | Advantages                                                                   | Disadvantages                                                                                                                                                                                               |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Local Development](#local-development)                         | Full LSP features, including "Go to definition" on third party libraries     | You have to install some system dependencies: `pyenv`, `poetry`, `portaudio`, ...                                                                                                                           |
-| [Container Development (IDE from Host)](#container-development) | System project dependencies are solved by the container build's instructions | You neeed to configure the IDE to run the container's LSP servers instead of the host's and some features like "Go to definition" on third-party libs don't work because the host doesn't have those files. |
+| Method                                                                              | Advantages                                                                   | Disadvantages                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Local Development](#local-development)                                             | Full LSP features, including "Go to definition" on third party libraries     | You have to install some system dependencies: `pyenv`, `poetry`, `portaudio`, ...                                                                                                                           |
+| [Container Development (IDE from Host)](#container-development-running-ide-in-host) | System project dependencies are solved by the container build's instructions | You neeed to configure the IDE to run the container's LSP servers instead of the host's and some features like "Go to definition" on third-party libs don't work because the host doesn't have those files. |
 
 ### Local Development
 

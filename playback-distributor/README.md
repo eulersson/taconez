@@ -6,6 +6,6 @@ TBD.
 
 I recommend having a look at the general document first:
 
-- [General Development Workflow](4-development-workflow)
+- [General Development Workflow](/docs/4-development-workflow)
 
 TBD.

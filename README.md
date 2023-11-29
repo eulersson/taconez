@@ -23,10 +23,12 @@ This project is composed of various pieces:
 
 ## Architecture
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./anesowa.drawio.dark.svg">
-  <img alt="Architecture Diagram" src="./anesowa.drawio.light.svg">
-</picture>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./anesowa.drawio.dark.svg">
+    <img alt="Architecture Diagram" src="./anesowa.drawio.light.svg">
+  </picture>
+</p>
 
 ## Technology
 
@@ -51,12 +53,12 @@ piece.
 - [Sound Player](sound-player)
 - [Playback Distributor](playback-distributor)
 
-If you are only interested in the deployment of the architecture:
+If you are only interested in the provisioning and deployment of the architecture:
 
-| Document                                              | Explains How To...                                                                                  |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Provisioning](docs/1-provisioning.md)                | Flash a new card, plug into a Raspberry Pi and provision it as **master** or **slave**.             |
-| [Raspberry Pi Sound Setup](docs/2-rpi-sound-setup.md) | Connect multiple Bluetooth speakers, create a combined sink of various speakers, set up microphone. |
+| Document                                                           | Explains How To...                                                                                            |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| [Provisioning & Deployment](docs/1-provisioning-and-deployment.md) | Flash a new card, plug into a Raspberry Pi and provision it as **master** or **slave** and deploy the project |
+| [Raspberry Pi Sound Setup](docs/2-rpi-sound-setup.md)              | Connect multiple Bluetooth speakers, create a combined sink of various speakers, set up microphone.           |
 
 Further information on how to get a development environment and how the issues of
 running container sound on the host (be it a MacBook or a Raspberry Pi):

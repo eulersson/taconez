@@ -14,10 +14,10 @@ These guides are used as reference:
 - [InfluxDB Docs | Get started writing data](https://docs.influxdata.com/influxdb/v2/get-started/write)
 - [InfluxDB Docs | Get started querying data](https://docs.influxdata.com/influxdb/v2/get-started/query)
 
-**NOTE**: This document is a reference, and you don't need to provision new Raspberry
+**NOTE**: This document is for reference, and you don't need to provision new Raspberry
 Pis with those commands since it's done with an Ansible playbook. This is for me to
 remember the steps before writing the Ansible Playbook. Read
-[Provisioning (Ansible)](#provisioning-ansible) for more.
+[Provisioning & Deployment](/docs/1-provisioning-and-deployment.md).
 
 ### Installation
 

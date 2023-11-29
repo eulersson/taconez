@@ -41,7 +41,7 @@ CONS:
 
 I also evaluated other workflows such as `lsyncd`, `distant` and `distant.nvim` but each
 had caveats. I explain why I discarded them in
-[Discarded Tools](4-development-workflow#discarded-tools).
+[Discarded Tools](4-development-workflow#discarded-tools-for-remote-development).
 
 ## Create a Sharing User & Group on the maOS Host
 

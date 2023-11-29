@@ -1,6 +1,6 @@
 # Sound Player
 
-Plays a specific sound when the [Sound Distributor](/sound-distributor) notifies it.
+Plays a specific sound when the [Sound Distributor](/docs/sound-distributor) notifies it.
 
 See the [Architecture](/#architecture) section on the root [README.md](/) for more.
 
@@ -8,7 +8,7 @@ See the [Architecture](/#architecture) section on the root [README.md](/) for mo
 
 I recommend having a look at the general document first:
 
-- [General Development Workflow](4-development-workflow)
+- [General Development Workflow](/docs/4-development-workflow)
 
 TODO: Translate the following into Dockerfile and document how to get sound from it
 from the container to the host.

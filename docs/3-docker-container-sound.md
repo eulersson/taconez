@@ -22,7 +22,7 @@ load-module module-native-protocol-tcp
 Make sure the correct microphone and speakers are set as default sink and source. Use
 `pactl`'s `set-default-sink` and `set-default-source` as explained in the previous
 section:
-[Default Sink (Sound Output) & Default Source (Sound Input)](2-rpi-sound-setup#default-sink-sound-output--default-source-sound-input).
+[Default Sink (Sound Output) & Default Source (Sound Input)](2-rpi-sound-setup.md#default-sink-sound-output--default-source-sound-input).
 
 If you want to test that that the PulseAudio on the host is setup correctly try to
 record a microphone sample and play it back:
@@ -83,7 +83,7 @@ load-module module-native-protocol-tcp
 Make sure the correct microphone and speakers are set as default sink and source. Use
 `pactl`'s `set-default-sink` and `set-default-source` as explained in the previous
 section:
-[Default Sink (Sound Output) & Default Source (Sound Input)](2-rpi-sound-setup#default-sink-sound-output--default-source-sound-input).
+[Default Sink (Sound Output) & Default Source (Sound Input)](2-rpi-sound-setup.md#default-sink-sound-output--default-source-sound-input).
 
 If you want to test that that the PulseAudio on the host is setup correctly try to
 record a microphone sample and play it back:
