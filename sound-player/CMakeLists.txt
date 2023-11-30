@@ -37,3 +37,12 @@ target_link_libraries(test_play ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${ZMQ_LIBRARY})
+# This is for development purposes:
+add_executable(foo_one foo_one.c)
+target_link_libraries(foo_one ${ZMQ_LIBRARY})
+
+add_executable(foo_two foo_two.c)
+target_link_libraries(foo_two ${ZMQ_LIBRARY})
+
+add_executable(foo_three foo_three.c)
+target_link_libraries(foo_three ${ZMQ_LIBRARY})
