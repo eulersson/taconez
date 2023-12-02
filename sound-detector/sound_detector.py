@@ -1,33 +1,67 @@
+"""Detects, records and informs upon detecting specific sounds.
+
+https://github.com/eulersson/anesowa/tree/main/sound-detector
+
+"""
+
+# Native Imports
 import os
 import datetime
 import urllib.request
 import wave
 import zipfile
 
+from typing import Any, List, Tuple, Optional
+
+# Third-Party Imports
 import pyaudio
+import zmq
 
 import numpy as np
 import pandas as pd
 
+from numpy.typing import NDArray
+
+# Endpoint where the distributor PULL socket is listening at.
+ZMQ_DISTRIBUTOR_ADDR = "tcp://host.docker.internal:5555"
+
+# This folder is shared over NFS, therefore all other clients will be able to mount it.
+DETECTED_RECORDINGS_DIR = "/mnt/nfs/anesowa"
+
+# TensorFlow Lite is more optimized for a device such as the Raspberry Pi.
 USE_TFLITE = os.getenv("USE_TFLITE", "True")
 USE_TFLITE = USE_TFLITE == "True" or USE_TFLITE == "1"
 
+# Audio processing.
 FRAMES_PER_BUFFER = 3900
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 SECONDS = 0.975
 
+# Allows interacting with microphone.
 p = pyaudio.PyAudio()
 
 
-def model_predict(model, labels, waveform):
-    """
+def model_predict(model, waveform: NDArray) -> NDArray:
+    """Guesses the sound category given some audio.
+
+    Depending on the `USE_TFLITE` variable it will load one of these versions:
+
+    - https://www.kaggle.com/models/google/yamnet/frameworks/tensorFlow2
+    - https://www.kaggle.com/models/google/yamnet/frameworks/tfLite/variations/classification-tflite
+
     Args:
-        model (model or interpreter) TODO DOCUMENT THIS.
-        waveform (numpy.NDArray) An array with 0.975 seconds of silence as mono 16 kHz,
-            waveform samples, that is of shape (15600,) where each value is normalized
-            between -1.0 and 1.0.
+        model: A model loaded through `tensorflow_hub.load(model_name)` or
+          `tflite_runtime.interpreter.Interpreter(model_path)`.
+        waveform (numpy.NDArray): An array with 0.975 seconds of silence as mono 16 kHz,
+          waveform samples, that is of shape (15600,) where each value is normalized
+          between -1.0 and 1.0.
+
+    Returns:
+        The scores for all the classes as an array of shape (M, N). It's a
+        two-dimensional list where the first dimension (M) corresponds to time slices
+        and the second dimension (N) the scores for that time slice.
     """
     if USE_TFLITE:
         interpreter = model
@@ -41,18 +75,20 @@ def model_predict(model, labels, waveform):
         interpreter.invoke()
 
         scores = interpreter.get_tensor(scores_output_index)
-        print(scores.shape)  # Should print (1, 521)
-
-        top_class_index = scores.argmax()
-        print(len(labels))  # Should print 521
-        print(labels[top_class_index])  # Should print 'Silence'.
     else:
         scores, embeddings, spectrogram = model(waveform)
 
     return scores
 
 
-def load_model_and_labels():
+# TODO: Resolve the model type better. At the moment "Any" is used.
+def load_model_and_labels() -> Tuple[Any, List[str]]:
+    """Loads the model to run classify audio and class names for those predictions.
+
+    Returns:
+        A model constructed with `tensorflow_hub.load(model_name)` or
+        `tflite_runtime.interpreter.Interpreter(model_path)`.
+    """
     if USE_TFLITE:
         model_path = os.path.join(
             os.path.dirname(__file__), "yamnet-classification.tflite"
@@ -81,7 +117,6 @@ def load_model_and_labels():
             waveform_input_index, [waveform.size], strict=True
         )
         interpreter.allocate_tensors()
-        model_predict(interpreter, labels, waveform)
 
         return interpreter, labels
     else:
@@ -96,10 +131,11 @@ def load_model_and_labels():
         return yamnet_model, class_names
 
 
+def write_audio(frames: bytes):
+    """Writes audio frames as bytes to a file.
 
-def write_audio(frames):
-    """
     https://gist.github.com/kepler62f/9d5836a1eff8b372ddf6de43b5b74d95
+
     """
     wavefile = wave.open(f"{datetime.datetime.now().isoformat()}.wav", "wb")
     wavefile.setnchannels(CHANNELS)
@@ -109,13 +145,12 @@ def write_audio(frames):
     wavefile.close()
 
 
-def record_audio():
-    """
-    Records audio from microphone returning an array of frames.
+def record_audio() -> Tuple[NDArray, bytes]:
+    """Records audio from microphone returning an array of frames.
 
-    Result:
-        numpy.NDArray: Array of size (FRAMES_PER_BUFFER,) the values of which range
-          between -32768 and 32768.
+    Returns:
+        An array of shape (`FRAMES_PER_BUFFER`,) values of which ranging [-32768, 32768]
+        and the binary audio as bytes.
     """
     stream = p.open(
         format=FORMAT,
@@ -126,6 +161,7 @@ def record_audio():
     )
 
     frames = []
+
     # TODO: Improve this since now 16000 / 3900 * 0.975 = 4 (4.0), but if you change any
     # variable it would lead to floating point values which would then skip reading the
     # last needed chunk.
@@ -145,15 +181,27 @@ def record_audio():
     return waveform, waveform_binary
 
 
-# TODO: Implement detect_sounds.
-def detect_specific_sounds(model, labels, detect_sounds=["Clip-clop"]):
+# TODO: Record 10 seconds and strip it to 1 second segments.
+# TODO: Use the `detect_sounds` argument.
+def detect_specific_sounds(
+    model,
+    labels: List[str],
+    detect_sounds: List[str] = ["Clip-clop"],
+    zmq_socket: Optional[zmq.Socket] = None,
+) -> None:
     """
     Continuously records audio segments form the microphone and passes it to the model
     to see if the prediction catches the specific sound.
+
+    Args:
+        model: Model to use for detection.
+        labels: Class names of the categories the model can recognize.
+        detect_sounds: Detection will happen if on high score for those categories.
+        zmq_socket: Used to notify the distributor a sound has been detected.
     """
     waveform, waveform_binary = record_audio()
 
-    scores = model_predict(model, labels, waveform)
+    scores = model_predict(model, waveform)
 
     class_scores = np.mean(scores, axis=0)
     clip_clop_index = labels.index("Clip-clop")
@@ -170,11 +218,26 @@ def detect_specific_sounds(model, labels, detect_sounds=["Clip-clop"]):
     # TODO: Calibrate this value.
     if clip_clop_prediction > 0.0001:
         print("DETECTED")
-        write_audio(waveform_binary)
+        if os.path.exists(DETECTED_RECORDINGS_DIR):
+            filepath = write_audio(waveform_binary)
+            zmq_socket.send(filepath.encode("ascii"))
+        else:
+            print(
+                "Not writing detected sound to file because "
+                f"{DETECTED_RECORDINGS_DIR} does not exist."
+            )
 
 
 if __name__ == "__main__":
+    # Connect to the distributor that will be notified upon detection:
+    context = zmq.Context()
+    print(f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_ADDR}.")
+    socket = context.socket(zmq.PUSH)
+    socket.connect(ZMQ_DISTRIBUTOR_ADDR)
+    print(f"Connected!")
+
     model, labels = load_model_and_labels()
 
+    # Run the detection loop.
     while True:
-        command = detect_specific_sounds(model, labels)
+        detect_specific_sounds(model, labels)
