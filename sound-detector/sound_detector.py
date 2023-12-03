@@ -22,22 +22,49 @@ import pandas as pd
 
 from numpy.typing import NDArray
 
+SKIP_DETECTION_NOTIFICATION = os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
+
 # Endpoint where the distributor PULL socket is listening at.
 ZMQ_DISTRIBUTOR_ADDR = "tcp://host.docker.internal:5555"
 
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
 DETECTED_RECORDINGS_DIR = "/mnt/nfs/anesowa"
 
+SKIP_RECORDING = os.getenv("SKIP_RECORDING", "False") == "True"
+if not SKIP_RECORDING:
+    assert os.path.exists(
+        DETECTED_RECORDINGS_DIR
+    ), f"The folder {DETECTED_RECORDINGS_DIR} must exist and be shared over NFS."
+
 # TensorFlow Lite is more optimized for a device such as the Raspberry Pi.
 USE_TFLITE = os.getenv("USE_TFLITE", "True")
 USE_TFLITE = USE_TFLITE == "True" or USE_TFLITE == "1"
 
-# Audio processing.
-FRAMES_PER_BUFFER = 3900
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000
-SECONDS = 0.975
+AUDIO_FORMAT = pyaudio.paInt16
+AUDIO_CHANNELS = 1
+
+# This is the rate the YAMNet explicitely requires.
+AUDIO_RATE = 16000
+
+# Read from microphone in this amount of frames per second.
+AUDIO_CHUNK = 1024
+
+# Amount of seconds to feed into the neural network.
+AUDIO_INFERENCE_SECONDS = 0.975
+
+# The length of numpy array values before feeding into YAMNet model.
+AUDIO_INFERENCE_SAMPLES = 15600
+
+# This assertion is illustrative.
+assert 15600 == AUDIO_INFERENCE_SAMPLES == (AUDIO_RATE * AUDIO_INFERENCE_SECONDS), (
+    "The AUDIO_INFERENCE_SAMPLES is explicitely set to satisfy the model constraints. "
+    "At the moment it uses YAMNet which requires a specific number of samples."
+)
+
+# Stripes of audio segments of individual durations of `INFERENCE_SECONDS` (~1s) that
+# are treated as a single event, that way when we detect a sound in one of the segments
+# of the batch we will store the entire strip of sound instead of storing only ~1s files.
+AUDIO_INFERENCE_BATCH_SIZE = 5
 
 # Allows interacting with microphone.
 p = pyaudio.PyAudio()
@@ -54,9 +81,9 @@ def model_predict(model, waveform: NDArray) -> NDArray:
     Args:
         model: A model loaded through `tensorflow_hub.load(model_name)` or
           `tflite_runtime.interpreter.Interpreter(model_path)`.
-        waveform (numpy.NDArray): An array with 0.975 seconds of silence as mono 16 kHz,
-          waveform samples, that is of shape (15600,) where each value is normalized
-          between -1.0 and 1.0.
+        waveform (numpy.NDArray): An array with 0.975 seconds as mono 16 kHz waveform
+          samples, that is of shape (15600,) where each value is normalized between
+          -1.0 and 1.0.
 
     Returns:
         The scores for all the classes as an array of shape (M, N). It's a
@@ -110,8 +137,9 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
         waveform_input_index = input_details[0]["index"]
 
         # Input: 0.975 seconds of silence as mono 16 kHz waveform samples.
-        waveform = np.zeros(int(round(0.975 * 16000)), dtype=np.float32)
-        print(waveform.shape)  # Should print (15600,)
+        waveform = np.zeros(
+            int(round(AUDIO_INFERENCE_SECONDS * 16000)), dtype=np.float32
+        )
 
         interpreter.resize_tensor_input(
             waveform_input_index, [waveform.size], strict=True
@@ -131,61 +159,85 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
         return yamnet_model, class_names
 
 
-def write_audio(frames: bytes):
+def write_audio(frames: bytes) -> str:
     """Writes audio frames as bytes to a file.
+
+    Args:
+        frames The audio binary content to write.
+
+    Returns:
+        The filename where the .wav file is saved.
 
     https://gist.github.com/kepler62f/9d5836a1eff8b372ddf6de43b5b74d95
 
     """
-    wavefile = wave.open(f"{datetime.datetime.now().isoformat()}.wav", "wb")
-    wavefile.setnchannels(CHANNELS)
+    file_name = f"{datetime.datetime.now().isoformat()}.wav"
+    file_path = os.path.join(DETECTED_RECORDINGS_DIR, file_name)
+
+    wavefile = wave.open(file_path, "wb")
+    wavefile.setnchannels(AUDIO_CHANNELS)
     wavefile.setsampwidth(p.get_sample_size(pyaudio.paInt16))
-    wavefile.setframerate(RATE)
+    wavefile.setframerate(AUDIO_RATE)
     wavefile.writeframes(frames)
     wavefile.close()
 
+    return file_path
 
-def record_audio() -> Tuple[NDArray, bytes]:
+
+def record_audio() -> Tuple[List[NDArray], bytes]:
     """Records audio from microphone returning an array of frames.
 
+    The underlying neural network model is YAMNet and it has the following input
+    requirements:
+
+    > The model accepts a 1-D float32 Tensor or NumPy array of length 15600 containing
+    > a 0.975 second waveform represented as mono 16 kHz samples in the range [-1.0, +1.0].
+
     Returns:
-        An array of shape (`FRAMES_PER_BUFFER`,) values of which ranging [-32768, 32768]
-        and the binary audio as bytes.
+        A list of `AUDIO_INFERENCE_BATCH_SIZE` arrays of shape (15600,)
+        values of which ranging [-1.0, 1.0] and the whole stripe binary audio as
+        bytes.
     """
     stream = p.open(
-        format=FORMAT,
-        channels=CHANNELS,
-        rate=RATE,
+        format=AUDIO_FORMAT,
+        channels=AUDIO_CHANNELS,
+        rate=AUDIO_RATE,
         input=True,
-        frames_per_buffer=FRAMES_PER_BUFFER,
+        frames_per_buffer=AUDIO_CHUNK,
     )
 
-    frames = []
+    waveforms: List[NDArray] = []
+    waveform_binary = b""
 
-    # TODO: Improve this since now 16000 / 3900 * 0.975 = 4 (4.0), but if you change any
-    # variable it would lead to floating point values which would then skip reading the
-    # last needed chunk.
-    for i in range(0, int(RATE / FRAMES_PER_BUFFER * SECONDS) + 1):
-        data = stream.read(FRAMES_PER_BUFFER)
-        frames.append(data)
+    for _ in range(AUDIO_INFERENCE_BATCH_SIZE):
+        binary_frames = []
+        samples_processed = 0
+        while samples_processed < AUDIO_INFERENCE_SAMPLES:
+            samples_to_read = max(
+                AUDIO_CHUNK, AUDIO_INFERENCE_SAMPLES - samples_processed
+            )
+            data = stream.read(samples_to_read)
+            binary_frames.append(data)
+            samples_processed += samples_to_read
+
+        partial_waveform_binary = b"".join(binary_frames)
+        waveform = np.frombuffer(partial_waveform_binary, dtype=np.int16)
+        waveform = waveform / 32768
+        waveform = waveform.astype(np.float32)
+
+        waveforms.append(waveform)
+        waveform_binary += partial_waveform_binary
 
     stream.stop_stream()
     stream.close()
 
-    waveform_binary = b"".join(frames)
-
-    waveform = np.frombuffer(waveform_binary, dtype=np.int16)
-    waveform = waveform / 32768
-    waveform = waveform.astype(np.float32)
-
-    return waveform, waveform_binary
+    return waveforms, waveform_binary
 
 
-# TODO: Record 10 seconds and strip it to 1 second segments.
-# TODO: Use the `detect_sounds` argument.
 def detect_specific_sounds(
     model,
     labels: List[str],
+    ignore_sounds: List[str] = ["Silence", "Speech"],
     detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,
 ) -> None:
@@ -193,51 +245,74 @@ def detect_specific_sounds(
     Continuously records audio segments form the microphone and passes it to the model
     to see if the prediction catches the specific sound.
 
+    If a detection happens the analyzed audio file is written down to an NFS-shared
+    folder and the subsequent parts of the pipeline are notified.
+
     Args:
         model: Model to use for detection.
         labels: Class names of the categories the model can recognize.
+        ignore_sounds: Class names to skip to reduce noise.
         detect_sounds: Detection will happen if on high score for those categories.
         zmq_socket: Used to notify the distributor a sound has been detected.
     """
-    waveform, waveform_binary = record_audio()
+    waveforms, waveform_binary = record_audio()
 
-    scores = model_predict(model, waveform)
+    predictions: List[Tuple[str, float]] = []
+    specific_sound_highest_scores = dict((n, 0.0) for n in detect_sounds)
 
-    class_scores = np.mean(scores, axis=0)
-    clip_clop_index = labels.index("Clip-clop")
-    print("Clip-clop index", clip_clop_index)
+    for i, waveform in enumerate(waveforms):
+        log_prefix = f"[{i}/{len(waveforms)}]"
 
-    clip_clop_prediction = class_scores[clip_clop_index]
-    print("Clip-clop prediction", clip_clop_prediction)
+        scores = model_predict(model, waveform)
+        class_scores = np.mean(scores, axis=0)
+        top_class_index = np.argmax(class_scores)
+        top_score = class_scores[top_class_index]
+        top_class_name = labels[top_class_index]
 
-    top_class = np.argmax(class_scores)
-    inferred_class = labels[top_class]
+        if top_class_name not in ignore_sounds:
+            predictions.append((top_class_name, top_score))
+            print(f"{log_prefix} Main sound: {top_class_name} (score {top_score})")
 
-    print(f"The main sound is: {inferred_class}")
+        for sound_to_detect in detect_sounds:
+            sound_index = labels.index(sound_to_detect)
+            sound_score = class_scores[sound_index]
 
-    # TODO: Calibrate this value.
-    if clip_clop_prediction > 0.0001:
-        print("DETECTED")
-        if os.path.exists(DETECTED_RECORDINGS_DIR):
-            filepath = write_audio(waveform_binary)
-            zmq_socket.send(filepath.encode("ascii"))
-        else:
-            print(
-                "Not writing detected sound to file because "
-                f"{DETECTED_RECORDINGS_DIR} does not exist."
+            specific_sound_highest_scores[sound_to_detect] = max(
+                specific_sound_highest_scores[sound_to_detect], sound_score
             )
+
+            if sound_score > 0:
+                print(
+                    f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
+                )
+
+    if len(predictions):
+        print(f"Batch predictions: {predictions}")
+        print(f"Batch highest scores: {specific_sound_highest_scores}")
+
+    # TODO: Implement this value and then calibrate it.
+    detected = False
+
+    if detected:
+        print("DETECTION")
+        if not SKIP_RECORDING:
+            file_path = write_audio(waveform_binary)
+            if zmq_socket:
+                zmq_socket.send(file_path.encode("ascii"))
 
 
 if __name__ == "__main__":
-    # Connect to the distributor that will be notified upon detection:
-    context = zmq.Context()
-    print(f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_ADDR}.")
-    socket = context.socket(zmq.PUSH)
-    socket.connect(ZMQ_DISTRIBUTOR_ADDR)
-    print(f"Connected!")
+    socket = None
+    if not SKIP_DETECTION_NOTIFICATION:
+        # Connect to the distributor that will be notified upon detection:
+        context = zmq.Context()
+        print(f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_ADDR}.")
+        socket = context.socket(zmq.PUSH)
+        socket.connect(ZMQ_DISTRIBUTOR_ADDR)
+        print("Connected!")
 
     model, labels = load_model_and_labels()
 
     # Run the detection loop.
     while True:
-        detect_specific_sounds(model, labels)
+        detect_specific_sounds(model, labels, zmq_socket=socket)
