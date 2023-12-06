@@ -133,7 +133,8 @@ Then on the Raspberry Pi mount the volume (`192.168.1.22` is the IP of the MacBo
 runs the NFS service):
 
 ```
-sudo mount --types nfs --verbose 192.168.1.22:/Users/eulersson/Devel/anesowa /mnt/nfs/anesowa
+sudo mkdir -p /mnt/nfs/development
+sudo mount --types nfs --verbose 192.168.1.22:/Users/eulersson/Devel/anesowa /mnt/nfs/development
 ```
 
 You can check it mounted correctly with `df -h` or by listing the mounted folder

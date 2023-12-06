@@ -1,0 +1,5 @@
+---
+# Tasks particular to the Raspberry Pi master node.
+
+- name: To implement
+  command: echo This is still to be implemented.

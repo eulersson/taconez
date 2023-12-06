@@ -1,0 +1,64 @@
+---
+# Install Docker from the official repository.
+#
+# - Install Docker Engine on Debian
+#   https://docs.docker.com/engine/install/debian/
+#
+# - How to Use Ansible to Install and Set Up Docker on Ubuntu 20.04
+#   https://www.digitalocean.com/community/tutorials/how-to-use-ansible-to-install-and-set-up-docker-on-ubuntu-20-04
+
+# - How to check if docker is installed - ansible - centos
+#   https://stackoverflow.com/a/70927289
+#
+# - How to check if a file exists in Ansible?
+#   https://stackoverflow.com/a/35680071
+#
+- name: Check if Docker is installed
+  stat:
+    path: /usr/bin/docker
+  register: docker_result
+
+- name: Check the stat result of checking for docker
+  debug:
+    var: docker_result
+
+- name: Install Docker
+  become: true
+  when: not docker_result.stat.exists
+  block:
+  # Ansible safely falls back onto apt for installing packages if aptitude is not
+  # available, but Ansible has historically preferred aptitude.
+  - name: Install aptitude
+    apt:
+      name: aptitude
+      state: latest
+      update_cache: true
+
+  - name: Install required system packages
+    apt:
+      pkg:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - python3-pip
+        - virtualenv
+        - python3-setuptools
+      state: latest
+      update_cache: true
+
+  - name: Add Docker GPG apt key
+    apt_key:
+      url: https://download.docker.com/linux/debian/gpg
+      state: present
+
+  - name: Add Docker respository
+    apt_repository:
+      repo: deb https://download.docker.com/linux/debian bookworm stable
+      state: present
+
+  - name: Update apt and install docker-ce
+    apt:
+      name: docker-ce
+      state: latest
+      update_cache: true

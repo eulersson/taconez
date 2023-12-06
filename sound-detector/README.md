@@ -22,8 +22,8 @@ Run:
 
 ```
 anesowa@rpi-master:~/anesowa $ docker run --rm -it \
-  --add-host host.docker.internal:host-gateway \
-  -e PULSE_SERVER host.docker.internal \
+  --add-host=host.docker.internal:host-gateway \
+  --env PULSE_SERVER=host.docker.internal \
   -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
   anesowa/sound-detector:1.0.0
 ```

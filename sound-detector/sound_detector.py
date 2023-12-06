@@ -8,6 +8,7 @@ https://github.com/eulersson/anesowa/tree/main/sound-detector
 import os
 import datetime
 import urllib.request
+import tarfile
 import wave
 import zipfile
 
@@ -22,13 +23,17 @@ import pandas as pd
 
 from numpy.typing import NDArray
 
-SKIP_DETECTION_NOTIFICATION = os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
+SKIP_DETECTION_NOTIFICATION = (
+    os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
+)
 
 # Endpoint where the distributor PULL socket is listening at.
+# The distributor runs as a container binding 5555 to the host.
 ZMQ_DISTRIBUTOR_ADDR = "tcp://host.docker.internal:5555"
 
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
-DETECTED_RECORDINGS_DIR = "/mnt/nfs/anesowa"
+# TODO: Ensure it doesn't get wiped out once we run the container again.
+DETECTED_RECORDINGS_DIR = "/recordings"
 
 SKIP_RECORDING = os.getenv("SKIP_RECORDING", "False") == "True"
 if not SKIP_RECORDING:
@@ -117,14 +122,23 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
         `tflite_runtime.interpreter.Interpreter(model_path)`.
     """
     if USE_TFLITE:
-        model_path = os.path.join(
-            os.path.dirname(__file__), "yamnet-classification.tflite"
+        print("Using TensorFlow Lite.")
+        # TODO: There might be a better way to download the model from Kaggle (former TensorFlow Hub).
+        model_tarball_path = os.path.join(
+            os.path.dirname(__file__), "yamnet-classification.tar.gz"
         )
-        if not os.path.exists(model_path):
+
+        if not os.path.exists(model_tarball_path):
             urllib.request.urlretrieve(
                 "https://www.kaggle.com/models/google/yamnet/frameworks/TfLite/variations/classification-tflite/versions/1/download",
-                model_path,
+                model_tarball_path,
             )
+
+        model_path = os.path.join(os.path.dirname(__file__), "1.tflite")
+        if not os.path.exists(model_path):
+            file = tarfile.open(model_tarball_path)
+            file.extractall(".")
+            file.close()
 
         import tflite_runtime.interpreter as tflite
 
@@ -148,6 +162,7 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
 
         return interpreter, labels
     else:
+        print("Using TensorFlow Core.")
         import tensorflow_hub as tfhub
 
         yamnet_model_handle = "https://tfhub.dev/google/yamnet/1"
@@ -302,7 +317,11 @@ def detect_specific_sounds(
 
 
 if __name__ == "__main__":
+    print("Running Sound Detector...")
+
     socket = None
+    if SKIP_DETECTION_NOTIFICATION:
+        print("Upon detections the distributor won't be notified.")
     if not SKIP_DETECTION_NOTIFICATION:
         # Connect to the distributor that will be notified upon detection:
         context = zmq.Context()

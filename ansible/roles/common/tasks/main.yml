@@ -1,0 +1,8 @@
+---
+# Install dependencies that are common among master and slave Raspberry Pi nodes.
+
+- name: Install Docker
+  import_tasks: docker.yml
+
+- name: Synchronize project files
+  import_tasks: project.yml

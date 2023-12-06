@@ -77,5 +77,8 @@ RUN eval poetry install --no-interaction \
 
 COPY . .
 
+ENV SKIP_RECORDING=False
+
+ENV SKIP_DETECTION_NOTIFICATION=False
 
 CMD python sound_detector.py

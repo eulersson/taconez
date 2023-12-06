@@ -1,0 +1,14 @@
+[Unit]
+Description=Sound Detector
+BindsTo=docker.service
+After=docker.service influxdb.service
+
+[Service]
+Type=exec
+Restart=always
+ExecPreStart=/home/anesowa/sound-detector/service/exec_pre_start.sh
+ExecStart=/home/anesowa/sound-detector/service/exec_start.sh
+ExecStop=/home/anesowa/sound-detector/service/exec_stop.sh
+
+[Install]
+WantedBy=multi-user.target
