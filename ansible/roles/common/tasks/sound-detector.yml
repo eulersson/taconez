@@ -1,0 +1,36 @@
+---
+# Builds the Sound Detector module.
+
+# - name: Build sound detector image
+#   become: true
+#   docker_image:
+#     build:
+#       path: "{{ project_root_remote }}/sound-detector"
+#     name: anesowa/sound-detector
+#     tag: "{{ project_version }}"
+#     source: build
+#   tags:
+#     - build-image
+
+- name: Install sound detector service scripts (ExecPreStart, ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  with_items:
+    - src: "{{ project_root_local }}/sound-detector/service/exec-start-pre.sh.j2"
+      dest: "{{ services_root_remote }}/sound-detector/exec-start-pre.sh"
+    - src: "{{ project_root_local }}/sound-detector/service/exec-start.sh.j2"
+      dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
+    - src: "{{ project_root_local }}/sound-detector/service/exec-stop.sh.j2"
+      dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
+  tags:
+    - services
+
+- name: Install sound detector service
+  become: true
+  template:
+    src: "{{ project_root_local }}/sound-detector/service/anesowa-sound-detector.service.j2"
+    dest: /etc/systemd/system/anesowa-sound-detector.service
+  tags:
+    - services

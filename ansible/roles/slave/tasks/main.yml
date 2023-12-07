@@ -1,5 +1,5 @@
 ---
 # Tasks particular to the Raspberry Pi slave nodes.
 
-- name: To implement
+- name: Slace main to implement
   command: echo This is still to be implemented.

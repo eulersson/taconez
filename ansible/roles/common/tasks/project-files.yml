@@ -1,0 +1,24 @@
+---
+# Synchronizes the project files to the remote system.
+
+- name: Create app folder for project files and service scripts
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}"
+    - "{{ services_root_remote }}/sound-detector"
+    - "{{ services_root_remote }}/sound-player"
+
+- name: Synchronize project files
+  synchronize:
+    src: "{{ project_root_local }}/"
+    dest: "{{ project_root_remote }}"
+    rsync_opts:
+      - "--exclude-from={{ project_root_local }}/rsync_exclude.txt"
+  tags:
+    - sync-project

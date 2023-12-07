@@ -92,7 +92,7 @@ Deploy slaves:
 eulersson@macbook:~/Devel/anesowa $ ansible-playbook ansible/site.yml -i ansible/hosts --limit slaves
 ```
 
-[Debugging tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html):
+[Debugging tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html):
 If you want to debug the output of a task you can place a debugger as follows:
 
 ```

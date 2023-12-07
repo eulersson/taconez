@@ -62,3 +62,7 @@
       name: docker-ce
       state: latest
       update_cache: true
+
+  - name: Install Python Docker SDK
+    pip:
+      name: docker

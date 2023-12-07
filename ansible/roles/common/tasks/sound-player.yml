@@ -1,0 +1,5 @@
+---
+# Builds the Sound Player module.
+
+- name: Sound player to implement
+  command: echo To Implement

@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# Runs a development container of the Sound Detector module.
+#
+# Intended for local container development mainly.
+
 if [ "$(uname)" == "Darwin" ]; then
-    ANESOWA_PROJECT_ROOT=$HOME/Devel/anesowa
+    ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-$HOME/Devel/anesowa}
     docker run --rm --tty --interactive \
       --env PULSE_SERVER=host.docker.internal \
       --env SKIP_RECORDING=True \
@@ -11,8 +15,7 @@ if [ "$(uname)" == "Darwin" ]; then
       --name anesowa-sound-detector-dev \
       anesowa/sound-detector:dev
 elif [ "$(uname)" == "Linux" ]; then
-    # On the Raspberry Pi the user's home folder (/home/anesowa) is the project root.
-    ANESOWA_PROJECT_ROOT=$HOME
+    ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-$HOME}
     docker run --rm --tty --interactive \
       --add-host=host.docker.internal:host-gateway \
       --env PULSE_SERVER=host.docker.internal \

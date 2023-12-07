@@ -1,0 +1,5 @@
+---
+# Configures NFS to be used as a server.
+
+- name: NFS server to implement
+  command: echo To Implement

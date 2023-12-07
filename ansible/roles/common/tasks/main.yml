@@ -5,4 +5,12 @@
   import_tasks: docker.yml
 
 - name: Synchronize project files
-  import_tasks: project.yml
+  import_tasks: project-files.yml
+
+- name: Building Sound Detector module
+  import_tasks: sound-detector.yml
+  tags:
+    - sound-detector
+
+- name: Building Sound Player module
+  import_tasks: sound-player.yml

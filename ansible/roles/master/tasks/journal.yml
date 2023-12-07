@@ -1,0 +1,5 @@
+---
+# Builds, installs and configures the journal web app.
+
+- name: Journal web app to implement
+  command: echo To Implement
