@@ -66,6 +66,30 @@ Host 192.168.1.76 rpi-master.local rpi-master.home
   UseKeychain yes
 ```
 
+## Install PulseAudio
+
+```
+anesowa@raspberry:~ $ sudo apt install pulseaudio
+anesowa@raspberry:~ $ systemctl --user start pulseaudio.service
+```
+
+## Configure Audio
+
+For each Raspberry Pi you will need to do some manual pre-deployment steps.
+
+1. [Configure the single or multiple speakers](2-rpi-sound-setup.md#usb-speaker) (USB or
+   Bluetooth) that you will use for that Raspberry Pi.
+2. [Combine the PulseAudio sinks](2-rpi-sound-setup.md#combining-sinks) so sound is sent
+   to the speaker group.
+3. [Persist the combined sink across reboots](2-rpi-sound-setup.md#persisting-configuration)
+   (by adding `module-combine-sink` on the `PulseAudio Server Startup Script`).
+4. [Enable PulseAudio comunication over TCP](3-docker-container-sound#docker-container-sound-on-raspberry-pi)
+   (by adding `module-native-protocol-tcp` on the `PulseAudio Server Startup Script`).
+
+⚠️ If you skip one of these manual pre-installation steps the container will fail either
+due to failed communication with the host PulseAudio server or because no devices are
+found.
+
 ## Running Ansible Playbook
 
 First add the hosts on the inventary `ansible/inventory/hosts`:
@@ -92,6 +116,21 @@ Deploy slaves:
 eulersson@macbook:~/Devel/anesowa $ ansible-playbook ansible/site.yml -i ansible/hosts --limit slaves
 ```
 
+## Troubleshooting
+
+You can print out ansible variables:
+
+```
+- name: Check if Docker is installed
+  stat:
+    path: /usr/bin/docker
+  register: docker_result
+
+- name: Check the stat result of checking for docker
+  debug:
+    var: docker_result
+```
+
 [Debugging tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html):
 If you want to debug the output of a task you can place a debugger as follows:
 
@@ -107,8 +146,8 @@ If you want to debug the output of a task you can place a debugger as follows:
     - sync-project
 ```
 
-Then after running this task a breakpoint gets hit and you can inspect the command
-and its output:
+Then after running this task a breakpoint gets hit and you can inspect the command and
+its output:
 
 ```
 eulersson@macbook:~/Devel/anesowa $ ansible-playbook ansible/site.yml -i ansible/hosts --limit master --tags sync-project
@@ -139,56 +178,7 @@ changed: [rpi-master.home]
         '<f++++++++++ playback-distributor/playback_distri
 ```
 
-
-## Running the Ansible Playbook
-
-TODO: Do an Ansible playbook for:
-
-- Raspberry Pi Zero
-- Rasbperry Pi 3 B
-- Raspberry Pi 4
-
-Where you do something like:
-
-```
-deploy --type raspberry-pi-zero 192.168.0.55
-```
-
-So the Raspberry Pi type should be parametrized.
-
-## Things to Translate Into Ansible Playbook
-
-### Docker
-
-Docker is needed on the Raspberry Pis:
-
-```
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# Add the repository to Apt sources:
-echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-sudo groupadd docker
-sudo usermod -aG docker $USER
-newgrp docker
-```
-
-```
-docker run hello-world
-```
-
-### Raspberry Pi < 4
+TODO:Raspberry Pi < 4
 
 Those Raspberry Pis will need an explicit install of the **PulseAudio** system, because
 otherwise they only run on **ALSA**.

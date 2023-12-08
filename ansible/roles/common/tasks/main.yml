@@ -1,11 +1,20 @@
 ---
-# Install dependencies that are common among master and slave Raspberry Pi nodes.
+# Installs dependencies that are common among master and slave Raspberry Pi nodes.
+
+- name: Install audio dependencies
+  import_tasks: audio.yml
+  tags:
+    - audio
 
 - name: Install Docker
   import_tasks: docker.yml
+  tags:
+    - docker
 
 - name: Synchronize project files
   import_tasks: project-files.yml
+  tags:
+    - project-files
 
 - name: Building Sound Detector module
   import_tasks: sound-detector.yml
@@ -14,3 +23,5 @@
 
 - name: Building Sound Player module
   import_tasks: sound-player.yml
+  tags:
+    - sound-player

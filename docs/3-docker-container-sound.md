@@ -9,7 +9,14 @@ did not explore that route because I didn't want to deal with UNIX permissions; 
 way uses a cookie mechanism and simply by binding the cookie file and by making the host
 service reachable to the container works out well.
 
-### Docker Container Sound on Raspberry Pi
+I show show to do it on a:
+
+- Raspberry Pi: Required before deploying the Ansible Playbook, otherwise the containers
+  that will be deployed won't work. See
+  [Provisioning and Deployment](1-provisioning-and-deployment.md).
+- macOS: If you want to develop locally away from a Raspberry Pi.
+
+### On Raspberry Pi
 
 Make sure the PulseAudio server process is running on the host and that you have placed
 a file on `/etc/pulse/default.pa.d/enable-tcp.pa` and specified to enable the `tcp`
@@ -57,7 +64,7 @@ root@460b1452b6ba:/anesowa/sound-detector# paplay hello.wav
 root@460b1452b6ba:/anesowa/sound-detector# python sound_detector.py
 ```
 
-### Docker Container Sound on macOS Host
+### On macOS
 
 If you are developing on a macOS you might find trouble accessing the host microphone
 and audio playback device.

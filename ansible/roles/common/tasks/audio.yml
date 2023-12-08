@@ -1,0 +1,22 @@
+---
+# Installes the audio dependencies (PulseAudio).
+
+- name: Check if PulseAudio is installed
+  stat:
+    path: /usr/bin/pulseaudio
+  register: pulseaudio_result
+
+- name: Install PulseAudio
+  become: true
+  when: not pulseaudio_result.stat.exists
+  apt:
+    name: pulseaudio
+    state: latest
+    update_cache: true
+
+- name: Start PulseAudio
+  systemd:
+    state: start
+    name: pulseaudio
+    scope: user
+

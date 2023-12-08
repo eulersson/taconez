@@ -18,10 +18,6 @@
     path: /usr/bin/docker
   register: docker_result
 
-- name: Check the stat result of checking for docker
-  debug:
-    var: docker_result
-
 - name: Install Docker
   become: true
   when: not docker_result.stat.exists
