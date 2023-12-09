@@ -1,4 +1,6 @@
 - hosts: slaves
   roles:
-    - common
-    - slave
+    - role: common
+      tags: [ common ]
+    - role: slave
+      tags: [ slave ]

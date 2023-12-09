@@ -23,7 +23,7 @@ Since our app will run on Docker containers that will use
 ([PortAudio](https://people.csail.mit.edu/hubert/pyaudio/)'s Python bindings) to
 interact with the microphone and speakers we will have a bit of a challenge depending on
 whether the host running the container is Raspberry Pi OS or macOS. This is explained in
-[Docker Container Sound on macOS Host](3-docker-container-sound).
+[Docker Container Sound](3-docker-container-sound.md).
 
 ### Dependencies
 
@@ -299,8 +299,9 @@ context.exec = [
 
 ### Persisting Audio Volume Levels
 
-First we need to disable a feature called **flat volumes** that will mess with the rest
-of volumes when you change a particular one.
+First we need to disable a feature called **flat volumes** on the PulseAudio daemon
+(`/etc/pulse/daemon.conf`) that will mess with the rest of volumes when you change a
+particular one.
 
 > **flat-volumes** scales the device-volume with the volume of the "loudest"
 > application. For example, raising the VoIP call volume will raise the hardware volume
@@ -327,24 +328,21 @@ Volume: front-left: 30446 /  46% / -19.98 dB,   front-right: 30446 /  46% / -19.
         balance 0.00
 ```
 
-As you can see it is at `46%` (value of `30446`). The `100%` is `65536`. Let's change it
-to the maximum (100%):
-
 ```
-$ pactl set-sink-volume bluez_output.F8_5C_7D_0F_6D_46.1 65536
+$ pactl set-sink-volume bluez_output.F8_5C_7D_0F_6D_46.1 100%
 ```
 
 Do this with the rest of individual speakers:
 
 ```
-$ pactl set-sink-volume alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo 65536
-$ pactl set-sink-volume bluez_output.70_99_1C_51_36_1B.1 65536
+$ pactl set-sink-volume alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo 100%
+$ pactl set-sink-volume bluez_output.70_99_1C_51_36_1B.1 100%
 ```
 
 Do it with the combined sink too if you want:
 
 ```
-$ pactl set-sink-volume combined-sink 65536
+$ pactl set-sink-volume combined-sink 100%
 ```
 
 If you reboot, even if the bluetooth speaker disconnects it seems to retain the volume

@@ -1,0 +1,16 @@
+---
+# Custom variables for the master host. Since each Raspberry Pi might be of a different
+# model or have different speakers and microphones it needs to be configured different
+# individually.
+
+# Raspberry Pi Model.
+rpi_model: 4B
+
+pulse_audio_sinks:
+  - alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo
+
+# Default speaker to use when playing sound.
+pulse_audio_default_sink: combined
+
+# Default microphone to use when recording sound.
+pulse_audio_default_source: alsa_input.usb-MUSIC-BOOST_USB_Microphone_MB-306-00.mono-fallback

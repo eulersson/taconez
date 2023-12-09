@@ -191,7 +191,12 @@ sudo exportfs -ra
 ### Connecting from a macOS
 
 To connect using _File Explorer > Go > Connect to Server_ (<kbd>⌘</kbd> + <kbd>K</kbd>)
-and type in `nfs://raspberrypi.local/mnt/nfs/anesowa`.
+and type in `nfs://raspberrypi.local/mnt/nfs/anesowa`. Or if you prefer the CLI:
+
+```
+sudo mkdir -p /Volumes/anesowa
+sudo mount_nfs -v rpi-master.home:/mnt/nfs/anesowa /Volumes/anesowa
+```
 
 ### Connecting from Other Raspberry Pi
 

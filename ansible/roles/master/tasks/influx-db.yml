@@ -1,0 +1,5 @@
+---
+# Installs and configures InfluxDB.
+
+- name: TODO Influx DB to implement
+  command: echo TODO

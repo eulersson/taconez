@@ -1,5 +1,31 @@
 ---
 # Configures NFS to be used as a server.
 
-- name: NFS server to implement
-  command: echo To Implement
+- name: Install NFS dependencies
+  become: true
+  apt:
+    name: nfs-kernel-server
+    state: latest
+    update_cache: true
+
+- name: Create app folder to turn into an NFS share
+  become: true
+  file:
+    path: "/mnt/nfs/anesowa"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+
+# TODO: Do not allow anonymous access.
+- name: Configure NFS exports"
+  become: true
+  template:
+    src: "exports.j2"
+    dest: "/etc/exports"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  vars:
+    allowed_hosts: "{{ nfs_allowed_hosts }}"
+  notify: Reexport NFS shares

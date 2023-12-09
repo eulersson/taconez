@@ -22,43 +22,43 @@
   become: true
   when: not docker_result.stat.exists
   block:
-  # Ansible safely falls back onto apt for installing packages if aptitude is not
-  # available, but Ansible has historically preferred aptitude.
-  - name: Install aptitude
-    apt:
-      name: aptitude
-      state: latest
-      update_cache: true
+    # Ansible safely falls back onto apt for installing packages if aptitude is not
+    # available, but Ansible has historically preferred aptitude.
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
 
-  - name: Install required system packages
-    apt:
-      pkg:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - software-properties-common
-        - python3-pip
-        - virtualenv
-        - python3-setuptools
-      state: latest
-      update_cache: true
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
 
-  - name: Add Docker GPG apt key
-    apt_key:
-      url: https://download.docker.com/linux/debian/gpg
-      state: present
+    - name: Add Docker GPG apt key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
 
-  - name: Add Docker respository
-    apt_repository:
-      repo: deb https://download.docker.com/linux/debian bookworm stable
-      state: present
+    - name: Add Docker respository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/debian bookworm stable
+        state: present
 
-  - name: Update apt and install docker-ce
-    apt:
-      name: docker-ce
-      state: latest
-      update_cache: true
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
 
-  - name: Install Python Docker SDK
-    pip:
-      name: docker
+    - name: Install Python Docker SDK
+      pip:
+        name: docker

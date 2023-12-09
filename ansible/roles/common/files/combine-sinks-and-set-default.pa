@@ -1,0 +1,2 @@
+load-module module-combine-sink
+set-default-sink combined

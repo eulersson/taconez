@@ -73,22 +73,10 @@ anesowa@raspberry:~ $ sudo apt install pulseaudio
 anesowa@raspberry:~ $ systemctl --user start pulseaudio.service
 ```
 
-## Configure Audio
+## Configure Individual Raspberry Pi Host Variables
 
-For each Raspberry Pi you will need to do some manual pre-deployment steps.
-
-1. [Configure the single or multiple speakers](2-rpi-sound-setup.md#usb-speaker) (USB or
-   Bluetooth) that you will use for that Raspberry Pi.
-2. [Combine the PulseAudio sinks](2-rpi-sound-setup.md#combining-sinks) so sound is sent
-   to the speaker group.
-3. [Persist the combined sink across reboots](2-rpi-sound-setup.md#persisting-configuration)
-   (by adding `module-combine-sink` on the `PulseAudio Server Startup Script`).
-4. [Enable PulseAudio comunication over TCP](3-docker-container-sound#docker-container-sound-on-raspberry-pi)
-   (by adding `module-native-protocol-tcp` on the `PulseAudio Server Startup Script`).
-
-⚠️ If you skip one of these manual pre-installation steps the container will fail either
-due to failed communication with the host PulseAudio server or because no devices are
-found.
+Open up `ansible/host_vars/{host-name}.yml` and configure each value specifically such
+as the name of the microphone to use and the Raspberry Pi version that host has.
 
 ## Running Ansible Playbook
 
@@ -101,7 +89,6 @@ rpi-master.home
 [slaves]
 rpi-slave-1.home
 rpi-slave-2.home
-rpi-slave-3.home
 ```
 
 Deploy master:

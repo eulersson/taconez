@@ -1,5 +1,5 @@
 ---
-# Installes the audio dependencies (PulseAudio).
+# Installs the audio dependencies (PulseAudio).
 
 - name: Check if PulseAudio is installed
   stat:
@@ -14,9 +14,39 @@
     state: latest
     update_cache: true
 
-- name: Start PulseAudio
+- name: Extend PulseAudio Server Startup Script
+  become: true
+  copy:
+    src: "{{ item }}"
+    dest: /etc/pulse/default.pa.d/
+  loop:
+    - combine-sinks-and-set-default.pa
+    - enable-tcp.pa
+
+- name: Make sure not flat volumes are set
+  become: true
+  lineinfile:
+    path: /etc/pulse/daemon.conf
+    regexp: ^; flat-volumes = no
+    line: flat-volumes = no
+
+- name: Set volumes of each sink to maximum
+  shell: pactl set-sink-volume {{ item }} 100%
+  loop: "{{ pulse_audio_sinks + [ 'combined' ] }}"
+
+- name: Set volumes of the default source (microphone) to maximum
+  shell: pactl set-source-volume {{ pulse_audio_default_source }} 100%
+
+- name: Enable and restart PulseAudio
   systemd:
-    state: start
+    enabled: true
+    daemon_reload: true
     name: pulseaudio
     scope: user
+    state: restarted
 
+- name: Set default sink to the combined group
+  command: /usr/bin/pactl set-default-sink combined
+
+- name: Set default source (microphone)
+  command: pactl set-default-source {{ pulse_audio_default_source }}

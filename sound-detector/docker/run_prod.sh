@@ -25,10 +25,10 @@ elif [ "$(uname)" == "Linux" ]; then
     ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-$HOME}
     # Useful for seeing the actual command that's run on the service logs.
     set -x;
-    docker run --rm --tty \
+    docker run --tty \
       --add-host=host.docker.internal:host-gateway \
       --env PULSE_SERVER=host.docker.internal \
-      --volume $HOME/.config/pulse/cookie:/root/.config/pulse/cookie \
+      --volume /home/anesowa/.config/pulse/cookie:/root/.config/pulse/cookie \
       --volume /mnt/nfs/anesowa:/recordings \
       --name $ANESOWA_CONTAINER_NAME \
       anesowa/sound-detector:$ANESOWA_VERSION

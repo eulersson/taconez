@@ -1,14 +1,14 @@
 [Unit]
 Description=Anesowa Sound Detector
 BindsTo=docker.service
-After=docker.service
+After=docker.service pulseaudio.service pulseaudio.socket
 
 [Service]
 Type=exec
 Restart=always
-Environment=ANESOWA_VERSION=1.0.0
+Environment=ANESOWA_VERSION={{ project_version }}
 Environment=ANESOWA_PROJECT_ROOT={{ project_root_remote }}
-ExecStartPre={{ services_root_remote }}/sound-detector/exec-start-pre.sh
+#ExecStartPre={{ services_root_remote }}/sound-detector/exec-start-pre.sh
 ExecStart={{ services_root_remote }}/sound-detector/exec-start.sh
 ExecStop={{ services_root_remote }}/sound-detector/exec-stop.sh
 TimeoutStartSec=900

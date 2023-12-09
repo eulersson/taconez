@@ -14,6 +14,7 @@ tflite-runtime = { version = "~2.13.0", platform = "linux" }
 
 # You can install all the tensorflow (not only the tensorflow lite) by passing `--with tensorflow-dev`
 # when running `poetry install`.
+python-slugify = "^8.0.1"
 [tool.poetry.group.tensorflow-dev]
 optional = true
 

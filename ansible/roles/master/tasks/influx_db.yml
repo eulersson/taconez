@@ -1,5 +1,0 @@
----
-# Installs and configures InfluxDB.
-
-- name: InfluxDB to implement
-  command: echo To Implement

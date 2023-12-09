@@ -22,6 +22,8 @@ import numpy as np
 import pandas as pd
 
 from numpy.typing import NDArray
+from slugify import slugify
+
 
 SKIP_DETECTION_NOTIFICATION = (
     os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
@@ -174,11 +176,12 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
         return yamnet_model, class_names
 
 
-def write_audio(frames: bytes) -> str:
+def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     """Writes audio frames as bytes to a file.
 
     Args:
-        frames The audio binary content to write.
+        frames: The audio binary content to write.
+        suffix: To suffix the resulting file with.
 
     Returns:
         The filename where the .wav file is saved.
@@ -186,7 +189,10 @@ def write_audio(frames: bytes) -> str:
     https://gist.github.com/kepler62f/9d5836a1eff8b372ddf6de43b5b74d95
 
     """
-    file_name = f"{datetime.datetime.now().isoformat()}.wav"
+    if suffix:
+        suffix = f"_{suffix}"
+
+    file_name = f"{datetime.datetime.now().isoformat()}{suffix}.wav"
     file_path = os.path.join(DETECTED_RECORDINGS_DIR, file_name)
 
     wavefile = wave.open(file_path, "wb")
@@ -195,6 +201,8 @@ def write_audio(frames: bytes) -> str:
     wavefile.setframerate(AUDIO_RATE)
     wavefile.writeframes(frames)
     wavefile.close()
+
+    print(f"Saved sound to {file_path}.")
 
     return file_path
 
@@ -252,7 +260,16 @@ def record_audio() -> Tuple[List[NDArray], bytes]:
 def detect_specific_sounds(
     model,
     labels: List[str],
-    ignore_sounds: List[str] = ["Silence", "Speech"],
+    # TODO: Turn that into a file that's read from.
+    ignore_sounds: List[str] = [
+        "Silence",
+        "Speech",
+        "Snoring",
+        "Music",
+        "Inside, small room",
+        "White noise",
+        "Breathing",
+    ],
     detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,
 ) -> None:
@@ -275,6 +292,7 @@ def detect_specific_sounds(
     predictions: List[Tuple[str, float]] = []
     specific_sound_highest_scores = dict((n, 0.0) for n in detect_sounds)
 
+    top_class_name = None
     for i, waveform in enumerate(waveforms):
         log_prefix = f"[{i}/{len(waveforms)}]"
 
@@ -306,12 +324,26 @@ def detect_specific_sounds(
         print(f"Batch highest scores: {specific_sound_highest_scores}")
 
     # TODO: Implement this value and then calibrate it.
-    detected = False
+    detected = len(predictions)
 
+    suffix = ""
     if detected:
-        print("DETECTION")
+        if top_class_name not in ignore_sounds:
+            suffix = top_class_name
+        else:
+            for prediction_name, prediction_value in sorted(
+                predictions, key=lambda x: x[1]
+            ):
+                if prediction_name not in ignore_sounds:
+                    suffix = prediction_name
+                    break
+
+        print(f"DEBUG: Sluggifying {suffix}")
+        suffix = slugify(suffix, separator="_")
+
+        print("DETECTION", top_class_name)
         if not SKIP_RECORDING:
-            file_path = write_audio(waveform_binary)
+            file_path = write_audio(waveform_binary, suffix=suffix)
             if zmq_socket:
                 zmq_socket.send(file_path.encode("ascii"))
 

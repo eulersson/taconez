@@ -1,5 +1,17 @@
 ---
 # Tasks particular to the Raspberry Pi master node.
 
-- name: Master to implement
-  command: echo This is still to be implemented.
+- name: Install and configure InfluxDB
+  import_tasks: influx-db.yml
+  tags:
+    - influx-db
+
+- name: Install NFS and configure a share
+  import_tasks: nfs.yml
+  tags:
+    - nfs
+
+- name: Prepare Journal Web App
+  import_tasks: journal.yml
+  tags:
+    - journal

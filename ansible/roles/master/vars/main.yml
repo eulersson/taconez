@@ -1,0 +1,4 @@
+---
+# Variables associated with master nodes.
+
+nfs_allowed_hosts: 192.168.1.0/24
