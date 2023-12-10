@@ -10,8 +10,9 @@
 # You can also launch it from the local machine instead too for debugging purposes.
 
 # If launched by the systemd service these two variables will be set.
-ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-detector-prod}
+ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-detector}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
+INFLUX_DB_TOKEN=${INFLUX_DB_TOKEN:-no_token}
 
 if [ "$(uname)" == "Darwin" ]; then
     ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-$HOME/Devel/anesowa}
@@ -28,6 +29,7 @@ elif [ "$(uname)" == "Linux" ]; then
     docker run --tty \
       --add-host=host.docker.internal:host-gateway \
       --env PULSE_SERVER=host.docker.internal \
+      --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
       --volume /home/anesowa/.config/pulse/cookie:/root/.config/pulse/cookie \
       --volume /mnt/nfs/anesowa:/recordings \
       --name $ANESOWA_CONTAINER_NAME \

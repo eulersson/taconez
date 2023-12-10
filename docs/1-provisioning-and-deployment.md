@@ -105,6 +105,8 @@ eulersson@macbook:~/Devel/anesowa $ ansible-playbook ansible/site.yml -i ansible
 
 ## Troubleshooting
 
+### Register and Debug Vars
+
 You can print out ansible variables:
 
 ```
@@ -117,6 +119,16 @@ You can print out ansible variables:
   debug:
     var: docker_result
 ```
+
+### Verbosity
+
+Increase verbosity with `-vvv`:
+
+```
+ansible-playbook ansible/site.yml -i ansible/hosts --limit master --tags influx-db -vvv
+```
+
+### Debugger
 
 [Debugging tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html):
 If you want to debug the output of a task you can place a debugger as follows:

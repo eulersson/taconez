@@ -1,5 +1,58 @@
 ---
 # Installs and configures InfluxDB.
 
-- name: TODO Influx DB to implement
-  command: echo TODO
+- name: Create app folder for Influx DB service scripts
+  become: true
+  file:
+    path: "{{ services_root_remote }}/influx-db"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+
+- name: Install Influx DB service scripts (ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  loop:
+    - src: "{{ project_root_local }}/influx-db/service/exec-start.sh.j2"
+      dest: "{{ services_root_remote }}/influx-db/exec-start.sh"
+    - src: "{{ project_root_local }}/influx-db/service/exec-stop.sh.j2"
+      dest: "{{ services_root_remote }}/influx-db/exec-stop.sh"
+  tags: [services]
+
+- name: Install Influx DB service
+  become: true
+  template:
+    src:
+      "{{ project_root_local }}/influx-db/service/influx-db.service.j2"
+    dest: /etc/systemd/system/influx-db.service
+  tags: [services]
+
+- name: Pull Influx DB Docker image used by the service
+  become: true
+  docker_image:
+    name: "{{ influx_db_server_docker_image }}"
+    source: pull
+
+- name: Ensure Influx DB service is stopped
+  become: true
+  systemd:
+    name: influx-db.service
+    state: stopped
+
+- name: Ensure no Influx DB containers exist
+  become: true
+  docker_container:
+    name: influx-db-server
+    state: absent
+
+- name: Restart Influx DB service
+  become: true
+  systemd_service:
+    daemon_reload: true
+    enabled: true
+    state: restarted
+    name: influx-db.service
+  tags: [services]

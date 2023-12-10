@@ -1,7 +1,7 @@
 ---
 # Synchronizes the project files to the remote system.
 
-- name: Create app folder for project files and service scripts
+- name: Create app folder for project service scripts
   become: true
   file:
     path: "{{ item }}"

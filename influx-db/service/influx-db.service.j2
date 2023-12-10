@@ -1,0 +1,15 @@
+[Unit]
+Description=Influx DB
+BindsTo=docker.service
+After=docker.service
+
+[Service]
+Type=exec
+Environment=ANESOWA_PROJECT_ROOT={{ project_root_remote }}
+Environment=INFLUX_DB_SERVER_DOCKER_IMAGE={{ influx_db_server_docker_image }}
+Environment=INFLUX_DB_TOKEN={{ influx_db_token }}
+ExecStart={{ services_root_remote }}/influx-db/exec-start.sh
+ExecStop={{ services_root_remote }}/influx-db/exec-stop.sh
+
+[Install]
+WantedBy=multi-user.target

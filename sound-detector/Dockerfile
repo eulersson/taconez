@@ -81,4 +81,6 @@ ENV SKIP_RECORDING=False
 
 ENV SKIP_DETECTION_NOTIFICATION=False
 
+ENV INFLUX_DB_TOKEN=no_token
+
 CMD python sound_detector.py

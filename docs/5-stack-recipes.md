@@ -81,7 +81,7 @@ anesowa@raspberrypi:~ $ date +%s
 
 # Create an entry:
 anesowa@raspberrypi:~ $ influx write --bucket anesowa --precision s "
-acons,sound=high_heel soundfile=\"/path/to/soundfile.wav\" $(date +%s)
+detections,sound=high-heel soundfile=\"/path/to/soundfile.wav\" $(date +%s)
 "
 
 # Querying:

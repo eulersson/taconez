@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# If launched by the systemd service these enviornment variable will be set.
-ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-detector-prod}
+ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-detector}
 
-# Useful for seeing the actual command that's run on the service logs.
 set -x;
 docker stop $ANESOWA_CONTAINER_NAME
 set +x;

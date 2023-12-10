@@ -17,7 +17,7 @@
     group: anesowa
     mode: 0755
 
-# TODO: Do not allow anonymous access.
+# TODO: Do not allow anonymous access?
 - name: Configure NFS exports"
   become: true
   template:

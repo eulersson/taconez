@@ -18,7 +18,7 @@
 - name: Ensure no Sound Detector containers exist
   become: true
   docker_container:
-    name: anesowa-sound-detector-prod
+    name: anesowa-sound-detector
     state: absent
 
 - name: Build Sound Detector image
@@ -39,7 +39,7 @@
     images_filters: dangling=true
   tags: [build-image]
 
-- name: Install Sound Detector service scripts (ExecPreStart, ExecStart, ExecStop)
+- name: Install Sound Detector service scripts (ExecStart, ExecStop)
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"

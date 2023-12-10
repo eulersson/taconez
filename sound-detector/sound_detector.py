@@ -15,12 +15,14 @@ import zipfile
 from typing import Any, List, Tuple, Optional
 
 # Third-Party Imports
+import influxdb_client
 import pyaudio
 import zmq
 
 import numpy as np
 import pandas as pd
 
+from influxdb_client.client.write_api import SYNCHRONOUS
 from numpy.typing import NDArray
 from slugify import slugify
 
@@ -28,6 +30,9 @@ from slugify import slugify
 SKIP_DETECTION_NOTIFICATION = (
     os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
 )
+
+INFLUX_DB_ADDR = "http://host.docker.internal:8086"
+INFLUX_DB_TOKEN = os.getenv("INFLUX_DB_TOKEN")
 
 # Endpoint where the distributor PULL socket is listening at.
 # The distributor runs as a container binding 5555 to the host.
@@ -192,19 +197,53 @@ def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     if suffix:
         suffix = f"_{suffix}"
 
-    file_name = f"{datetime.datetime.now().isoformat()}{suffix}.wav"
-    file_path = os.path.join(DETECTED_RECORDINGS_DIR, file_name)
+    now = datetime.datetime.now()
 
-    wavefile = wave.open(file_path, "wb")
-    wavefile.setnchannels(AUDIO_CHANNELS)
-    wavefile.setsampwidth(p.get_sample_size(pyaudio.paInt16))
-    wavefile.setframerate(AUDIO_RATE)
-    wavefile.writeframes(frames)
-    wavefile.close()
+    # E.g. '2023-12-10T17:05:52.578411_knock.wav'
+    file_name = f"{now.isoformat()}{suffix}.wav"
 
-    print(f"Saved sound to {file_path}.")
+    # E.g. '2023/12/22'
+    year_month_day_folder = os.path.join(str(now.year), str(now.month), str(now.day))
 
-    return file_path
+    # E.g. '2023/12/22/2023-12-10T17:05:52.578411_knock.wav'
+    relative_file_path = os.path.join(year_month_day_folder, file_name)
+
+    # E.g. '/recordings/2023/12/22/2023-12-10T17:05:52.578411_knock.wav'
+    absolute_file_path = os.path.join(DETECTED_RECORDINGS_DIR, relative_file_path)
+
+    os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
+
+    wave_file = wave.open(absolute_file_path, "wb")
+    wave_file.setnchannels(AUDIO_CHANNELS)
+    wave_file.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    wave_file.setframerate(AUDIO_RATE)
+    wave_file.writeframes(frames)
+    wave_file.close()
+
+    print(f"Saved sound to {absolute_file_path}.")
+
+    return absolute_file_path
+
+
+def write_db_entry(slugified_class_name, relative_sound_path):
+    """Writes the sound occurrence to the Influx DB store.
+
+    Args:
+        class_name: Name of the highest scoring label the sound matches.
+        relative_sound_path: Path relative to DETECTED_RECORDINGS_DIR, e.g.
+          `2023/12/10/2023-12-10-16-43.wav`.
+    """
+    client = influxdb_client.InfluxDBClient(
+        url=INFLUX_DB_ADDR, org="anesowa", token=INFLUX_DB_TOKEN
+    )
+
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+    p = (
+        influxdb_client.Point("detections")
+        .tag("sound", slugified_class_name)
+        .field("soundfile", relative_sound_path)
+    )
+    write_api.write(bucket="anesowa", org="anesowa", record=p)
 
 
 def record_audio() -> Tuple[List[NDArray], bytes]:
@@ -326,26 +365,30 @@ def detect_specific_sounds(
     # TODO: Implement this value and then calibrate it.
     detected = len(predictions)
 
-    suffix = ""
+    slugified_top_class_name = ""
     if detected:
         if top_class_name not in ignore_sounds:
-            suffix = top_class_name
+            slugified_top_class_name = top_class_name
         else:
             for prediction_name, prediction_value in sorted(
                 predictions, key=lambda x: x[1]
             ):
                 if prediction_name not in ignore_sounds:
-                    suffix = prediction_name
+                    slugified_top_class_name = prediction_name
                     break
 
-        print(f"DEBUG: Sluggifying {suffix}")
-        suffix = slugify(suffix, separator="_")
+        slugified_top_class_name = slugify(slugified_top_class_name, separator="_")
 
         print("DETECTION", top_class_name)
         if not SKIP_RECORDING:
-            file_path = write_audio(waveform_binary, suffix=suffix)
+            file_path = write_audio(waveform_binary, suffix=slugified_top_class_name)
+            relative_sound_path = os.path.relpath(file_path, DETECTED_RECORDINGS_DIR)
+
+            if not SKIP_DETECTION_NOTIFICATION:
+                write_db_entry(slugified_top_class_name, relative_sound_path)
+
             if zmq_socket:
-                zmq_socket.send(file_path.encode("ascii"))
+                zmq_socket.send(relative_sound_path.encode("ascii"))
 
 
 if __name__ == "__main__":
@@ -354,7 +397,7 @@ if __name__ == "__main__":
     socket = None
     if SKIP_DETECTION_NOTIFICATION:
         print("Upon detections the distributor won't be notified.")
-    if not SKIP_DETECTION_NOTIFICATION:
+    else:
         # Connect to the distributor that will be notified upon detection:
         context = zmq.Context()
         print(f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_ADDR}.")
