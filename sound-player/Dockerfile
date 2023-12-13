@@ -8,3 +8,7 @@ RUN apk --update add build-base cmake pulseaudio-dev zeromq-dev
 RUN apk add pulseaudio-utils
 
 COPY . .
+
+RUN cmake -S . -B build --fresh && cmake --build build --verbose
+
+# TODO: Cleanup build-time dependencies.

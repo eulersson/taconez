@@ -12,7 +12,7 @@ if [ "$(uname)" == "Darwin" ]; then
       --build-arg="USE_TFLITE=0" \
       --tag anesowa/sound-detector:dev $ANESOWA_PROJECT_ROOT/sound-detector
 elif [ "$(uname)" == "Linux" ]; then
-    ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-$HOME}
+    ANESOWA_PROJECT_ROOT=${ANESOWA_PROJECT_ROOT:-/app/anesowa}
     docker build \
       --build-arg="DEBUG=1" \
       --build-arg="INSTALL_DEV_DEPS=1" \

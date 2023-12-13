@@ -63,7 +63,7 @@ The main program entrypoint is `./build/sound_player`
 ### Container Development (Running IDE in Host)
 
 ```
-eulersson@macbook:~/Devel/anesowa $ docker build -t anesowa/sound-player:1.0.0 ./sound-player
+eulersson@macbook:~/Devel/anesowa $ ./sound-player/docker/build_dev.sh
 ```
 
 ```

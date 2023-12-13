@@ -14,6 +14,9 @@ include(CMakePrintHelpers)
 find_path(PULSEAUDIO_INCLUDE_DIR pulse/pulseaudio.h)
 cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
 
+find_path(ZMQ_INCLUDE_DIR zmq.h)
+cmake_print_variables(ZMQ_INCLUDE_DIR)
+
 find_library(PULSEAUDIO_LIBRARY pulse)
 cmake_print_variables(PULSEAUDIO_LIBRARY)
 
@@ -24,6 +27,7 @@ find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
 include_directories(${PULSEAUDIO_INCLUDE_DIR})
+include_directories(${ZMQ_INCLUDE_DIR})
 
 set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
 set(TEST_PLAY_SOURCE_FILES test_play.c)
@@ -37,6 +41,7 @@ target_link_libraries(test_play ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${ZMQ_LIBRARY})
+
 # This is for development purposes:
 add_executable(foo_one foo_one.c)
 target_link_libraries(foo_one ${ZMQ_LIBRARY})
@@ -46,3 +51,8 @@ target_link_libraries(foo_two ${ZMQ_LIBRARY})
 
 add_executable(foo_three foo_three.c)
 target_link_libraries(foo_three ${ZMQ_LIBRARY})
+
+add_executable(foo_four foo_four.c)
+target_link_libraries(foo_four ${PULSEAUDIO_LIBRARY})
+target_link_libraries(foo_four ${PULSEAUDIO_SIMPLE_LIBRARY})
+target_link_libraries(foo_four ${ZMQ_LIBRARY})

@@ -1,5 +1,5 @@
 // ====================================================================================
-// utils.h
+// Utils & Helpers (utils.h)
 //
 // Helpers and utils for the application.
 //
@@ -11,14 +11,14 @@
 #include <string.h>
 #include <zmq.h>
 
-static int s_send(void *socket, char *string) {
+int s_send(void *socket, char *string) {
   int size = zmq_send(socket, string, strlen(string), 0);
   return size;
 }
 
 // Receive ZeroMQ string from socket and convert into C string. Caller must free
 // returned string. Returns NULL if the context is being terminated.
-static char *s_recv(void *socket) {
+char *s_recv(void *socket) {
   enum { cap = 256 };
 
   char buffer[cap];
