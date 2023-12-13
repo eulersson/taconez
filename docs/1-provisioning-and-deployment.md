@@ -140,7 +140,7 @@ If you want to debug the output of a task you can place a debugger as follows:
     src: "{{ project_root }}/"
     dest: /app/anesowa
     rsync_opts:
-      - "--exclude-from={{ project_root }}/rsync_exclude.txt"
+      - "--exclude-from={{ project_root }}/.rsync-exclude"
   tags:
     - sync-project
 ```
@@ -165,7 +165,7 @@ changed: [rpi-master.home]
  'cmd': '/usr/local/bin/rsync --delay-updates -F --compress --archive '
         "--rsh='/usr/bin/ssh -S none -i /Users/ramon/.ssh/raspberry_local -o "
         "StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' "
-        '--exclude-from=/Users/ramon/Devel/anesowa/rsync_exclude.txt '
+        '--exclude-from=/Users/ramon/Devel/anesowa/.rsync-exclude '
         "--out-format='<<CHANGED>>%i %n%L' /Users/ramon/Devel/anesowa/ "
         'anesowa@rpi-master.home:/app/anesowa',
  'failed': False,

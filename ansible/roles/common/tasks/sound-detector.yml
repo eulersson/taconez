@@ -6,7 +6,7 @@
     src: "{{ project_root_local }}/sound-detector/"
     dest: "{{ project_root_remote }}/sound-detector"
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/sound-detector/.rsync_exclude"
+      - "--exclude-from={{ project_root_local }}/sound-detector/.rsync-exclude"
   tags: [sync-project, sync-sound-detector]
 
 - name: Ensure Sound Detector service is stopped

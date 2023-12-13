@@ -6,7 +6,7 @@
     src: "{{ project_root_local }}/sound-player/"
     dest: "{{ project_root_remote }}/sound-player"
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/sound-player/.rsync_exclude"
+      - "--exclude-from={{ project_root_local }}/sound-player/.rsync-exclude"
   tags: [sync-project, sync-sound-player]
 
 - name: TODO Sound Player to implement
