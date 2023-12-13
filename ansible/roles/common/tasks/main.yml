@@ -17,6 +17,6 @@
   import_tasks: sound-detector.yml
   tags: [sound-detector]
 
-- name: Building Sound Player module
-  import_tasks: sound-player.yml
-  tags: [sound-player]
+- name: Building Playback Distributor module
+  import_tasks: playback-distributor.yml
+  tags: [playback-distributor]

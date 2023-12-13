@@ -26,7 +26,8 @@
   docker_image:
     force_source: true
     build:
-      path: "{{ project_root_remote }}/sound-detector"
+      dockerfile: "{{ project_root_remote }}/sound-detector/Dockerfile"
+      path: "{{ project_root_remote }}"
     name: anesowa/sound-detector
     tag: "{{ project_version }}"
     source: build

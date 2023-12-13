@@ -3,7 +3,7 @@
 
 #include <zmq.h>
 
-#include "utils.h"
+#include <anesowa_commons/utils.h>
 
 int main(void) {
   void *context = zmq_ctx_new();

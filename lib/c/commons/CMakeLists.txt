@@ -18,5 +18,8 @@ find_path(ZMQ_INCLUDE_DIR zmq.h)
 cmake_print_variables(ZMQ_INCLUDE_DIR)
 include_directories(${ZMQ_INCLUDE_DIR})
 
+# Prepare the sources to include in the library.
+set(COMMONS_UTILS_SOURCE_FILES src/utils.c)
+
 # Create the library.
-add_library(commons_utils src/utils.c)
+add_library(anesowa_commons ${COMMONS_UTILS_SOURCE_FILES})

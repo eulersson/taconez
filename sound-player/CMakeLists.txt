@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(sound_player)
 
+include(CMakePrintHelpers)
+
 # Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
 # C++ language server) so it works with Neovim's language server feature:
 #
@@ -9,13 +11,15 @@ project(sound_player)
 #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(CMakePrintHelpers)
+# Add anesowa common library and include paths.
+add_subdirectory(../lib/c/commons anesowa_commons)
+cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib/c/commons/include)
 
+# Add third-party libraries and include paths.
 find_path(PULSEAUDIO_INCLUDE_DIR pulse/pulseaudio.h)
 cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
-
-find_path(ZMQ_INCLUDE_DIR zmq.h)
-cmake_print_variables(ZMQ_INCLUDE_DIR)
+include_directories(${PULSEAUDIO_INCLUDE_DIR})
 
 find_library(PULSEAUDIO_LIBRARY pulse)
 cmake_print_variables(PULSEAUDIO_LIBRARY)
@@ -23,36 +27,19 @@ cmake_print_variables(PULSEAUDIO_LIBRARY)
 find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
 cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
 
+find_path(ZMQ_INCLUDE_DIR zmq.h)
+cmake_print_variables(ZMQ_INCLUDE_DIR)
+include_directories(${ZMQ_INCLUDE_DIR})
+
 find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
-include_directories(${PULSEAUDIO_INCLUDE_DIR})
-include_directories(${ZMQ_INCLUDE_DIR})
-
+# Prepare the sources to include in the library.
 set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
-set(TEST_PLAY_SOURCE_FILES test_play.c)
 
 add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
-add_executable(test_play ${TEST_PLAY_SOURCE_FILES})
 
-target_link_libraries(test_play ${PULSEAUDIO_LIBRARY})
-target_link_libraries(test_play ${PULSEAUDIO_SIMPLE_LIBRARY})
-
+target_link_libraries(sound_player anesowa_commons)
 target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
 target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound_player ${ZMQ_LIBRARY})
-
-# This is for development purposes:
-add_executable(foo_one foo_one.c)
-target_link_libraries(foo_one ${ZMQ_LIBRARY})
-
-add_executable(foo_two foo_two.c)
-target_link_libraries(foo_two ${ZMQ_LIBRARY})
-
-add_executable(foo_three foo_three.c)
-target_link_libraries(foo_three ${ZMQ_LIBRARY})
-
-add_executable(foo_four foo_four.c)
-target_link_libraries(foo_four ${PULSEAUDIO_LIBRARY})
-target_link_libraries(foo_four ${PULSEAUDIO_SIMPLE_LIBRARY})
-target_link_libraries(foo_four ${ZMQ_LIBRARY})
