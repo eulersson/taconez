@@ -4,6 +4,11 @@
 #
 # Intended for local container development mainly.
 
+# Useful for seeing the actual command that's run on the service logs.
+set -x
+
+COMMAND="$1"
+
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
@@ -19,4 +24,7 @@ docker run --rm --tty --interactive \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $ANESOWA_ROOT/sound-detector:/anesowa/sound-detector \
   $extra_flags \
-  anesowa/sound-detector:dev
+  anesowa/sound-detector:dev \
+  $COMMAND
+
+set +x

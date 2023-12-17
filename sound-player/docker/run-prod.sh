@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Runs a production container of the Playback Distributor module.
+# Runs a production container of the Sound Player module.
 #
 # This script will be launched by the Raspberry Pi systemd service's ExecStart:
 #
-# - playback-distributor/service/anesowa-playback-distributor.service
-# - playback-distributor/service/exec-start.sh
+# - sound-player/service/anesowa-sound-player.service
+# - sound-player/service/exec-start.sh
 #
 # You can also launch it from the local machine instead too for debugging purposes.
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 
 # If launched by the systemd service these two variables will be set.
-ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
+ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-player}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
 if [ "$(uname)" == "Linux" ]; then
@@ -30,6 +30,6 @@ docker run \
   --publish 5556:5556 \
   --name $ANESOWA_CONTAINER_NAME \
   $extra_flags \
-  anesowa/playback-distributor:$ANESOWA_VERSION
+  anesowa/sound-player:$ANESOWA_VERSION
 
 set +x;

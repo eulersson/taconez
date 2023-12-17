@@ -7,6 +7,7 @@
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 docker build \
+  --build-arg DEBUG=0 \
   --tag anesowa/playback-distributor:prod \
   --file $ANESOWA_ROOT/playback-distributor/Dockerfile \
   $ANESOWA_ROOT

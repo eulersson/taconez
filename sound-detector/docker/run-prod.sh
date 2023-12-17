@@ -34,6 +34,7 @@ fi
 
 # Useful for seeing the actual command that's run on the service logs.
 set -x;
+
 docker run --tty \
   --env PULSE_SERVER=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
@@ -42,5 +43,6 @@ docker run --tty \
   --name $ANESOWA_CONTAINER_NAME \
   $extra_flags \
   anesowa/sound-detector:$ANESOWA_VERSION
+
 set +x;
 

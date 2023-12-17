@@ -3,7 +3,8 @@
 # NOTE: If you were to run the docker build manually, do it from the root of the
 # repository pointing to this Dockerfile with the `-f` flag:
 #
-#   docker build -f playback-distributor/Dockerfile -t manually-created-playback-distributor-image .
+#   ./playback-distributor/docker/build-dev.sh
+#   ./playback-distributor/docker/run-dev.sh
 #
 
 FROM alpine:3.18.4
@@ -19,6 +20,10 @@ WORKDIR /anesowa/playback-distributor
 # TODO: See if we can skip installing g++ and have CMake work. Then we would need to
 #   install libc-dev
 #
+
+ARG DEBUG=0
+ENV DEBUG=$DEBUG
+
 ARG BUILD_TIME_DEPENDENCIES="\
   gcc=12.2.1_git20220924-r10 \  
   g++=12.2.1_git20220924-r10 \
@@ -30,14 +35,23 @@ ARG RUN_TIME_DEPENDENCIES="\
   zeromq-dev=4.3.4-r4 \
   "
 
-# Install build dependencies.
-RUN apk --no-cache --update add $BUILD_TIME_DEPENDENCIES $RUN_TIME_DEPENDENCIES 
+ARG DEBUG_DEPENDENCIES="\
+  iputils-ping=20221126-r2 \
+  pulseaudio-utils=16.1-r10 \
+  alsa-utils=1.2.9-r0 \
+  "
+
+# Install dependencies.
+RUN apk --no-cache --update add \
+  $BUILD_TIME_DEPENDENCIES \
+  $RUN_TIME_DEPENDENCIES \
+  $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES )
 
 # Build the module.
 COPY lib /anesowa/lib
+COPY playback-distributor/build-cmake-project.sh ./
 COPY playback-distributor/CMakeLists.txt playback-distributor/*.c ./
-
-RUN cmake -S . -B build --fresh && cmake --build build --verbose
+RUN ./build-cmake-project.sh 
 
 # Cleanup build-time dependencies.
 #
@@ -46,7 +60,9 @@ RUN cmake -S . -B build --fresh && cmake --build build --verbose
 #   any characters that are not a space or equals sign. It replaces this matched pattern
 #   with an empty string, effectively extracting only the package names. Thanks ChatGPT!
 #
-RUN echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del
+RUN \
+  if [ $DEBUG == 0 ]; then \
+  echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
+  fi
 
 ENTRYPOINT [ "build/playback-distributor" ]
-

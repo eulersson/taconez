@@ -1,0 +1,15 @@
+[Unit]
+Description=Anesowa Sound Player
+BindsTo=docker.service
+After=docker.service
+
+[Service]
+Type=exec
+Restart=always
+Environment=ANESOWA_VERSION={{ project_version }}
+ExecStart={{ services_root_remote }}/sound-player/exec-start.sh
+ExecStop={{ services_root_remote }}/sound-player/exec-stop.sh
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,93 @@
 ---
 # Builds and runs the Sound Player module.
 
-- name: TODO Sound Player
-  shell: echo To be implemented
+- name: Create folder for the Sound Player module and its service scripts
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}/sound-player"
+    - "{{ services_root_remote }}/sound-player"
+
+- name: Synchronize Sound Player project files
+  synchronize:
+    src: "{{ project_root_local }}/sound-player/"
+    dest: "{{ project_root_remote }}/sound-player"
+    rsync_opts:
+      - "--exclude-from={{ project_root_local }}/sound-player/.rsync-exclude"
+  tags:
+    - sync-project
+    - sync-sound-player
+    - update
+    - sound-player-update
+
+- name: Install Sound Player service scripts (ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  loop:
+    - src: "{{ project_root_local }}/sound-player/service/exec-start.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-start.sh"
+    - src: "{{ project_root_local }}/sound-player/service/exec-stop.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-stop.sh"
+  tags: [services]
+
+- name: Install Sound Player service
+  become: true
+  template:
+    src:
+      "{{ project_root_local
+      }}/sound-player/service/sound-player.service.j2"
+    dest: /etc/systemd/system/anesowa-sound-player.service
+  tags: [services]
+
+- name: Ensure Sound Player service is stopped
+  become: true
+  systemd:
+    name: anesowa-sound-player.service
+    state: stopped
+
+- name: Ensure no Sound Player containers exist
+  become: true
+  docker_container:
+    name: anesowa-sound-player
+    state: absent
+
+- name: Build Sound Player image
+  become: true
+  docker_image:
+    force_source: true
+    build:
+      dockerfile: "{{ project_root_remote }}/sound-player/Dockerfile"
+      path: "{{ project_root_remote }}"
+    name: anesowa/sound-player
+    tag: "{{ project_version }}"
+    source: build
+  tags:
+    - build-image
+    - update
+    - sound-player-update
+
+- name: Clean dangling images
+  become: true
+  docker_prune:
+    images: true
+    images_filters: dangling=true
+  tags: [build-image]
+
+- name: Restart Sound Player service
+  become: true
+  systemd_service:
+    daemon_reload: true
+    enabled: true
+    state: restarted
+    name: anesowa-sound-player.service
+  tags: 
+    - services
+    - update
+    - sound-player-update

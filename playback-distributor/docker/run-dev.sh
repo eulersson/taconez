@@ -4,8 +4,9 @@
 #
 # Intended for local container development mainly.
 
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
-PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
+ENTRYPOINT="$1"
+
+ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 if [ "$(uname)" == "Linux" ]; then
   extra_flags=--add-host=host.docker.internal:host-gateway
@@ -13,9 +14,23 @@ else
   extra_flags=""
 fi
 
-docker run --rm --tty --interactive \
-  --env PULSE_SERVER=host.docker.internal \
-  --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $ANESOWA_PROJECT_ROOT/playback-distributor:/anesowa/playback-distributor \
+entrypoint=""
+if [ "$ENTRYPOINT" ]; then
+  entrypoint="--entrypoint $ENTRYPOINT"
+fi
+
+# Useful for seeing the actual command that's run on the service logs.
+set -x
+
+docker run \
+  --rm \
+  --tty \
+  --interactive \
+  --publish 5555:5555 \
+  --publish 5556:5556 \
+  --volume $ANESOWA_ROOT/playback-distributor:/anesowa/playback-distributor \
   $extra_flags \
-  anesowa/playback-distributor:dev sh
+  $entrypoint \
+  anesowa/playback-distributor:dev
+
+set +x
