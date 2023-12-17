@@ -26,8 +26,6 @@ set -x;
 
 docker run \
   --tty \
-  --publish 5555:5555 \
-  --publish 5556:5556 \
   --name $ANESOWA_CONTAINER_NAME \
   $extra_flags \
   anesowa/sound-player:$ANESOWA_VERSION

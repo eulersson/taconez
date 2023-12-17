@@ -27,7 +27,6 @@ docker run \
   --rm \
   --tty \
   --interactive \
-  --publish 5556:5556 \
   --env PULSE_SERVER=host.docker.internal \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $ANESOWA_ROOT/sound-player:/anesowa/sound-player \

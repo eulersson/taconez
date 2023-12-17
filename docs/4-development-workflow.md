@@ -37,6 +37,31 @@ build stage otherwise:
 
 ```
 ./sound-detector/docker/build-dev.sh
+./playback-distributor/docker/build-dev.sh
+./sound-player/docker/build-dev.sh
+```
+
+Then run in this order on different shells:
+
+```
+./influx-db/service/exec-start.sh
+```
+
+```
+$ ./playback-distributor/docker/run-dev.sh sh
+(inside container) $ ./build-cmake-project.sh
+(inside container) $ ./build/playback-distributor
+```
+
+```
+$ ./sound-player/docker/run-dev.sh sh
+(inside container) $ ./build-cmake-project.sh
+(inside container) $ ./build/sound-player
+```
+
+```
+$ ./sound-detector/docker/run-dev.sh sh
+(inside container) $ python sound_detector.py
 ```
 
 ## Network Volume Approach Overview
