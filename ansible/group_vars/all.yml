@@ -7,3 +7,4 @@ project_version: 1.0.0
 project_root_local: "{{ playbook_dir | dirname }}"
 project_root_remote: /app/anesowa
 services_root_remote: /app/anesowa-services
+python_virtualenv: /app/venv

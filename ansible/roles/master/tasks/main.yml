@@ -11,6 +11,10 @@
   tags:
     - nfs
 
+- name: Building Playback Distributor module
+  import_tasks: playback-distributor.yml
+  tags: [playback-distributor]
+
 - name: Prepare Journal Web App
   import_tasks: journal.yml
   tags:

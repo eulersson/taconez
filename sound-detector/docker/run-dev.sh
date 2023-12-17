@@ -1,21 +1,22 @@
 #!/bin/bash
 
-# Runs a development container of the Sound Player module.
+# Runs a development container of the Sound Detector module.
 #
 # Intended for local container development mainly.
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
+extra_flags=""
 if [ "$(uname)" == "Linux" ]; then
-  extra_flags=--add-host=host.docker.internal:host-gateway
-else
-  extra_flags=""
+  extra_flags="--add-host=host.docker.internal:host-gateway"
 fi
 
 docker run --rm --tty --interactive \
   --env PULSE_SERVER=host.docker.internal \
+  --env SKIP_RECORDING=True \
+  --env SKIP_DETECTION_NOTIFICATION=True \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $ANESOWA_PROJECT_ROOT/playback-distributor:/anesowa/playback-distributor \
+  --volume $ANESOWA_ROOT/sound-detector:/anesowa/sound-detector \
   $extra_flags \
-  anesowa/playback-distributor:dev sh
+  anesowa/sound-detector:dev

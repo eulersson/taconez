@@ -1,0 +1,15 @@
+# Enable PulseAudio system-wide instead of on a per-user basis
+#
+#   - https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SystemWide/
+#   - https://github.com/shivasiddharth/PulseAudio-System-Wide
+#
+
+[Unit]
+Description=PulseAudio System Server
+
+[Service]
+Type=notify
+ExecStart=pulseaudio --daemonize=no --system --log-target=journal
+
+[Install]
+WantedBy=multi-user.target

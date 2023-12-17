@@ -1,6 +1,14 @@
+# Dockerfile to build Sound Detector
+#
+# NOTE: If you were to run the docker build manually, do it from the root of the
+# repository pointing to this Dockerfile with the `-f` flag:
+#
+#   docker build -f sound-detector/Dockerfile -t manually-created-sound-detector-image .
+#
+
 FROM python:3.10.13-slim-bookworm
 
-WORKDIR /anesowa/sound-detector/
+WORKDIR /anesowa/sound-detector
 
 # Set to `1` if you are not on a Raspberry Pi. Accessible during build time (build
 # argument) as well as during run time (environment variable).
@@ -21,6 +29,17 @@ ARG BUILD_TIME_DEPENDENCIES="\
   libc-dev=2.36-9+deb12u3 \
 "
 
+ARG RUN_TIME_DEPENDENCIES="\
+  portaudio19-dev=19.6.0-1.2 \
+  libasound2-plugins=1.2.7.1-1 \
+"
+
+ARG DEBUG_DEPENDENCIES="\
+  iputils-ping=3:20221126-1 \
+  pulseaudio-utils=16.1+dfsg1-2+b1 \
+  alsa-utils=1.2.8-1 \
+"
+
 # The --no-install-recommends helps limit some of the install so that you can be more
 # explicit about what gets installed.
 #
@@ -34,16 +53,16 @@ ARG BUILD_TIME_DEPENDENCIES="\
 # - portaudio19-dev: Needed by PyAudio.
 #
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  portaudio19-dev=19.6.0-1.2 libasound2-plugins=1.2.7.1-1 \
   $BUILD_TIME_DEPENDENCIES \
-  $( [ $DEBUG = 1 ] && echo pulseaudio-utils=16.1+dfsg1-2+b1 alsa-utils=1.2.8-1 )
+  $RUN_TIME_DEPENDENCIES \
+  $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES )
 
 # Place the ALSA configuration on the $HOME for PyAudio's ALSA to resolve it and
 # understand that the input and output devices are delegated to PulseAudio.
 COPY .asoundrc /root/.asoundrc
 
 # Install Poetry and use it to install the project dependencies.
-COPY pyproject.toml poetry.lock README.md ./
+COPY sound-detector/pyproject.toml sound-detector/poetry.lock sound-detector/README.md ./
 RUN pip install --upgrade setuptools wheel \
   && pip install --upgrade keyrings.alt \
   && pip install poetry==1.7.1 \
@@ -75,7 +94,7 @@ RUN eval poetry install --no-interaction \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
   && apt-get autoremove -y --purge
 
-COPY . .
+COPY sound-detector/sound_detector.py .
 
 ENV SKIP_RECORDING=False
 

@@ -1,0 +1,30 @@
+---
+# Install libraries that are common across modules.
+
+- name: Create folder for the common library files
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}/lib"
+
+- name: Synchronize common library files
+  synchronize:
+    src: "{{ project_root_local }}/lib"
+    dest: "{{ project_root_remote }}/"
+    rsync_opts:
+      - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
+  tags: [sync-project, sync-common-lib]
+
+- name: Synchronize other files that are shared across modules
+  synchronize:
+    src: "{{ project_root_local }}/{{ item }}"
+    dest: "{{ project_root_remote }}/"
+  loop:
+    - .asoundrc
+    - .dockerignore
+  tags: [sync-project, sync-common-files]

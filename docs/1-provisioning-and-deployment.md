@@ -66,13 +66,6 @@ Host 192.168.1.76 rpi-master.local rpi-master.home
   UseKeychain yes
 ```
 
-## Install PulseAudio
-
-```
-anesowa@raspberry:~ $ sudo apt install pulseaudio
-anesowa@raspberry:~ $ systemctl --user start pulseaudio.service
-```
-
 ## Configure Individual Raspberry Pi Host Variables
 
 Open up `ansible/host_vars/{host-name}.yml` and configure each value specifically such

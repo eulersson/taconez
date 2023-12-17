@@ -12,4 +12,6 @@ pyrightconfig.json
 .cache/
 build/
 
+recordings/
+
 yamnet-classification.tflite

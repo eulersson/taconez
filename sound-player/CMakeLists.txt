@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(sound_player)
+project(sound-player)
 
 include(CMakePrintHelpers)
 
@@ -37,9 +37,9 @@ cmake_print_variables(ZMQ_LIBRARY)
 # Prepare the sources to include in the library.
 set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
 
-add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
+add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
 
-target_link_libraries(sound_player anesowa_commons)
-target_link_libraries(sound_player ${PULSEAUDIO_LIBRARY})
-target_link_libraries(sound_player ${PULSEAUDIO_SIMPLE_LIBRARY})
-target_link_libraries(sound_player ${ZMQ_LIBRARY})
+target_link_libraries(sound-player anesowa_commons)
+target_link_libraries(sound-player ${PULSEAUDIO_LIBRARY})
+target_link_libraries(sound-player ${PULSEAUDIO_SIMPLE_LIBRARY})
+target_link_libraries(sound-player ${ZMQ_LIBRARY})

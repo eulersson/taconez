@@ -1,0 +1,5 @@
+---
+# Builds and runs the Sound Player module.
+
+- name: TODO Sound Player
+  shell: echo To be implemented

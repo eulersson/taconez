@@ -59,6 +59,8 @@
         state: latest
         update_cache: true
 
-    - name: Install Python Docker SDK
+    # TODO: Is the Docker SDK needed?
+    - name: Install Python Docker SDK in our virtual environment
       pip:
         name: docker
+        virtualenv: "{{ python_virtualenv }}"

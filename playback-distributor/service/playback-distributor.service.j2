@@ -7,7 +7,6 @@ After=docker.service
 Type=exec
 Restart=always
 Environment=ANESOWA_VERSION={{ project_version }}
-Environment=ANESOWA_PROJECT_ROOT={{ project_root_remote }}
 ExecStart={{ services_root_remote }}/playback-distributor/exec-start.sh
 ExecStop={{ services_root_remote }}/playback-distributor/exec-stop.sh
 TimeoutStartSec=900

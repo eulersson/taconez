@@ -1,0 +1,93 @@
+---
+# Builds and runs the Playback Distributor module.
+
+- name: Create folder for the Playback Distributor module and its service scripts
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}/playback-distributor"
+    - "{{ services_root_remote }}/playback-distributor"
+
+- name: Synchronize Playback Distributor project files
+  synchronize:
+    src: "{{ project_root_local }}/playback-distributor/"
+    dest: "{{ project_root_remote }}/playback-distributor"
+    rsync_opts:
+      - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
+  tags:
+    - sync-project
+    - sync-playback-distributor
+    - update
+    - playback-distributor-update
+
+- name: Install Playback Distributor service scripts (ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  loop:
+    - src: "{{ project_root_local }}/playback-distributor/service/exec-start.sh.j2"
+      dest: "{{ services_root_remote }}/playback-distributor/exec-start.sh"
+    - src: "{{ project_root_local }}/playback-distributor/service/exec-stop.sh.j2"
+      dest: "{{ services_root_remote }}/playback-distributor/exec-stop.sh"
+  tags: [services]
+
+- name: Install Playback Distributor service
+  become: true
+  template:
+    src:
+      "{{ project_root_local
+      }}/playback-distributor/service/playback-distributor.service.j2"
+    dest: /etc/systemd/system/anesowa-playback-distributor.service
+  tags: [services]
+
+- name: Ensure Playback Distributor service is stopped
+  become: true
+  systemd:
+    name: anesowa-playback-distributor.service
+    state: stopped
+
+- name: Ensure no Playback Distributor containers exist
+  become: true
+  docker_container:
+    name: anesowa-playback-distributor
+    state: absent
+
+- name: Build Playback Distributor image
+  become: true
+  docker_image:
+    force_source: true
+    build:
+      dockerfile: "{{ project_root_remote }}/playback-distributor/Dockerfile"
+      path: "{{ project_root_remote }}"
+    name: anesowa/playback-distributor
+    tag: "{{ project_version }}"
+    source: build
+  tags:
+    - build-image
+    - update
+    - playback-distributor-update
+
+- name: Clean dangling images
+  become: true
+  docker_prune:
+    images: true
+    images_filters: dangling=true
+  tags: [build-image]
+
+- name: Restart Playback Distributor service
+  become: true
+  systemd_service:
+    daemon_reload: true
+    enabled: true
+    state: restarted
+    name: anesowa-playback-distributor.service
+  tags: 
+    - services
+    - update
+    - playback-distributor-update

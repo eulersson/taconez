@@ -308,6 +308,7 @@ def detect_specific_sounds(
         "Inside, small room",
         "White noise",
         "Breathing",
+        "Typing",
     ],
     detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,

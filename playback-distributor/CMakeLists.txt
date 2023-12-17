@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(playback_distributor)
+project(playback-distributor)
 
 include(CMakePrintHelpers)
 
@@ -25,6 +25,6 @@ find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
 # Link our executable to the libraries it needs.
-add_executable(playback_distributor playback_distributor.c)
-target_link_libraries(playback_distributor ${ZMQ_LIBRARY})
-target_link_libraries(playback_distributor anesowa_commons)
+add_executable(playback-distributor playback_distributor.c)
+target_link_libraries(playback-distributor ${ZMQ_LIBRARY})
+target_link_libraries(playback-distributor anesowa_commons)

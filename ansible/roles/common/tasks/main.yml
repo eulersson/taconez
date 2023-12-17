@@ -9,14 +9,14 @@
   import_tasks: docker.yml
   tags: [docker]
 
-- name: Create project files layout
-  import_tasks: project-files.yml
-  tags: [project-files]
+- name: Install common libraries
+  import_tasks: common-libs.yml
+  tags: [common-libs]
 
-- name: Building Sound Detector module
+- name: Build and run Sound Detector module
   import_tasks: sound-detector.yml
   tags: [sound-detector]
 
-- name: Building Playback Distributor module
-  import_tasks: playback-distributor.yml
-  tags: [playback-distributor]
+- name: Build and run Sound Player module
+  import_tasks: sound-player.yml
+  tags: [sound-player]

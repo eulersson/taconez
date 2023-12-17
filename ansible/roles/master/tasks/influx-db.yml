@@ -11,14 +11,14 @@
     mode: 0755
 
 - name: Install Influx DB service scripts (ExecStart, ExecStop)
-  template:
+  copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: 0755
   loop:
-    - src: "{{ project_root_local }}/influx-db/service/exec-start.sh.j2"
+    - src: "{{ project_root_local }}/influx-db/service/exec-start.sh"
       dest: "{{ services_root_remote }}/influx-db/exec-start.sh"
-    - src: "{{ project_root_local }}/influx-db/service/exec-stop.sh.j2"
+    - src: "{{ project_root_local }}/influx-db/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/influx-db/exec-stop.sh"
   tags: [services]
 

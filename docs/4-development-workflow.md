@@ -22,6 +22,23 @@ This guide is written considering the NFS host is a macOS machine. If you are on
 is way easier since it's not the Apple opinionated stuff, and you should search for the
 equivalent commands and syntaxes. If I ever set it up on a Linux I will do it myself.
 
+## Local Development No-Pi Workflow
+
+You don't need the Pi to develop locally.
+
+It's required to install on the host:
+
+- PulseAudio
+- Docker
+
+Then you can build the images using the scripts provided, do it from the root of the
+repository since some docker files add shared files that would be unreachable at the
+build stage otherwise:
+
+```
+./sound-detector/docker/build-dev.sh
+```
+
 ## Network Volume Approach Overview
 
 A volume could be bound on the host machine (macOS) and Raspberry Pi could mount it with

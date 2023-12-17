@@ -1,5 +1,26 @@
 ---
-# Builds the Sound Detector module.
+# Builds and runs the Sound Detector module.
+
+- name: Create folder for the Sound Detector module and its service scripts
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}/sound-detector"
+    - "{{ services_root_remote }}/sound-detector"
+
+- name: Create directory where recordings will go in case it doesn't exist
+  become: true
+  file:
+    path: "/mnt/nfs/anesowa"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
 
 - name: Synchronize Sound Detector project files
   synchronize:
@@ -8,6 +29,27 @@
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/sound-detector/.rsync-exclude"
   tags: [sync-project, sync-sound-detector]
+
+- name: Install Sound Detector service scripts (ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  loop:
+    - src: "{{ project_root_local }}/sound-detector/service/exec-start.sh.j2"
+      dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
+    - src: "{{ project_root_local }}/sound-detector/service/exec-stop.sh.j2"
+      dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
+  tags: [services]
+
+- name: Install Sound Detector service
+  become: true
+  template:
+    src:
+      "{{ project_root_local }}/sound-detector/service/sound-detector.service.j2"
+    dest: /etc/systemd/system/anesowa-sound-detector.service
+  tags: [services]
+
 
 - name: Ensure Sound Detector service is stopped
   become: true
@@ -39,26 +81,6 @@
     images: true
     images_filters: dangling=true
   tags: [build-image]
-
-- name: Install Sound Detector service scripts (ExecStart, ExecStop)
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: 0755
-  loop:
-    - src: "{{ project_root_local }}/sound-detector/service/exec-start.sh.j2"
-      dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
-    - src: "{{ project_root_local }}/sound-detector/service/exec-stop.sh.j2"
-      dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
-  tags: [services]
-
-- name: Install Sound Detector service
-  become: true
-  template:
-    src:
-      "{{ project_root_local }}/sound-detector/service/anesowa-sound-detector.service.j2"
-    dest: /etc/systemd/system/anesowa-sound-detector.service
-  tags: [services]
 
 - name: Restart Sound Detector service
   become: true
