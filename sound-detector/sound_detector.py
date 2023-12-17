@@ -389,7 +389,7 @@ def detect_specific_sounds(
                 write_db_entry(slugified_top_class_name, relative_sound_path)
 
             if zmq_socket:
-                zmq_socket.send(relative_sound_path.encode("ascii"))
+                zmq_socket.send(f"/mnt/nfs/anesowa/{relative_sound_path}".encode("ascii"))
 
 
 if __name__ == "__main__":

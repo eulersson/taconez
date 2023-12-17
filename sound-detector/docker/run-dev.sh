@@ -7,7 +7,7 @@
 # Useful for seeing the actual command that's run on the service logs.
 set -x
 
-COMMAND="$1"
+ENTRYPOINT="$1"
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
@@ -17,14 +17,20 @@ if [ "$(uname)" == "Linux" ]; then
   extra_flags="--add-host=host.docker.internal:host-gateway"
 fi
 
+entrypoint=""
+if [ "$ENTRYPOINT" ]; then
+  entrypoint="--entrypoint $ENTRYPOINT"
+fi
+
 docker run --rm --tty --interactive \
   --env PULSE_SERVER=host.docker.internal \
-  --env SKIP_RECORDING=True \
-  --env SKIP_DETECTION_NOTIFICATION=True \
+  --env SKIP_RECORDING=False \
+  --env SKIP_DETECTION_NOTIFICATION=False \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $ANESOWA_ROOT/sound-detector:/anesowa/sound-detector \
+  --volume $ANESOWA_ROOT/recordings:/recordings \
   $extra_flags \
-  anesowa/sound-detector:dev \
-  $COMMAND
+  $entrypoint \
+  anesowa/sound-detector:dev
 
 set +x
