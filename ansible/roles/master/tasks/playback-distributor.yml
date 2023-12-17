@@ -31,9 +31,9 @@
     dest: "{{ item.dest }}"
     mode: 0755
   loop:
-    - src: "{{ project_root_local }}/playback-distributor/service/exec-start.sh.j2"
+    - src: "{{ project_root_local }}/playback-distributor/service/exec-start.sh"
       dest: "{{ services_root_remote }}/playback-distributor/exec-start.sh"
-    - src: "{{ project_root_local }}/playback-distributor/service/exec-stop.sh.j2"
+    - src: "{{ project_root_local }}/playback-distributor/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/playback-distributor/exec-stop.sh"
   tags: [services]
 
