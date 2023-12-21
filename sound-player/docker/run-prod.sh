@@ -30,7 +30,7 @@ docker run \
   --name $ANESOWA_CONTAINER_NAME \
   --env PULSE_SERVER=host.docker.internal \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume /mnt/nfs/anesowa:/mnt/nfs/anesowa:ro \
+  --volume /mnt/nfs/anesowa:/anesowa/recordings:ro \
   $extra_flags \
   anesowa/sound-player:$ANESOWA_VERSION
 

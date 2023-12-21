@@ -94,12 +94,10 @@ RUN eval poetry install --no-interaction \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
   && apt-get autoremove -y --purge
 
-COPY sound-detector/sound_detector.py .
+COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py .
 
 ENV SKIP_RECORDING=False
-
 ENV SKIP_DETECTION_NOTIFICATION=False
-
-ENV INFLUX_DB_TOKEN=no_token
+ENV INFLUX_DB_TOKEN=
 
 ENTRYPOINT [ "python", "sound_detector.py" ]

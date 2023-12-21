@@ -29,6 +29,7 @@ docker run \
   --publish 5555:5555 \
   --publish 5556:5556 \
   --name $ANESOWA_CONTAINER_NAME \
+  --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
   $extra_flags \
   anesowa/playback-distributor:$ANESOWA_VERSION
 

@@ -24,15 +24,17 @@ WORKDIR /anesowa/playback-distributor
 ARG DEBUG=0
 ENV DEBUG=$DEBUG
 
-ARG BUILD_TIME_DEPENDENCIES="\
+# Dependencies needed only at build time and that can be uninstalled afterwards.
+ARG BUILD_DEPENDENCIES="\
   gcc=12.2.1_git20220924-r10 \  
   g++=12.2.1_git20220924-r10 \
   make=4.4.1-r1 \
   cmake=3.26.5-r0 \
   "
 
-ARG RUN_TIME_DEPENDENCIES="\
+ARG DEPENDENCIES="\
   zeromq-dev=4.3.4-r4 \
+  cjson-dev=1.7.15-r4 \
   "
 
 ARG DEBUG_DEPENDENCIES="\
@@ -43,14 +45,14 @@ ARG DEBUG_DEPENDENCIES="\
 
 # Install dependencies.
 RUN apk --no-cache --update add \
-  $BUILD_TIME_DEPENDENCIES \
-  $RUN_TIME_DEPENDENCIES \
+  $BUILD_DEPENDENCIES \
+  $DEPENDENCIES \
   $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES )
 
 # Build the module.
 COPY lib /anesowa/lib
-COPY playback-distributor/build-cmake-project.sh ./
-COPY playback-distributor/CMakeLists.txt playback-distributor/*.c ./
+COPY playback-distributor/CMakeLists.txt playback-distributor/build-cmake-project.sh ./
+COPY playback-distributor/src ./src
 RUN ./build-cmake-project.sh 
 
 # Cleanup build-time dependencies.
@@ -62,7 +64,7 @@ RUN ./build-cmake-project.sh
 #
 RUN \
   if [ $DEBUG == 0 ]; then \
-  echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
+  echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
 ENTRYPOINT [ "build/playback-distributor" ]

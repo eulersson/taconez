@@ -4,53 +4,65 @@ https://github.com/eulersson/anesowa/tree/main/sound-detector
 
 """
 
-# Native Imports
+import logging
 import os
-import datetime
-import urllib.request
 import tarfile
+import threading
+import urllib.request
 import wave
 import zipfile
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
-from typing import Any, List, Tuple, Optional
-
-# Third-Party Imports
 import influxdb_client
-import pyaudio
-import zmq
-
 import numpy as np
 import pandas as pd
-
+import pyaudio
+import zmq
+from environs import Env
 from influxdb_client.client.write_api import SYNCHRONOUS
 from numpy.typing import NDArray
 from slugify import slugify
 
+env = Env()
+env.read_env()
 
-SKIP_DETECTION_NOTIFICATION = (
-    os.getenv("SKIP_DETECTION_NOTIFICATION", "False") == "True"
+DEBUG = env.bool("DEBUG")
+logging.basicConfig(
+    format="[%(funcName)s:%(lineno)s] %(message)s",
+    level=logging.DEBUG if DEBUG else logging.INFO,
 )
 
-INFLUX_DB_ADDR = "http://host.docker.internal:8086"
-INFLUX_DB_TOKEN = os.getenv("INFLUX_DB_TOKEN")
+SKIP_DETECTION_NOTIFICATION = env.bool("SKIP_DETECTION_NOTIFICATION", False)
 
-# Endpoint where the distributor PULL socket is listening at.
-# The distributor runs as a container binding 5555 to the host.
-ZMQ_DISTRIBUTOR_ADDR = "tcp://host.docker.internal:5555"
+INFLUX_DB_ADDR = "http://host.docker.internal:8086"
+INFLUX_DB_TOKEN = env("INFLUX_DB_TOKEN")
+
+# Endpoint where the distributor PULL socket is bound and therefore the endpoint we must
+# connect to. The distributor runs as a container connecting port 5555 to the host.
+ZMQ_DISTRIBUTOR_PUSH_ADDR = "tcp://host.docker.internal:5555"
+
+# Endpoint where the distributor PUSH socket is bound and therefore the endpoint we must
+# connects to. The distributor runs as a container connecting port 5556 to the host.
+ZMQ_DISTRIBUTOR_SUB_ADDR = "tcp://host.docker.internal:5556"
 
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
-# TODO: Ensure it doesn't get wiped out once we run the container again.
 DETECTED_RECORDINGS_DIR = "/recordings"
 
-SKIP_RECORDING = os.getenv("SKIP_RECORDING", "False") == "True"
+IGNORE_SOUNDS = []
+with open("./.ignore-sounds", "r") as f:
+    IGNORE_SOUNDS = f.read().splitlines()
+
+logging.info(f"Ignoring sounds: {IGNORE_SOUNDS}")
+
+SKIP_RECORDING = env.bool("SKIP_RECORDING")
 if not SKIP_RECORDING:
     assert os.path.exists(
         DETECTED_RECORDINGS_DIR
     ), f"The folder {DETECTED_RECORDINGS_DIR} must exist and be shared over NFS."
 
 # TensorFlow Lite is more optimized for a device such as the Raspberry Pi.
-USE_TFLITE = os.getenv("USE_TFLITE", "True")
-USE_TFLITE = USE_TFLITE == "True" or USE_TFLITE == "1"
+USE_TFLITE = env.bool("USE_TFLITE", True)
 
 AUDIO_FORMAT = pyaudio.paInt16
 AUDIO_CHANNELS = 1
@@ -80,6 +92,9 @@ AUDIO_INFERENCE_BATCH_SIZE = 5
 
 # Allows interacting with microphone.
 p = pyaudio.PyAudio()
+
+# Last time a sound was played backed over the speakers.
+last_play: datetime | None = None
 
 
 def model_predict(model, waveform: NDArray) -> NDArray:
@@ -129,7 +144,7 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
         `tflite_runtime.interpreter.Interpreter(model_path)`.
     """
     if USE_TFLITE:
-        print("Using TensorFlow Lite.")
+        logging.info("Using TensorFlow Lite.")
         # TODO: There might be a better way to download the model from Kaggle (former TensorFlow Hub).
         model_tarball_path = os.path.join(
             os.path.dirname(__file__), "yamnet-classification.tar.gz"
@@ -169,7 +184,7 @@ def load_model_and_labels() -> Tuple[Any, List[str]]:
 
         return interpreter, labels
     else:
-        print("Using TensorFlow Core.")
+        logging.info("Using TensorFlow Core.")
         import tensorflow_hub as tfhub
 
         yamnet_model_handle = "https://tfhub.dev/google/yamnet/1"
@@ -197,7 +212,7 @@ def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     if suffix:
         suffix = f"_{suffix}"
 
-    now = datetime.datetime.now()
+    now = datetime.now()
 
     # E.g. '2023-12-10T17:05:52.578411_knock.wav'
     file_name = f"{now.isoformat()}{suffix}.wav"
@@ -220,7 +235,7 @@ def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     wave_file.writeframes(frames)
     wave_file.close()
 
-    print(f"Saved sound to {absolute_file_path}.")
+    logging.info(f"Saved sound to {absolute_file_path}.")
 
     return absolute_file_path
 
@@ -299,17 +314,6 @@ def record_audio() -> Tuple[List[NDArray], bytes]:
 def detect_specific_sounds(
     model,
     labels: List[str],
-    # TODO: Turn that into a file that's read from.
-    ignore_sounds: List[str] = [
-        "Silence",
-        "Speech",
-        "Snoring",
-        "Music",
-        "Inside, small room",
-        "White noise",
-        "Breathing",
-        "Typing",
-    ],
     detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,
 ) -> None:
@@ -323,12 +327,28 @@ def detect_specific_sounds(
     Args:
         model: Model to use for detection.
         labels: Class names of the categories the model can recognize.
-        ignore_sounds: Class names to skip to reduce noise.
         detect_sounds: Detection will happen if on high score for those categories.
         zmq_socket: Used to notify the distributor a sound has been detected.
     """
     waveforms, waveform_binary = record_audio()
 
+    # Check if sound had been playing last few seconds to avoid analyzing sound that was
+    # recorded while a speaker was playing a recorded sound and hence avoid feedback
+    # speaker-microphone.
+    if last_play:
+        seconds_since_last_play = (
+            datetime.now(tz=timezone.utc) - last_play
+        ).total_seconds()
+        is_sound_playing = seconds_since_last_play < (
+            AUDIO_INFERENCE_BATCH_SIZE * AUDIO_INFERENCE_SECONDS
+        )
+        if is_sound_playing:
+            logging.info(
+                "Skipping sound processing because sound has been played during "
+                "recording and might cause feedback."
+            )
+
+    # Run inference on the model to see what sound hsa been detected.
     predictions: List[Tuple[str, float]] = []
     specific_sound_highest_scores = dict((n, 0.0) for n in detect_sounds)
 
@@ -342,9 +362,11 @@ def detect_specific_sounds(
         top_score = class_scores[top_class_index]
         top_class_name = labels[top_class_index]
 
-        if top_class_name not in ignore_sounds:
+        if top_class_name not in IGNORE_SOUNDS:
             predictions.append((top_class_name, top_score))
-            print(f"{log_prefix} Main sound: {top_class_name} (score {top_score})")
+            logging.info(
+                f"{log_prefix} Main sound: {top_class_name} (score {top_score})"
+            )
 
         for sound_to_detect in detect_sounds:
             sound_index = labels.index(sound_to_detect)
@@ -355,59 +377,89 @@ def detect_specific_sounds(
             )
 
             if sound_score > 0:
-                print(
+                logging.info(
                     f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
                 )
 
     if len(predictions):
-        print(f"Batch predictions: {predictions}")
-        print(f"Batch highest scores: {specific_sound_highest_scores}")
+        logging.info(f"Batch predictions: {predictions}")
+        logging.info(f"Batch highest scores: {specific_sound_highest_scores}")
 
     # TODO: Implement this value and then calibrate it.
     detected = len(predictions)
 
+    if not detected:
+        return
+
     slugified_top_class_name = ""
-    if detected:
-        if top_class_name not in ignore_sounds:
-            slugified_top_class_name = top_class_name
-        else:
-            for prediction_name, prediction_value in sorted(
-                predictions, key=lambda x: x[1]
-            ):
-                if prediction_name not in ignore_sounds:
-                    slugified_top_class_name = prediction_name
-                    break
+    if top_class_name not in IGNORE_SOUNDS:
+        slugified_top_class_name = top_class_name
+    else:
+        for prediction_name, prediction_value in sorted(
+            predictions, key=lambda x: x[1]
+        ):
+            if prediction_name not in IGNORE_SOUNDS:
+                slugified_top_class_name = prediction_name
+                break
 
-        slugified_top_class_name = slugify(slugified_top_class_name, separator="_")
+    slugified_top_class_name = slugify(slugified_top_class_name, separator="_")
 
-        print("DETECTION", top_class_name)
-        if not SKIP_RECORDING:
-            file_path = write_audio(waveform_binary, suffix=slugified_top_class_name)
-            relative_sound_path = os.path.relpath(file_path, DETECTED_RECORDINGS_DIR)
+    logging.info(f"DETECTION {top_class_name}")
+    if not SKIP_RECORDING:
+        file_path = write_audio(waveform_binary, suffix=slugified_top_class_name)
+        relative_sound_path = os.path.relpath(file_path, DETECTED_RECORDINGS_DIR)
 
-            if not SKIP_DETECTION_NOTIFICATION:
-                write_db_entry(slugified_top_class_name, relative_sound_path)
+        if INFLUX_DB_TOKEN:
+            write_db_entry(slugified_top_class_name, relative_sound_path)
 
-            if zmq_socket:
-                zmq_socket.send(f"/mnt/nfs/anesowa/{relative_sound_path}".encode("ascii"))
+        if not SKIP_DETECTION_NOTIFICATION and zmq_socket:
+            logging.info("Notifying distributor about detected sound")
+            zmq_socket.send_json(
+                {
+                    "sound_file": relative_sound_path,
+                    "when": datetime.now(tz=timezone.utc).isoformat(),
+                }
+            )
+
+
+def pull_sound_play_events(socket: zmq.Socket):
+    while True:
+        msg = socket.recv_json()
+        logging.info(msg)
+
+        if isinstance(msg, dict) and msg.get("when"):
+            global last_play
+            last_play = datetime.fromisoformat(msg["when"])
 
 
 if __name__ == "__main__":
-    print("Running Sound Detector...")
+    logging.info("Running Sound Detector...")
 
-    socket = None
+    push_socket = None
     if SKIP_DETECTION_NOTIFICATION:
-        print("Upon detections the distributor won't be notified.")
+        logging.info("Upon detections the distributor won't be notified.")
     else:
         # Connect to the distributor that will be notified upon detection:
         context = zmq.Context()
-        print(f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_ADDR}.")
-        socket = context.socket(zmq.PUSH)
-        socket.connect(ZMQ_DISTRIBUTOR_ADDR)
-        print("Connected!")
+        logging.info(
+            f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_PUSH_ADDR}."
+        )
+        push_socket = context.socket(zmq.PUSH)
+        push_socket.connect(ZMQ_DISTRIBUTOR_PUSH_ADDR)
+        logging.info("Connected ZMQ PUSH socket.")
+
+        sub_socket = context.socket(zmq.SUB)
+        sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
+        logging.info("Connected ZMQ SUB socket.")
+
+        # Listen to "sound playing" messages as a separate thread.
+        thread = threading.Thread(
+            target=pull_sound_play_events, args=(sub_socket,), daemon=True
+        )
+        thread.start()
 
     model, labels = load_model_and_labels()
 
     # Run the detection loop.
     while True:
-        detect_specific_sounds(model, labels, zmq_socket=socket)
+        detect_specific_sounds(model, labels, zmq_socket=push_socket)

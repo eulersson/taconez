@@ -25,6 +25,6 @@ find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
 # Link our executable to the libraries it needs.
-add_executable(playback-distributor playback_distributor.c)
+add_executable(playback-distributor src/playback_distributor.c)
 target_link_libraries(playback-distributor ${ZMQ_LIBRARY})
 target_link_libraries(playback-distributor anesowa_commons)

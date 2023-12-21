@@ -16,6 +16,7 @@ tflite-runtime = { version = "~2.13.0", platform = "linux" }
 # when running `poetry install`.
 python-slugify = "^8.0.1"
 influxdb-client = "^1.39.0"
+environs = "^10.0.0"
 [tool.poetry.group.tensorflow-dev]
 optional = true
 

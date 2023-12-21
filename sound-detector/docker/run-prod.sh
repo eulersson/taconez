@@ -21,28 +21,27 @@ INFLUX_DB_TOKEN=${INFLUX_DB_TOKEN:-no_token}
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
 if [ "$(uname)" == "Linux" ]; then
-  extra_flags="--add-host=host.docker.internal:host-gateway"
+	extra_flags="--add-host=host.docker.internal:host-gateway"
 else
-  extra_flags=""
+	extra_flags=""
 fi
 
 if [ -d "/mnt/nfs/anesowa" ]; then
-  recordings_source_dir=/mnt/nfs/anesowa
+	recordings_source_dir=/mnt/nfs/anesowa
 else
-  recordings_source_dir=$ANESOWA_ROOT/recordings
+	recordings_source_dir=$ANESOWA_ROOT/recordings
 fi
 
 # Useful for seeing the actual command that's run on the service logs.
-set -x;
+set -x
 
 docker run --tty \
-  --env PULSE_SERVER=host.docker.internal \
-  --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
-  --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $recordings_source_dir:/recordings \
-  --name $ANESOWA_CONTAINER_NAME \
-  $extra_flags \
-  anesowa/sound-detector:$ANESOWA_VERSION
+	--env PULSE_SERVER=host.docker.internal \
+	--env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
+	--volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
+	--volume $recordings_source_dir:/recordings \
+	--name $ANESOWA_CONTAINER_NAME \
+	$extra_flags \
+	anesowa/sound-detector:$ANESOWA_VERSION
 
-set +x;
-
+set +x

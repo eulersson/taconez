@@ -2,6 +2,8 @@
 
 .DS_Store
 
+.vscode/
+
 *.drawio.bkp
 
 __pycache__/
@@ -11,6 +13,7 @@ pyrightconfig.json
 
 .cache/
 build/
+prerolls/*.wav
 
 recordings/
 

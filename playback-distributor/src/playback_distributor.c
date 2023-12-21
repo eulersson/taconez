@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <zmq.h>
+#include <cjson/cJSON.h>
 
-#include <anesowa_commons/utils.h>
+#include <anesowa/commons/utils.h>
 
 int main(void) {
   void *context = zmq_ctx_new();
@@ -35,3 +37,4 @@ int main(void) {
   zmq_ctx_destroy(context);
   return 0;
 }
+

@@ -34,12 +34,18 @@ include_directories(${ZMQ_INCLUDE_DIR})
 find_library(ZMQ_LIBRARY zmq)
 cmake_print_variables(ZMQ_LIBRARY)
 
+find_package(cJSON REQUIRED)
+cmake_print_variables(CJSON_INCLUDE_DIR)
+cmake_print_variables(CJSON_LIBRARY)
+include_directories(${CJSON_INCLUDE_DIR})
+
 # Prepare the sources to include in the library.
 set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
 
 add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
 
 target_link_libraries(sound-player anesowa_commons)
+target_link_libraries(sound-player ${CJSON_LIBRARY})
 target_link_libraries(sound-player ${PULSEAUDIO_LIBRARY})
 target_link_libraries(sound-player ${PULSEAUDIO_SIMPLE_LIBRARY})
 target_link_libraries(sound-player ${ZMQ_LIBRARY})

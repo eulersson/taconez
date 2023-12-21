@@ -21,14 +21,15 @@ WORKDIR /anesowa/sound-player
 #   install libc-dev
 #
 
-ARG BUILD_TIME_DEPENDENCIES="\
+# Dependencies needed only at build time and that can be uninstalled afterwards.
+ARG BUILD_DEPENDENCIES="\
   gcc=12.2.1_git20220924-r10 \  
   g++=12.2.1_git20220924-r10 \
   make=4.4.1-r1 \
   cmake=3.26.5-r0 \
   "
 
-ARG RUN_TIME_DEPENDENCIES="\
+ARG DEPENDENCIES="\
   zeromq-dev=4.3.4-r4 \
   pulseaudio-dev=16.1-r10 \
   "
@@ -47,8 +48,8 @@ RUN apk --no-cache --update add \
 
 # Build the module.
 COPY lib /anesowa/lib
-COPY sound-player/build-cmake-project.sh ./
-COPY sound-player/CMakeLists.txt sound-player/*.c ./
+COPY sound-player/CMakeLists.txt sound-player/build-cmake-project.sh ./
+COPY sound-player/src ./src
 RUN ./build-cmake-project.sh 
 
 # Cleanup build-time dependencies.

@@ -28,7 +28,8 @@ docker run \
   --interactive \
   --publish 5555:5555 \
   --publish 5556:5556 \
-  --volume $ANESOWA_ROOT/playback-distributor:/anesowa/playback-distributor \
+  --volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
+  --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
   $extra_flags \
   $entrypoint \
   anesowa/playback-distributor:dev
