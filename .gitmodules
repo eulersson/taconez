@@ -1,0 +1,3 @@
+[submodule "lib/c/Criterion"]
+	path = lib/c/Criterion
+	url = https://github.com/Snaipe/Criterion
