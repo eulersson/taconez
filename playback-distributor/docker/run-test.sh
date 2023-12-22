@@ -1,17 +1,13 @@
 #!/bin/bash
 
-# Runs a development container of the Sound Player module.
-#
-# Intended for local container development mainly.
+# Runs container of the Sound Player module that runs the tests.
 #
 # NOTE: Should be run from project root ideally.
 #
 # Usage:
 #
-# ./playback-distributor/docker/run-dev.sh [... extra args to pass to docker run command]
+# ./playback-distributor/docker/run-test.sh [... extra args to pass to docker run command]
 #
-
-ENTRYPOINT="$1"
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
@@ -21,22 +17,17 @@ else
   extra_flags=""
 fi
 
-entrypoint=""
-if [ "$ENTRYPOINT" ]; then
-  entrypoint="--entrypoint $ENTRYPOINT"
-fi
 
 # Useful for seeing the actual command that's run on the service logs.
 set -x
-
 docker run \
   --rm \
   --tty \
   --interactive \
   --volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
+  --volume $ANESOWA_ROOT/playback-distributor/test:/anesowa/playback-distributor/test \
   --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
   $extra_flags \
-  $entrypoint \
-  anesowa/playback-distributor:dev
-
+  $(echo $@) \
+  anesowa/playback-distributor:test
 set +x

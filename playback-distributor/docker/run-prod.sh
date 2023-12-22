@@ -8,6 +8,13 @@
 # - playback-distributor/service/exec-start.sh
 #
 # You can also launch it from the local machine instead too for debugging purposes.
+#
+# NOTE: Should be run from project root ideally.
+#
+# Usage:
+#
+# ./playback-distributor/docker/run-prod.sh [... extra args to pass to docker run command]
+#
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 
@@ -26,8 +33,6 @@ set -x;
 
 docker run \
   --tty \
-  --publish 5555:5555 \
-  --publish 5556:5556 \
   --name $ANESOWA_CONTAINER_NAME \
   --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
   $extra_flags \

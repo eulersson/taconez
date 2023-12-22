@@ -7,7 +7,10 @@ project(anesowa_commons)
 #
 #   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
 #
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
 
 include(CMakePrintHelpers)
 

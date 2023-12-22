@@ -6,10 +6,19 @@
 #   ./playback-distributor/docker/build-dev.sh
 #   ./playback-distributor/docker/run-dev.sh
 #
+# Sources:
+#
+# - Docker Multi-Stage Builds
+#   https://docs.docker.com/language/nodejs/run-tests/
+#
 
-FROM alpine:3.18.4
+
+FROM alpine:3.18.4 as base
 
 WORKDIR /anesowa/playback-distributor
+
+EXPOSE 5555
+EXPOSE 5556
 
 # Separate the dependencies that are only used to build the module and the ones that
 # need to be present when running the module binaries. That way we can cleanup after
@@ -53,7 +62,27 @@ RUN apk --no-cache --update add \
 COPY lib /anesowa/lib
 COPY playback-distributor/CMakeLists.txt playback-distributor/build-cmake-project.sh ./
 COPY playback-distributor/src ./src
-RUN ./build-cmake-project.sh 
+
+# docker run ... --target dev
+FROM base as development
+
+RUN ./build-cmake-project.sh -DTARGET_GROUP=development
+
+ENTRYPOINT [ "build/playback-distributor" ]
+
+# docker run ... --target test
+FROM base as test
+
+COPY playback-distributor/test ./test
+
+# RUN ./build-cmake-project.sh -DTARGET_GROUP=test
+
+ENTRYPOINT [ "ctest", "--test-dir", "build", "--verbose" ]
+
+# docker run ... --target prod
+FROM base as production
+
+RUN ./build-cmake-project.sh -DTARGET_GROUP=production
 
 # Cleanup build-time dependencies.
 #
