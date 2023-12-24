@@ -17,21 +17,20 @@ ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
 if [ "$(uname)" == "Linux" ]; then
-  extra_flags="--add-host=host.docker.internal:host-gateway"
+	extra_flags="--add-host=host.docker.internal:host-gateway"
 else
-  extra_flags=""
+	extra_flags=""
 fi
 
-# Useful for seeing the actual command that's run on the service logs.
-set -x;
+set -x # Print commands as they run.
 
 docker run \
-  --tty \
-  --name $ANESOWA_CONTAINER_NAME \
-  --env PULSE_SERVER=host.docker.internal \
-  --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume /mnt/nfs/anesowa:/anesowa/recordings:ro \
-  $extra_flags \
-  anesowa/sound-player:$ANESOWA_VERSION
+	--tty \
+	--name $ANESOWA_CONTAINER_NAME \
+	--env PULSE_SERVER=host.docker.internal \
+	--volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
+	--volume /mnt/nfs/anesowa:/anesowa/recordings:ro \
+	$extra_flags \
+	anesowa/sound-player:$ANESOWA_VERSION
 
-set +x;
+set +x

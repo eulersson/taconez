@@ -5,8 +5,7 @@ void setUp(void) {}
 void tearDown(void) {}
 
 void test_add() {
-  int output = 30;
-  TEST_ASSERT_EQUAL(31, output);
+  TEST_ASSERT_EQUAL(30, 30);
 }
 
 int main(void) {

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Runs container of the Sound Player module that runs the tests.
+# Runs container of the Playback Distributor module that runs the tests.
 #
 # NOTE: Should be run from project root ideally.
 #
@@ -18,8 +18,8 @@ else
 fi
 
 
-# Useful for seeing the actual command that's run on the service logs.
-set -x
+set -x # Print commands as they run.
+
 docker run \
   --rm \
   --tty \
@@ -30,4 +30,5 @@ docker run \
   $extra_flags \
   $(echo $@) \
   anesowa/playback-distributor:test
+
 set +x

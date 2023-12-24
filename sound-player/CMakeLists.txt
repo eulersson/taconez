@@ -4,48 +4,86 @@ project(sound-player)
 
 include(CMakePrintHelpers)
 
-# Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
-# C++ language server) so it works with Neovim's language server feature:
-#
-#   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
-#
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(NOT DEFINED TARGET_GROUP)
+  message(
+    FATAL_ERROR
+    "Missing TARGET_GROUP when configuring CMake project, "
+    "pass it on the cmake command as -DTARGET_GROUP=[production | development | test]."
+  )
+endif()
 
-# Add anesowa common library and include paths.
-add_subdirectory(../lib/c/commons anesowa_commons)
+cmake_print_variables(CMAKE_CURRENT_LIST_DIR)
 cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
+
+if(TARGET_GROUP STREQUAL development)
+  # Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
+  # C++ language server) so it works with Neovim's language server feature:
+  #
+  #   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
+  #
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+else()
+  set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+endif()
+
+cmake_print_variables(CMAKE_EXPORT_COMPILE_COMMANDS)
+
+# Shared dependencies: Add anesowa common library and include paths.
+add_subdirectory(../lib/c/commons anesowa_commons)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib/c/commons/include)
 
-# Add third-party libraries and include paths.
-find_path(PULSEAUDIO_INCLUDE_DIR pulse/pulseaudio.h)
-cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
+# Third party: cJSON.
+find_package(cJSON)
+cmake_print_variables(CJSON_INCLUDE_DIRS)
+cmake_print_variables(CJSON_LIBRARIES)
+include_directories(${CJSON_INCLUDE_DIRS})
+
+# Third party: ZeroMQ.
+find_package(PkgConfig REQUIRED)
+pkg_search_module(ZMQ REQUIRED libzmq)
+cmake_print_variables(ZMQ_INCLUDE_DIRS)
+cmake_print_variables(ZMQ_LINK_LIBRARIES)
+include_directories(${ZMQ_INCLUDE_DIRS})
+
+# Third party: PulseAudio (Core & Simple API).
+find_package(PulseAudio)
 include_directories(${PULSEAUDIO_INCLUDE_DIR})
-
-find_library(PULSEAUDIO_LIBRARY pulse)
-cmake_print_variables(PULSEAUDIO_LIBRARY)
-
 find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
+cmake_print_variables(PULSEAUDIO_LIBRARY)
 cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
 
-find_path(ZMQ_INCLUDE_DIR zmq.h)
-cmake_print_variables(ZMQ_INCLUDE_DIR)
-include_directories(${ZMQ_INCLUDE_DIR})
+if(TARGET_GROUP STREQUAL production OR TARGET_GROUP STREQUAL development)
+  # Add and link our executable to the libraries it needs.
+  set(SOUND_PLAYER_SOURCE_FILES src/sound_player.c)
+  add_executable(${PROJECT_NAME} ${SOUND_PLAYER_SOURCE_FILES})
+  target_link_libraries(${PROJECT_NAME} anesowa-commons)
+  target_link_libraries(${PROJECT_NAME} ${CJSON_LIBRARY})
+  target_link_libraries(${PROJECT_NAME} ${PULSEAUDIO_LIBRARY})
+  target_link_libraries(${PROJECT_NAME} ${PULSEAUDIO_SIMPLE_LIBRARY})
+  target_link_libraries(${PROJECT_NAME} ${ZMQ_LINK_LIBRARIES})
+endif()
 
-find_library(ZMQ_LIBRARY zmq)
-cmake_print_variables(ZMQ_LIBRARY)
+if(TARGET_GROUP STREQUAL test)
+  # Configure unit tests.
+  #
+  # Sources:
+  # - https://honeytreelabs.com/posts/cmake-unity-integration/
+  # - https://docs.docker.com/language/nodejs/run-tests/
+  #
 
-find_package(cJSON REQUIRED)
-cmake_print_variables(CJSON_INCLUDE_DIR)
-cmake_print_variables(CJSON_LIBRARY)
-include_directories(${CJSON_INCLUDE_DIR})
+  # Add Third-Party Unity (unit testing framework).
+  include(FetchContent)
+  FetchContent_Declare(
+    unity
+    GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity
+    GIT_TAG        0b899aec14d3a9abb2bf260ac355f0f28630a6a3 # v2.5.2
+  )
+  FetchContent_MakeAvailable(unity)
 
-# Prepare the sources to include in the library.
-set(SOUND_PLAYER_SOURCE_FILES sound_player.c)
+  # Include ctest (built-in CMake test runner).
+  include(CTest)
 
-add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
-
-target_link_libraries(sound-player anesowa_commons)
-target_link_libraries(sound-player ${CJSON_LIBRARY})
-target_link_libraries(sound-player ${PULSEAUDIO_LIBRARY})
-target_link_libraries(sound-player ${PULSEAUDIO_SIMPLE_LIBRARY})
-target_link_libraries(sound-player ${ZMQ_LIBRARY})
+  add_executable(suite-${PROJECT_NAME} test/test_sound_player.c)
+  target_link_libraries(suite-${PROJECT_NAME} unity)
+  add_test(test-${PROJECT_NAME} suite-${PROJECT_NAME})
+endif()

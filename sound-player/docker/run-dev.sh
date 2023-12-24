@@ -20,8 +20,7 @@ if [ "$ENTRYPOINT" ]; then
   entrypoint="--entrypoint $ENTRYPOINT"
 fi
 
-# Useful for seeing the actual command that's run on the service logs.
-set -x
+set -x # Print commands as they run.
 
 docker run \
   --rm \

@@ -3,8 +3,8 @@
 # NOTE: If you were to run the docker build manually, do it from the root of the
 # repository pointing to this Dockerfile with the `-f` flag:
 #
-#   ./playback-distributor/docker/build-dev.sh
-#   ./playback-distributor/docker/run-dev.sh
+#   ./sound-player/docker/build-dev.sh
+#   ./sound-player/docker/run-dev.sh
 #
 
 FROM alpine:3.18.4
@@ -20,6 +20,9 @@ WORKDIR /anesowa/sound-player
 # TODO: See if we can skip installing g++ and have CMake work. Then we would need to
 #   install libc-dev
 #
+
+ARG DEBUG=0
+ENV DEBUG=$DEBUG
 
 # Dependencies needed only at build time and that can be uninstalled afterwards.
 ARG BUILD_DEPENDENCIES="\
@@ -50,7 +53,27 @@ RUN apk --no-cache --update add \
 COPY lib /anesowa/lib
 COPY sound-player/CMakeLists.txt sound-player/build-cmake-project.sh ./
 COPY sound-player/src ./src
-RUN ./build-cmake-project.sh 
+
+# docker run ... --target dev
+FROM base as development
+
+RUN ./build-cmake-project.sh -DTARGET_GROUP=development
+
+ENTRYPOINT [ "build/sound-player" ]
+
+# docker run ... --target test
+FROM base as test
+
+COPY sound-player/test ./test
+
+RUN ./build-cmake-project.sh -DTARGET_GROUP=test
+
+ENTRYPOINT [ "ctest", "--test-dir", "build", "--verbose" ]
+
+# docker run ... --target prod
+FROM base as production
+
+RUN ./build-cmake-project.sh -DTARGET_GROUP=production
 
 # Cleanup build-time dependencies.
 #

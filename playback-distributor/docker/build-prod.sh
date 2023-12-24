@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Builds a production image of the Sound Detector module.
+# Builds a production image of the Playback Distributor module.
 #
 # Intended for local container development mainly.
 #
@@ -13,9 +13,13 @@
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
+set -x # Print commands as they run.
+
 docker build \
 	--build-arg DEBUG=0 \
 	--tag anesowa/playback-distributor:prod \
 	--file $ANESOWA_ROOT/playback-distributor/Dockerfile \
 	--target production \
 	$ANESOWA_ROOT
+
+set +x

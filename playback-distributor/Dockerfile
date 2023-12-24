@@ -1,4 +1,4 @@
-# Dockerfile to build Sound Detector
+# Dockerfile to build Playback Distributor
 #
 # NOTE: If you were to run the docker build manually, do it from the root of the
 # repository pointing to this Dockerfile with the `-f` flag:
@@ -75,7 +75,7 @@ FROM base as test
 
 COPY playback-distributor/test ./test
 
-# RUN ./build-cmake-project.sh -DTARGET_GROUP=test
+RUN ./build-cmake-project.sh -DTARGET_GROUP=test
 
 ENTRYPOINT [ "ctest", "--test-dir", "build", "--verbose" ]
 
