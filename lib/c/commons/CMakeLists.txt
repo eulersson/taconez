@@ -2,17 +2,23 @@ cmake_minimum_required(VERSION 3.10)
 
 project(anesowa-commons)
 
-# Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
+include(CMakePrintHelpers)
+
+# Produces the JSON Compilation Database (`compile_commands.json`) used by clangd (the 
 # C++ language server) so it works with Neovim's language server feature:
 #
 #   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
 #
-if(NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)
-  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-endif()
-cmake_print_variables(CMAKE_EXPORT_COMPILE_COMMANDS)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(CMakePrintHelpers)
+
+# Third party: ZeroMQ.
+find_package(PkgConfig REQUIRED)
+pkg_search_module(ZMQ REQUIRED libzmq)
+cmake_print_variables(ZMQ_INCLUDE_DIRS)
+cmake_print_variables(ZMQ_LINK_LIBRARIES)
+include_directories(${ZMQ_INCLUDE_DIRS})
 
 # Third party: cJSON.
 if(WANTS_CJSON)
@@ -33,16 +39,6 @@ if(WANTS_CJSON)
   cmake_print_variables(CJSON_LIBRARIES)
   include_directories(${CJSON_INCLUDE_DIRS})
 endif()
-
-if(WANTS_ZMQ)
-  # Third party: ZeroMQ.
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(ZMQ REQUIRED libzmq)
-  cmake_print_variables(ZMQ_INCLUDE_DIRS)
-  cmake_print_variables(ZMQ_LINK_LIBRARIES)
-  include_directories(${ZMQ_INCLUDE_DIRS})
-endif()
-
 
 if(WANTS_PULSEAUDIO)
   # Third party: PulseAudio (Core & Simple API).
