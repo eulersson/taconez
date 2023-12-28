@@ -9,50 +9,86 @@ include(CMakePrintHelpers)
 #
 #   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
 #
+# NOTE: This needs to be in every CMake project.
+#
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(CMakePrintHelpers)
+# Create the library.
+set(COMMONS_UTILS_SOURCE_FILES src/utils.c)
+add_library(${PROJECT_NAME} ${COMMONS_UTILS_SOURCE_FILES})
 
 # Third party: ZeroMQ.
 find_package(PkgConfig REQUIRED)
 pkg_search_module(ZMQ REQUIRED libzmq)
 cmake_print_variables(ZMQ_INCLUDE_DIRS)
+cmake_print_variables(ZMQ_LIBRARIES)
 cmake_print_variables(ZMQ_LINK_LIBRARIES)
-include_directories(${ZMQ_INCLUDE_DIRS})
+
+# Include directories and link target so dependants would also have ZeroMQ.
+target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
 
 # Third party: cJSON.
 if(WANTS_CJSON)
-  find_package(cJSON)
-  cmake_print_variables(cJSON_FOUND)
-  if(NOT cJSON_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-      cJSON
-      GIT_REPOSITORY https://github.com/DaveGamble/cJSON
-      GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
-    )
-    set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
-    FetchContent_MakeAvailable(cJSON)
-  endif()
+  # find_package(cJSON)
+  # target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
+  # target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_LIBRARIES})
+  # cmake_print_variables(CJSON_INCLUDE_DIRS)
+  # cmake_print_variables(CJSON_LIBRARIES)
 
-  cmake_print_variables(CJSON_INCLUDE_DIRS)
-  cmake_print_variables(CJSON_LIBRARIES)
-  include_directories(${CJSON_INCLUDE_DIRS})
+  include(FetchContent)
+  FetchContent_Declare(
+    cJSON
+    GIT_REPOSITORY https://github.com/DaveGamble/cJSON
+    GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
+  )
+  set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
+  FetchContent_MakeAvailable(cJSON)
+
+  # # if(cJSON_FOUND)
+  #   include(FetchContent)
+  #   FetchContent_Declare(
+  #     cJSON
+  #     GIT_REPOSITORY https://github.com/DaveGamble/cJSON
+  #     GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
+  #   )
+  #   set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
+  #   FetchContent_MakeAvailable(cJSON)
+  # # endif()
+
+  # cmake_print_variables(CJSON_INCLUDE_DIRS)
+  # cmake_print_variables(CJSON_LIBRARIES)
+
+  # # include_directories(${CJSON_INCLUDE_DIRS})
 endif()
 
 if(WANTS_PULSEAUDIO)
-  # Third party: PulseAudio (Core & Simple API).
+  # Third party: PulseAudio (Core API).
   find_package(PulseAudio)
-  include_directories(${PULSEAUDIO_INCLUDE_DIR})
-  find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
+
+  cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
   cmake_print_variables(PULSEAUDIO_LIBRARY)
+
+  # # Third party: PulseAudio (Simple API).
+  find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
   cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
+
+  # Prepare the sources to include in the target.
+  target_include_directories(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY})
 endif()
 
-# Prepare the sources to include in the library.
-include_directories(./include)
-set(COMMONS_UTILS_SOURCE_FILES src/utils.c)
-
-# Create the library.
-add_library(${PROJECT_NAME} ${COMMONS_UTILS_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} ${ZMQ_LINK_LIBRARIES})
+# Third party: cmocka (unit test framework with mocking capabilities).
+if(TARGET_GROUP STREQUAL test)
+  include(FetchContent)
+  FetchContent_Declare(
+    cmocka
+    GIT_REPOSITORY https://git.cryptomilk.org/projects/cmocka.git
+    GIT_TAG        5838210b437c7abf688e74bcf057ad9e6d637ee6 # cmocka-1.1.7
+    GIT_SHALLOW    1
+  )
+  set(WITH_EXAMPLES OFF CACHE BOOL "CMocka: Build examples" FORCE)
+  set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build with unit testing" FORCE)
+  FetchContent_MakeAvailable(cmocka)
+  target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)
+endif()
