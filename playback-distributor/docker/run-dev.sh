@@ -33,6 +33,7 @@ docker run \
   --tty \
   --interactive \
   --volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
+  --volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/anesowa/playback-distributor/CMakeLists.txt \
   --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
   $extra_flags \
   $entrypoint \

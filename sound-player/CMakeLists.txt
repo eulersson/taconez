@@ -15,42 +15,12 @@ endif()
 cmake_print_variables(CMAKE_CURRENT_LIST_DIR)
 cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
 
-if(TARGET_GROUP STREQUAL development)
-  # Produces the JSON Compilation Database (`compile_comands.json`) used by clangd (the 
-  # C++ language server) so it works with Neovim's language server feature:
-  #
-  #   https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#clangd
-  #
-  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-else()
-  set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
-endif()
-
-cmake_print_variables(CMAKE_EXPORT_COMPILE_COMMANDS)
-
 # Shared dependencies: Add anesowa common library and include paths.
+set(WANTS_CJSON ON)
+set(WANTS_PULSEAUDIO ON)
+set(WANTS_ZMQ ON)
 add_subdirectory(../lib/c/commons anesowa_commons)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib/c/commons/include)
-
-# Third party: cJSON.
-find_package(cJSON)
-cmake_print_variables(CJSON_INCLUDE_DIRS)
-cmake_print_variables(CJSON_LIBRARIES)
-include_directories(${CJSON_INCLUDE_DIRS})
-
-# Third party: ZeroMQ.
-find_package(PkgConfig REQUIRED)
-pkg_search_module(ZMQ REQUIRED libzmq)
-cmake_print_variables(ZMQ_INCLUDE_DIRS)
-cmake_print_variables(ZMQ_LINK_LIBRARIES)
-include_directories(${ZMQ_INCLUDE_DIRS})
-
-# Third party: PulseAudio (Core & Simple API).
-find_package(PulseAudio)
-include_directories(${PULSEAUDIO_INCLUDE_DIR})
-find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
-cmake_print_variables(PULSEAUDIO_LIBRARY)
-cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
 
 if(TARGET_GROUP STREQUAL production OR TARGET_GROUP STREQUAL development)
   # Add and link our executable to the libraries it needs.
@@ -64,26 +34,23 @@ if(TARGET_GROUP STREQUAL production OR TARGET_GROUP STREQUAL development)
 endif()
 
 if(TARGET_GROUP STREQUAL test)
-  # Configure unit tests.
-  #
-  # Sources:
-  # - https://honeytreelabs.com/posts/cmake-unity-integration/
-  # - https://docs.docker.com/language/nodejs/run-tests/
-  #
-
-  # Add Third-Party Unity (unit testing framework).
+  # Download cmocka, a unit test framework with mocking capabilities.
   include(FetchContent)
   FetchContent_Declare(
-    unity
-    GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity
-    GIT_TAG        0b899aec14d3a9abb2bf260ac355f0f28630a6a3 # v2.5.2
+    cmocka
+    GIT_REPOSITORY https://git.cryptomilk.org/projects/cmocka.git
+    GIT_TAG        5838210b437c7abf688e74bcf057ad9e6d637ee6 # cmocka-1.1.7
+    GIT_SHALLOW    1
   )
-  FetchContent_MakeAvailable(unity)
+  set(WITH_EXAMPLES OFF CACHE BOOL "CMocka: Build examples" FORCE)
+  set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build with unit testing" FORCE)
+  FetchContent_MakeAvailable(cmocka)
 
   # Include ctest (built-in CMake test runner).
   include(CTest)
 
+  # Configure the suite and tests to be run from CMake as `ctest --test-dir build --verbose`.
   add_executable(suite-${PROJECT_NAME} test/test_sound_player.c)
-  target_link_libraries(suite-${PROJECT_NAME} unity)
+  target_link_libraries(suite-${PROJECT_NAME} cmocka)
   add_test(test-${PROJECT_NAME} suite-${PROJECT_NAME})
 endif()

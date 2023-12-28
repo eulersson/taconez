@@ -11,8 +11,6 @@
 # - Docker Multi-Stage Builds
 #   https://docs.docker.com/language/nodejs/run-tests/
 #
-
-
 FROM alpine:3.18.4 as base
 
 WORKDIR /anesowa/playback-distributor
@@ -42,8 +40,8 @@ ARG BUILD_DEPENDENCIES="\
   "
 
 ARG DEPENDENCIES="\
-  zeromq-dev=4.3.4-r4 \
   cjson-dev=1.7.15-r4 \
+  zeromq-dev=4.3.4-r4 \
   "
 
 ARG DEBUG_DEPENDENCIES="\
