@@ -22,10 +22,11 @@ int main(void) {
     char *message = s_recv(pull_socket);
     printf("[distributor] Received: %s\n", message);
 
-    // cJSON *json = cJSON_Parse(message);
-    // char* sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
-    // char* when = cJSON_GetObjectItem(json, "when")->valuestring;
-    // char* abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
+    cJSON *json = cJSON_Parse(message);
+    char* sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
+    char* when = cJSON_GetObjectItem(json, "when")->valuestring;
+    char* abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
+    printf("[distributor] When: %s | Sound file: %s", when, sound_file);
 
     printf("[distributor] Publishing: %s\n", message);
     s_send(pub_socket, message);

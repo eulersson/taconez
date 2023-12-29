@@ -30,36 +30,40 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
 
 # Third party: cJSON.
 if(WANTS_CJSON)
-  # find_package(cJSON)
-  # target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
-  # target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_LIBRARIES})
-  # cmake_print_variables(CJSON_INCLUDE_DIRS)
-  # cmake_print_variables(CJSON_LIBRARIES)
+  find_package(cJSON)
+  if(cJSON_FOUND)
+    message("cJSON was found on the system! No need to build it.")
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_LIBRARIES})
+  else()
+    message("cJSON was not found on the system! Fetching and building it...")
 
-  include(FetchContent)
-  FetchContent_Declare(
-    cJSON
-    GIT_REPOSITORY https://github.com/DaveGamble/cJSON
-    GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
-  )
-  set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
-  FetchContent_MakeAvailable(cJSON)
+    include(FetchContent)
 
-  # # if(cJSON_FOUND)
-  #   include(FetchContent)
-  #   FetchContent_Declare(
-  #     cJSON
-  #     GIT_REPOSITORY https://github.com/DaveGamble/cJSON
-  #     GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
-  #   )
-  #   set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
-  #   FetchContent_MakeAvailable(cJSON)
-  # # endif()
+    FetchContent_Declare(
+      cJSON
+      GIT_REPOSITORY https://github.com/DaveGamble/cJSON
+      GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
+    )
+    set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
+    FetchContent_MakeAvailable(cJSON)
 
-  # cmake_print_variables(CJSON_INCLUDE_DIRS)
-  # cmake_print_variables(CJSON_LIBRARIES)
+    get_cmake_property(_variableNames VARIABLES)
 
-  # # include_directories(${CJSON_INCLUDE_DIRS})
+    # TODO: Check if this is the best way to make a header available at build time to
+    # not have to install cJSON system-wide. The cjson target does not include the
+    # header file.
+    #
+    # - Installing with CMake's FetchContent creates problems with header files
+    #   https://github.com/DaveGamble/cJSON/issues/816
+    #
+    # - [FetchContent] How to include header files of a third-party project whose target does not provide them
+    #   https://discourse.cmake.org/t/fetchcontent-how-to-include-header-files-of-a-third-party-project-whose-target-does-not-provide-them/9734
+    # 
+    configure_file(${cJSON_SOURCE_DIR}/cJSON.h ${CMAKE_BINARY_DIR}/include/cJSON/cJSON.h)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cjson)
+  endif()
 endif()
 
 if(WANTS_PULSEAUDIO)
