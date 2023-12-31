@@ -34,7 +34,7 @@ ARG DEBUG_DEPENDENCIES="\
   "
 
 # When set to true we won' install the dependencies from package.
-ARG INSTALL_DEPENDENCIES_FROM_PACKAGE=1
+ARG INSTALL_DEPENDENCIES_FROM_PACKAGE=0
 ARG DEPENDENCIES="\
   cjson-dev=1.7.15-r4 \
   zeromq-dev=4.3.4-r4 \
