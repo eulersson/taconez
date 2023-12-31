@@ -20,6 +20,7 @@ docker build \
 	--tag anesowa/sound-player:prod \
 	--file $ANESOWA_ROOT/sound-player/Dockerfile \
 	--target production \
+	$(echo $@) \
 	$ANESOWA_ROOT
 
 set +x

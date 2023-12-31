@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(anesowa-commons)
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
-include(CMakePrintHelpers)
+project(anesowa-commons)
 
 # Produces the JSON Compilation Database (`compile_commands.json`) used by clangd (the 
 # C++ language server) so it works with Neovim's language server feature:
@@ -17,39 +20,61 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(COMMONS_UTILS_SOURCE_FILES src/utils.c)
 add_library(${PROJECT_NAME} ${COMMONS_UTILS_SOURCE_FILES})
 
-# Third party: ZeroMQ.
-find_package(PkgConfig REQUIRED)
-pkg_search_module(ZMQ REQUIRED libzmq)
-cmake_print_variables(ZMQ_INCLUDE_DIRS)
-cmake_print_variables(ZMQ_LIBRARIES)
-cmake_print_variables(ZMQ_LINK_LIBRARIES)
+if($ENV{INSTALL_DEPENDENCIES_FROM_PACKAGE})
+  message("Using ZeroMQ from package.")
+  # Third party: ZeroMQ.
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZMQ REQUIRED libzmq)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
+else()
+  message("Building ZeroMQ from source.")
+  include(FetchContent)
 
-# Include directories and link target so dependants would also have ZeroMQ.
-target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
+  message("Fetching ZeroMQ tarball.")
+  FetchContent_Declare(
+    libzmq
+    URL https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.4.tar.gz
+    URL_HASH MD5=cc20b769ac10afa352e5ed2769bb23b3
+  )
+
+  if(BUILD_DEPENDENCY_TESTS)
+    message("Will include ZeroMQ's unit tests.")
+    set(BUILD_TESTS ON CACHE BOOL "libzmq: Build unit tests" FORCE)
+  else()
+    message("Won't include ZeroMQ's unit tests.")
+    set(BUILD_TESTS OFF CACHE BOOL "libzmq: Build unit tests" FORCE)
+  endif()
+
+  FetchContent_MakeAvailable(libzmq)
+  target_link_libraries(${PROJECT_NAME} PUBLIC libzmq)
+endif()
 
 # Third party: cJSON.
 if(WANTS_CJSON)
-  find_package(cJSON)
-  if(cJSON_FOUND)
-    message("cJSON was found on the system! No need to build it.")
+  if($ENV{INSTALL_DEPENDENCIES_FROM_PACKAGE})
+    message("Using cJSON from package.")
+    find_package(cJSON REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_LIBRARIES})
   else()
-    message("cJSON was not found on the system! Fetching and building it...")
-
+    message("Building cJSON from source.")
     include(FetchContent)
-
+    message("Fetching cJSON tarball.")
     FetchContent_Declare(
       cJSON
-      GIT_REPOSITORY https://github.com/DaveGamble/cJSON
-      GIT_TAG        cb8693b058ba302f4829ec6d03f609ac6f848546 # v1.7.16
+      URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.15.tar.gz
+      URL_HASH MD5=921b4bcb401aa604dc632fdb1c8dbdea
     )
-    set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build with unit testing" FORCE)
+
+    if(BUILD_DEPENDENCY_TESTS)
+      message("Will include cJSON's unit tests.")
+      set(ENABLE_CJSON_TEST ON CACHE BOOL "cJSON: Build unit tests" FORCE)
+    else()
+      message("Won't include cJSON's unit tests.")
+      set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build unit tests" FORCE)
+    endif()
     FetchContent_MakeAvailable(cJSON)
-
-    get_cmake_property(_variableNames VARIABLES)
-
     # TODO: Check if this is the best way to make a header available at build time to
     # not have to install cJSON system-wide. The cjson target does not include the
     # header file.
@@ -70,12 +95,8 @@ if(WANTS_PULSEAUDIO)
   # Third party: PulseAudio (Core API).
   find_package(PulseAudio)
 
-  cmake_print_variables(PULSEAUDIO_INCLUDE_DIR)
-  cmake_print_variables(PULSEAUDIO_LIBRARY)
-
   # # Third party: PulseAudio (Simple API).
   find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
-  cmake_print_variables(PULSEAUDIO_SIMPLE_LIBRARY)
 
   # Prepare the sources to include in the target.
   target_include_directories(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_INCLUDE_DIR})
@@ -85,14 +106,29 @@ endif()
 # Third party: cmocka (unit test framework with mocking capabilities).
 if(TARGET_GROUP STREQUAL test)
   include(FetchContent)
+
   FetchContent_Declare(
     cmocka
-    GIT_REPOSITORY https://git.cryptomilk.org/projects/cmocka.git
-    GIT_TAG        5838210b437c7abf688e74bcf057ad9e6d637ee6 # cmocka-1.1.7
-    GIT_SHALLOW    1
+    URL https://cmocka.org/files/1.1/cmocka-1.1.7.tar.xz
+    URL_HASH MD5=dc23f4870eb7dfa6da065f3056e815b0
   )
+
   set(WITH_EXAMPLES OFF CACHE BOOL "CMocka: Build examples" FORCE)
-  set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build with unit testing" FORCE)
+
+  # Since cmocka includes the `unity` target it would clash if we build unit tests for
+  # all dependencies.
+  #
+  #   - How can I avoid clashes with targets "imported" with FetchContent_MakeAvailable?
+  #     https://stackoverflow.com/a/72943178
+  #
+  if(BUILD_DEPENDENCY_TESTS)
+    message("Will include cmocka unit tests.")
+    set(UNIT_TESTING ON CACHE BOOL "CMocka: Build unit tests" FORCE)
+  else()
+    message("Won't include cmocka unit tests.")
+    set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build unit tests" FORCE)
+  endif()
+
   FetchContent_MakeAvailable(cmocka)
   target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)
 endif()

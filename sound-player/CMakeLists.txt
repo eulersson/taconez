@@ -10,7 +10,12 @@ if(NOT DEFINED TARGET_GROUP)
   )
 endif()
 
-include(CMakePrintHelpers)
+# NOTE: Must be included at the top so any call to add_test by subproject and third
+# party dependencies get included and simply running `ctest` on the build folder would
+# run them all.
+if(TARGET_GROUP STREQUAL test)
+  include(CTest)
+endif()
 
 # Produces the JSON Compilation Database (`compile_commands.json`) used by clangd (the 
 # C++ language server) so it works with Neovim's language server feature:
@@ -20,9 +25,6 @@ include(CMakePrintHelpers)
 # NOTE: This needs to be in every CMake project.
 #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-cmake_print_variables(CMAKE_CURRENT_LIST_DIR)
-cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
 
 # Shared dependencies: Add anesowa common library and include paths.
 set(WANTS_CJSON ON)

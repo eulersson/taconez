@@ -20,6 +20,7 @@ docker build \
 	--tag anesowa/playback-distributor:prod \
 	--file $ANESOWA_ROOT/playback-distributor/Dockerfile \
 	--target production \
+	$(echo $@) \
 	$ANESOWA_ROOT
 
 set +x
