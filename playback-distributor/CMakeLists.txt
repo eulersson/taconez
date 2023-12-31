@@ -44,8 +44,6 @@ if(TARGET_GROUP STREQUAL production OR TARGET_GROUP STREQUAL development)
 endif()
 
 if(TARGET_GROUP STREQUAL test)
-  # Configure the suite and tests to be run from CMake as `ctest --test-dir build --verbose`.
-  add_executable(suite-${PROJECT_NAME} test/test_playback_distributor.c)
-  target_link_libraries(suite-${PROJECT_NAME} anesowa-commons)
-  add_test(test-${PROJECT_NAME} suite-${PROJECT_NAME})
+  enable_testing() # Enable testing only works in root scope.
+  add_subdirectory(tests)
 endif()

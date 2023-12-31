@@ -13,6 +13,7 @@
 ARG DEBUG=0
 
 # Dependencies needed only at build time and that can be uninstalled afterwards.
+# TODO: Version pkgconfig.
 ARG BUILD_DEPENDENCIES="\
   gcc=12.2.1_git20220924-r10 \  
   g++=12.2.1_git20220924-r10 \
@@ -72,15 +73,16 @@ RUN apk --no-cache --update add \
 
 # Build the module.
 COPY lib /anesowa/lib
-COPY playback-distributor/CMakeLists.txt playback-distributor/build-cmake-project.sh ./
+COPY playback-distributor/CMakeLists.txt  ./
 COPY playback-distributor/src ./src
 
 # docker run ... --target dev
 FROM base as development
 
-RUN ./build-cmake-project.sh -DTARGET_GROUP=development
+RUN cmake -S . -B build -DTARGET_GROUP=development
+RUN cmake --build build --verbose
 
-ENTRYPOINT [ "build/playback-distributor" ]
+ENTRYPOINT [ "./build/playback-distributor" ]
 
 # docker run ... --target test
 FROM base as test
@@ -95,7 +97,7 @@ ENV DEBUG=$DEBUG
 ARG INSTALL_DEPENDENCIES_FROM_PACKAGE
 ENV INSTALL_DEPENDENCIES_FROM_PACKAGE=$INSTALL_DEPENDENCIES_FROM_PACKAGE
 
-COPY playback-distributor/test ./test
+COPY playback-distributor/tests ./tests
 
 # TODO: BUILD_DEPENDENCY_TESTS will fail because various dependencies define the "unity"
 # target (unity is the testing framework). I asked the question to the community:
@@ -108,15 +110,17 @@ COPY playback-distributor/test ./test
 # - CMake Discourse
 #   https://discourse.cmake.org/t/building-project-with-depedencies-tests-cmake-fetchcontent-conflicting-targets/9747
 #
-# RUN ./build-cmake-project.sh -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=1
-RUN ./build-cmake-project.sh -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=0
+# RUN cmake -S . -B build -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=1
+RUN cmake -S . -B build -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=0
+RUN cmake --build build --verbose
 
 ENTRYPOINT [ "ctest", "--test-dir", "build", "--verbose" ]
 
 # docker run ... --target prod
 FROM base as production
 
-RUN ./build-cmake-project.sh -DTARGET_GROUP=production \
+RUN cmake -S . -B build -DTARGET_GROUP=production
+RUN cmake --build build --verbose \
   && mv ./build/playback-distributor . \
   && rm -rf build
 
@@ -132,4 +136,4 @@ RUN \
   echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
-ENTRYPOINT [ "playback-distributor" ]
+ENTRYPOINT [ "./playback-distributor" ]

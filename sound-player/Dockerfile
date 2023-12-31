@@ -1,15 +1,4 @@
 # Dockerfile to build Sound Player
-#
-# NOTE: If you were to run the docker build manually, do it from the root of the
-# repository pointing to this Dockerfile with the `-f` flag:
-#
-#   ./sound-player/docker/build-dev.sh
-#   ./sound-player/docker/run-dev.sh
-#
-
-FROM alpine:3.18.4
-
-WORKDIR /anesowa/sound-player
 
 # Separate the dependencies that are only used to build the module and the ones that
 # need to be present when running the module binaries. That way we can cleanup after
@@ -22,14 +11,15 @@ WORKDIR /anesowa/sound-player
 #
 
 ARG DEBUG=0
-ENV DEBUG=$DEBUG
 
 # Dependencies needed only at build time and that can be uninstalled afterwards.
+# TODO: Version pkgconfig.
 ARG BUILD_DEPENDENCIES="\
   gcc=12.2.1_git20220924-r10 \  
   g++=12.2.1_git20220924-r10 \
   make=4.4.1-r1 \
   cmake=3.26.5-r0 \
+  pkgconfig \
   "
 
 ARG DEPENDENCIES="\
@@ -43,37 +33,95 @@ ARG DEBUG_DEPENDENCIES="\
   alsa-utils=1.2.9-r0 \
   "
 
+# When set to true we won' install the dependencies from package.
+ARG INSTALL_DEPENDENCIES_FROM_PACKAGE=1
+ARG DEPENDENCIES="\
+  cjson-dev=1.7.15-r4 \
+  zeromq-dev=4.3.4-r4 \
+  "
+
+#
+# NOTE: If you were to run the docker build manually, do it from the root of the
+# repository pointing to this Dockerfile with the `-f` flag:
+#
+#   ./sound-player/docker/build-dev.sh
+#   ./sound-player/docker/run-dev.sh
+#
+
+FROM alpine:3.18.4 as base
+
+# Use args from the global scope.
+#
+#  - Share ARG in multi-stage Dockerfile
+#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
+#
+ARG DEBUG
+ARG BUILD_DEPENDENCIES
+ARG INSTALL_DEPENDENCIES_FROM_PACKAGE
+ENV INSTALL_DEPENDENCIES_FROM_PACKAGE=$INSTALL_DEPENDENCIES_FROM_PACKAGE
+ARG DEPENDENCIES
+
+WORKDIR /anesowa/sound-player
+
 # Install dependencies.
 RUN apk --no-cache --update add \
-  $BUILD_TIME_DEPENDENCIES \
-  $RUN_TIME_DEPENDENCIES \
-  $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES )
+  pulseaudio-dev=16.1-r10 \
+  $BUILD_DEPENDENCIES \
+  $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES ) \
+  $( [ ${INSTALL_DEPENDENCIES_FROM_PACKAGE} = 1 ] && echo $DEPENDENCIES )
 
 # Build the module.
 COPY lib /anesowa/lib
-COPY sound-player/CMakeLists.txt sound-player/build-cmake-project.sh ./
+COPY sound-player/CMakeLists.txt ./
 COPY sound-player/src ./src
 
 # docker run ... --target dev
 FROM base as development
 
-RUN ./build-cmake-project.sh -DTARGET_GROUP=development
+RUN cmake -S . -B build -DTARGET_GROUP=development --fresh
+RUN cmake --build build --verbose
 
-ENTRYPOINT [ "build/sound-player" ]
+ENTRYPOINT [ "./build/sound-player" ]
 
 # docker run ... --target test
 FROM base as test
 
-COPY sound-player/test ./test
+# Use args from the global scope.
+#
+#  - Share ARG in multi-stage Dockerfile
+#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
+#
+ARG DEBUG
+ENV DEBUG=$DEBUG
+ARG INSTALL_DEPENDENCIES_FROM_PACKAGE
+ENV INSTALL_DEPENDENCIES_FROM_PACKAGE=$INSTALL_DEPENDENCIES_FROM_PACKAGE
 
-RUN ./build-cmake-project.sh -DTARGET_GROUP=test
+COPY sound-player/tests ./tests
+
+# TODO: BUILD_DEPENDENCY_TESTS will fail because various dependencies define the "unity"
+# target (unity is the testing framework). I asked the question to the community:
+#
+# Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets:
+#
+# - StackOverflow 
+#   https://stackoverflow.com/questions/77739155
+#
+# - CMake Discourse
+#   https://discourse.cmake.org/t/building-project-with-depedencies-tests-cmake-fetchcontent-conflicting-targets/9747
+#
+# RUN cmake -S . -B build -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=1
+RUN cmake -S . -B build -DTARGET_GROUP=test -DBUILD_DEPENDENCY_TESTS=0
+RUN cmake --build build --verbose
 
 ENTRYPOINT [ "ctest", "--test-dir", "build", "--verbose" ]
 
 # docker run ... --target prod
 FROM base as production
 
-RUN ./build-cmake-project.sh -DTARGET_GROUP=production
+RUN cmake -S . -B build -DTARGET_GROUP=production
+RUN cmake --build build --verbose \
+  && mv ./build/sound-player . \
+  && rm -rf build
 
 # Cleanup build-time dependencies.
 #
@@ -87,4 +135,4 @@ RUN \
   echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
-ENTRYPOINT [ "build/sound-player" ]
+ENTRYPOINT [ "./sound-player" ]

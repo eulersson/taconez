@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Builds an image of the Sound Detector module to run the tests.
+# Builds an image of the Playback Distributor module to run the tests.
 #
 # NOTE: Should be run from project root ideally.
 #

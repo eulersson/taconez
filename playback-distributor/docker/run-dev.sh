@@ -11,9 +11,9 @@
 # ./playback-distributor/docker/run-dev.sh [... extra args to pass to docker run command]
 #
 
-ENTRYPOINT="$1"
-
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
+
+ENTRYPOINT="$1"
 
 if [ "$(uname)" == "Linux" ]; then
 	extra_flags=--add-host=host.docker.internal:host-gateway
@@ -34,6 +34,7 @@ docker run \
 	--interactive \
 	--volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
 	--volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/anesowa/playback-distributor/CMakeLists.txt \
+	--volume $ANESOWA_ROOT/playback-distributor/tests:/anesowa/playback-distributor/tests \
 	--volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/anesowa/lib/c/commons/CMakeLists.txt \
 	--volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
 	$extra_flags \

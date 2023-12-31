@@ -25,8 +25,9 @@ if($ENV{INSTALL_DEPENDENCIES_FROM_PACKAGE})
   # Third party: ZeroMQ.
   find_package(PkgConfig REQUIRED)
   pkg_search_module(ZMQ REQUIRED libzmq)
+  include(CMakePrintHelpers)
   target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_STATIC_LIBRARIES})
 else()
   message("Building ZeroMQ from source.")
   include(FetchContent)
@@ -47,7 +48,7 @@ else()
   endif()
 
   FetchContent_MakeAvailable(libzmq)
-  target_link_libraries(${PROJECT_NAME} PUBLIC libzmq)
+  target_link_libraries(${PROJECT_NAME} PUBLIC libzmq-static)
 endif()
 
 # Third party: cJSON.
@@ -56,7 +57,7 @@ if(WANTS_CJSON)
     message("Using cJSON from package.")
     find_package(cJSON REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_STATIC_LIBRARIES})
   else()
     message("Building cJSON from source.")
     include(FetchContent)
@@ -85,18 +86,19 @@ if(WANTS_CJSON)
     # - [FetchContent] How to include header files of a third-party project whose target does not provide them
     #   https://discourse.cmake.org/t/fetchcontent-how-to-include-header-files-of-a-third-party-project-whose-target-does-not-provide-them/9734
     # 
-    configure_file(${cJSON_SOURCE_DIR}/cJSON.h ${CMAKE_BINARY_DIR}/include/cJSON/cJSON.h)
+    configure_file(${cJSON_SOURCE_DIR}/cJSON.h ${CMAKE_BINARY_DIR}/include/cjson/cJSON.h)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cjson)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cjson) # It's lowercase as you can see in https://github.com/DaveGamble/cJSON/blob/v1.7.15/CMakeLists.txt#L117
   endif()
 endif()
 
+# TODO: Handle the package vs compile from source logic.
 if(WANTS_PULSEAUDIO)
   # Third party: PulseAudio (Core API).
-  find_package(PulseAudio)
+  find_package(PulseAudio REQUIRED)
 
   # # Third party: PulseAudio (Simple API).
-  find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple)
+  find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple REQUIRED)
 
   # Prepare the sources to include in the target.
   target_include_directories(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_INCLUDE_DIR})
@@ -131,4 +133,8 @@ if(TARGET_GROUP STREQUAL test)
 
   FetchContent_MakeAvailable(cmocka)
   target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)
+
+  if(TARGET_GROUP STREQUAL test)
+    add_subdirectory(tests)
+  endif()
 endif()

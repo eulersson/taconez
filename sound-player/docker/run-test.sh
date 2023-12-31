@@ -24,7 +24,8 @@ docker run \
 	--tty \
 	--interactive \
 	--volume $ANESOWA_ROOT/sound-player/src:/anesowa/sound-player/src \
-	--volume $ANESOWA_ROOT/sound-player/test:/anesowa/sound-player/test \
+	--volume $ANESOWA_ROOT/sound-player/CMakeLists.txt:/anesowa/sound-player/CMakeLists.txt \
+	--volume $ANESOWA_ROOT/sound-player/tests:/anesowa/sound-player/tests \
 	--volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
 	$extra_flags \
 	$(echo $@) \

@@ -13,6 +13,9 @@ pyrightconfig.json
 
 .cache/
 build/
+
+*/tests/Testing
+
 prerolls/*.wav
 
 recordings/
