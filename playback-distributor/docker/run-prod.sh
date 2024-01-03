@@ -9,13 +9,14 @@
 #
 # You can also launch it from the local machine instead too for debugging purposes.
 #
-# NOTE: Should be run from project root ideally.
-#
 # Usage:
 #
 # ./playback-distributor/docker/run-prod.sh [... extra args to pass to docker run command]
 #
 
+# NOTE: Ideally should be run from project root so that docker can copy over files
+# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# not run from root we protect the script by finding the root as follows.
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 
 # If launched by the systemd service these two variables will be set.

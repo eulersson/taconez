@@ -39,13 +39,14 @@ else()
     URL_HASH MD5=cc20b769ac10afa352e5ed2769bb23b3
   )
 
-  if(BUILD_DEPENDENCY_TESTS)
-    message("Will include ZeroMQ's unit tests.")
-    set(BUILD_TESTS ON CACHE BOOL "libzmq: Build unit tests" FORCE)
-  else()
-    message("Won't include ZeroMQ's unit tests.")
-    set(BUILD_TESTS OFF CACHE BOOL "libzmq: Build unit tests" FORCE)
-  endif()
+  # The libzmq CMake project when building tests defines the `unity` (test framework)
+  # target which also gets defined by other dependencies fetched with FetchContent
+  # producing a clash of targets.
+  #
+  #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
+  #     https://stackoverflow.com/questions/77739155/
+  #
+  set(BUILD_TESTS OFF CACHE BOOL "libzmq: Build unit tests" FORCE)
 
   FetchContent_MakeAvailable(libzmq)
   target_link_libraries(${PROJECT_NAME} PUBLIC libzmq-static)
@@ -68,13 +69,14 @@ if(WANTS_CJSON)
       URL_HASH MD5=921b4bcb401aa604dc632fdb1c8dbdea
     )
 
-    if(BUILD_DEPENDENCY_TESTS)
-      message("Will include cJSON's unit tests.")
-      set(ENABLE_CJSON_TEST ON CACHE BOOL "cJSON: Build unit tests" FORCE)
-    else()
-      message("Won't include cJSON's unit tests.")
-      set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build unit tests" FORCE)
-    endif()
+    # The libzmq CMake project when building tests defines the `unity` (test framework)
+    # target which also gets defined by other dependencies fetched with FetchContent
+    # producing a clash of targets.
+    #
+    #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
+    #     https://stackoverflow.com/questions/77739155/
+    #
+    set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build unit tests" FORCE)
     FetchContent_MakeAvailable(cJSON)
     # TODO: Check if this is the best way to make a header available at build time to
     # not have to install cJSON system-wide. The cjson target does not include the
@@ -117,19 +119,15 @@ if(TARGET_GROUP STREQUAL test)
 
   set(WITH_EXAMPLES OFF CACHE BOOL "CMocka: Build examples" FORCE)
 
-  # Since cmocka includes the `unity` target it would clash if we build unit tests for
-  # all dependencies.
+
+  # The libzmq CMake project when building tests defines the `unity` (test framework)
+  # target which also gets defined by other dependencies fetched with FetchContent
+  # producing a clash of targets.
   #
-  #   - How can I avoid clashes with targets "imported" with FetchContent_MakeAvailable?
-  #     https://stackoverflow.com/a/72943178
+  #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
+  #     https://stackoverflow.com/questions/77739155/
   #
-  if(BUILD_DEPENDENCY_TESTS)
-    message("Will include cmocka unit tests.")
-    set(UNIT_TESTING ON CACHE BOOL "CMocka: Build unit tests" FORCE)
-  else()
-    message("Won't include cmocka unit tests.")
-    set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build unit tests" FORCE)
-  endif()
+  set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build unit tests" FORCE)
 
   FetchContent_MakeAvailable(cmocka)
   target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)

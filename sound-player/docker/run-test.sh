@@ -2,13 +2,14 @@
 
 # Runs container of the Sound Player module that runs the tests.
 #
-# NOTE: Should be run from project root ideally.
-#
 # Usage:
 #
 # ./sound-player/docker/run-test.sh [... extra args to pass to docker run command]
 #
 
+# NOTE: Ideally should be run from project root so that docker can copy over files
+# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# not run from root we protect the script by finding the root as follows.
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
 
 if [ "$(uname)" == "Linux" ]; then
@@ -28,7 +29,6 @@ docker run \
 	--volume $ANESOWA_ROOT/sound-player/tests:/anesowa/sound-player/tests \
 	--volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
 	$extra_flags \
-	$(echo $@) \
 	anesowa/sound-player:test
 
 set +x
