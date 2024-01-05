@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 // Third-Party
-// #include <cjson/cJSON.h>
+#include <cjson/cJSON.h>
 #include <pulse/error.h>
 #include <pulse/simple.h>
 #include <zmq.h>
@@ -95,23 +95,22 @@ int main(void) {
 
     printf("[player] Received: %s\n", message);
 
-    // cJSON *json = cJSON_Parse(message);
-    // char* sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
-    // char* when = cJSON_GetObjectItem(json, "when")->valuestring;
+    cJSON *json = cJSON_Parse(message);
+    char* sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
+    char* when = cJSON_GetObjectItem(json, "when")->valuestring;
 
-    // char* abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
+    char* abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
 
-    // time_t rawtime;
-    // struct tm * timeinfo;
-    // timeinfo = localtime(&rawtime);
+    time_t rawtime;
+    struct tm * timeinfo;
+    timeinfo = localtime(&rawtime);
 
-    // printf("[distributor] When: %s\n", when);
-    // printf("[distributor] Now: %s\n", asctime(timeinfo));
-    // printf("[distributor] Sound file path: %s\n", abs_sound_file_path);
+    printf("[distributor] When: %s\n", when);
+    printf("[distributor] Now: %s\n", asctime(timeinfo));
+    printf("[distributor] Sound file path: %s\n", abs_sound_file_path);
 
-    // TODO: Randomly select one preroll.
-    // play_sound(abs_sound_file_path);
-    play_sound(message);
+    // TODO: Play pre-roll.
+    play_sound(abs_sound_file_path);
 
     int finished = strcmp(message, "exit") == 0;
     free(message);

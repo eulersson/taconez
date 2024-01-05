@@ -7,6 +7,10 @@ endif()
 
 project(anesowa-commons)
 
+include(CMakePrintHelpers)
+include(ExternalProject)
+include(helpers.cmake)
+
 # Produces the JSON Compilation Database (`compile_commands.json`) used by clangd (the 
 # C++ language server) so it works with Neovim's language server feature:
 #
@@ -16,123 +20,151 @@ project(anesowa-commons)
 #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Create the library.
+# The Dockerfile sets this environment variable. Not using a CMake flag to show that we
+# can also use environment variables, although it might not conform to common practices.
+set(DEPENDENCIES_COMPILE_FROM_SOURCE ON)
+if(DEFINED ENV{DEPENDENCIES_COMPILE_FROM_SOURCE})
+  set(DEPENDENCIES_COMPILE_FROM_SOURCE $ENV{DEPENDENCIES_COMPILE_FROM_SOURCE})
+endif()
+
+cmake_print_variables(TARGET_GROUP)
+if(BUILD_TYPE STREQUAL test)
+  set(IS_TEST_BUILD ON)
+else()
+  set(IS_TEST_BUILD OFF)
+endif()
+
+# Create the project's library.
 set(COMMONS_UTILS_SOURCE_FILES src/utils.c)
 add_library(${PROJECT_NAME} ${COMMONS_UTILS_SOURCE_FILES})
 
-if($ENV{INSTALL_DEPENDENCIES_FROM_PACKAGE})
-  message("Using ZeroMQ from package.")
-  # Third party: ZeroMQ.
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(ZMQ REQUIRED libzmq)
-  include(CMakePrintHelpers)
-  target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_STATIC_LIBRARIES})
-else()
-  message("Building ZeroMQ from source.")
-  include(FetchContent)
-
-  message("Fetching ZeroMQ tarball.")
-  FetchContent_Declare(
-    libzmq
-    URL https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.4.tar.gz
-    URL_HASH MD5=cc20b769ac10afa352e5ed2769bb23b3
-  )
-
-  # The libzmq CMake project when building tests defines the `unity` (test framework)
-  # target which also gets defined by other dependencies fetched with FetchContent
-  # producing a clash of targets.
-  #
-  #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
-  #     https://stackoverflow.com/questions/77739155/
-  #
-  set(BUILD_TESTS OFF CACHE BOOL "libzmq: Build unit tests" FORCE)
-
-  FetchContent_MakeAvailable(libzmq)
-  target_link_libraries(${PROJECT_NAME} PUBLIC libzmq-static)
-endif()
-
-# Third party: cJSON.
-if(WANTS_CJSON)
-  if($ENV{INSTALL_DEPENDENCIES_FROM_PACKAGE})
-    message("Using cJSON from package.")
-    find_package(cJSON REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CJSON_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CJSON_STATIC_LIBRARIES})
-  else()
-    message("Building cJSON from source.")
-    include(FetchContent)
-    message("Fetching cJSON tarball.")
-    FetchContent_Declare(
-      cJSON
-      URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.15.tar.gz
-      URL_HASH MD5=921b4bcb401aa604dc632fdb1c8dbdea
+# cmocka
+if(IS_TEST_BUILD)
+  if(COMPILE_DEPS_FROM_SOURCE)
+    message("[Dependency] [cmocka] Compile from source.")
+    ExternalProject_Add(
+      cmocka
+      URL https://cmocka.org/files/1.1/cmocka-1.1.7.tar.xz
+      URL_HASH MD5=dc23f4870eb7dfa6da065f3056e815b0
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cmocka
+      CMAKE_CACHE_ARGS
+        -DUNIT_TESTING:BOOL=TRUE
+        -DWITH_EXAMPLES:BOOL=FALSE
     )
-
-    # The libzmq CMake project when building tests defines the `unity` (test framework)
-    # target which also gets defined by other dependencies fetched with FetchContent
-    # producing a clash of targets.
-    #
-    #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
-    #     https://stackoverflow.com/questions/77739155/
-    #
-    set(ENABLE_CJSON_TEST OFF CACHE BOOL "cJSON: Build unit tests" FORCE)
-    FetchContent_MakeAvailable(cJSON)
-    # TODO: Check if this is the best way to make a header available at build time to
-    # not have to install cJSON system-wide. The cjson target does not include the
-    # header file.
-    #
-    # - Installing with CMake's FetchContent creates problems with header files
-    #   https://github.com/DaveGamble/cJSON/issues/816
-    #
-    # - [FetchContent] How to include header files of a third-party project whose target does not provide them
-    #   https://discourse.cmake.org/t/fetchcontent-how-to-include-header-files-of-a-third-party-project-whose-target-does-not-provide-them/9734
-    # 
-    configure_file(${cJSON_SOURCE_DIR}/cJSON.h ${CMAKE_BINARY_DIR}/include/cjson/cJSON.h)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cjson) # It's lowercase as you can see in https://github.com/DaveGamble/cJSON/blob/v1.7.15/CMakeLists.txt#L117
+    list(APPEND ${PROJECT_NAME}_external_project_added_test_dependencies cmocka)
+  else()
+    message("[Dependency] [cmocka] Use from package.")
+    find_package(cmocka REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)
   endif()
 endif()
 
-# TODO: Handle the package vs compile from source logic.
+# ZeroMQ
+if(DEPENDENCIES_COMPILE_FROM_SOURCE)
+  message("[Dependency] [ZeroMQ] Compile from source.")
+  ExternalProject_Add(
+    zmq
+    URL https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.5.tar.gz
+    URL_HASH MD5=cfb80c6ad694cacc2f7c99bf44e8b686
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/zmq
+    CMAKE_CACHE_ARGS -DBUILD_TESTS:BOOL=${IS_TEST_BUILD}
+  )
+  list(APPEND ${PROJECT_NAME}_external_project_added_dependencies zmq)
+else()
+  message("[Dependency] [ZeroMQ] Using from installed package.")
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZMQ REQUIRED libzmq)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${ZMQ_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${ZMQ_LINK_LIBRARIES})
+endif()
+
+# PulseAudio
 if(WANTS_PULSEAUDIO)
-  # Third party: PulseAudio (Core API).
+  message("[Dependency] [PulseAudio] Using from installed package.")
   find_package(PulseAudio REQUIRED)
-
-  # # Third party: PulseAudio (Simple API).
   find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple REQUIRED)
-
-  # Prepare the sources to include in the target.
   target_include_directories(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME} PUBLIC ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY})
 endif()
 
-# Third party: cmocka (unit test framework with mocking capabilities).
-if(TARGET_GROUP STREQUAL test)
-  include(FetchContent)
-
-  FetchContent_Declare(
-    cmocka
-    URL https://cmocka.org/files/1.1/cmocka-1.1.7.tar.xz
-    URL_HASH MD5=dc23f4870eb7dfa6da065f3056e815b0
-  )
-
-  set(WITH_EXAMPLES OFF CACHE BOOL "CMocka: Build examples" FORCE)
-
-
-  # The libzmq CMake project when building tests defines the `unity` (test framework)
-  # target which also gets defined by other dependencies fetched with FetchContent
-  # producing a clash of targets.
-  #
-  #   - Building Project with Depedencies’ Tests: CMake FetchContent Conflicting Targets 
-  #     https://stackoverflow.com/questions/77739155/
-  #
-  set(UNIT_TESTING OFF CACHE BOOL "CMocka: Build unit tests" FORCE)
-
-  FetchContent_MakeAvailable(cmocka)
-  target_link_libraries(${PROJECT_NAME} PUBLIC cmocka::cmocka)
-
-  if(TARGET_GROUP STREQUAL test)
-    add_subdirectory(tests)
+# cJSON
+if(WANTS_CJSON)
+  if(DEPENDENCIES_COMPILE_FROM_SOURCE)
+    message("[Dependency] [cjson] Compile from source.")
+    ExternalProject_Add(
+      cjson
+      URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.16.tar.gz
+      URL_HASH MD5=9422f73fb9e4e524d77d9467d4b73536
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
+      CMAKE_CACHE_ARGS
+        -DENABLE_CJSON_TEST:BOOL=${IS_TEST_BUILD}
+    )
+    list(APPEND ${PROJECT_NAME}_external_project_added_dependencies cjson)
+  else()
+    message("[Dependency] [cjson] Using from installed package.")
+    find_package(cJSON REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cjson)
   endif()
 endif()
+
+# Link all dependencies to the shared "anesowa-commons" library so the other projects
+# by simply linking to "anesowa-commons" will receive "anesowa-commons"' dependencies
+# as well.
+#
+# Individual targets for anesowa-commons' dependencies will also be available as their
+# lowercased name prefixed with `lib_`, e.g.: `lib_cjson`, `lib_cmocka`. Those `lib_*`
+# targets will only be available when compiling from source, if using the packaged
+# versions the <DEP>_INCLUDE_DIRS, <DEP>_LIBRARIES, ... will be available since CMake
+# instead of compiling from source would have used `find_package()` calls.
+if(DEPENDENCIES_COMPILE_FROM_SOURCE)
+  foreach(
+      dep IN LISTS
+      ${PROJECT_NAME}_external_project_added_dependencies
+      ${PROJECT_NAME}_external_project_added_test_dependencies
+  )
+    add_dependencies(${PROJECT_NAME} ${dep})
+
+    add_library(${dep}_lib INTERFACE)
+    target_include_directories(
+      ${dep}_lib
+      INTERFACE
+      ${CMAKE_BINARY_DIR}/${dep}/include/
+    )
+    target_link_libraries(
+      ${dep}_lib
+      INTERFACE
+      ${CMAKE_BINARY_DIR}/${dep}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${dep}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+  endforeach()
+
+  foreach(
+      dep IN LISTS
+      ${PROJECT_NAME}_external_project_added_dependencies
+  )
+    # Link against the interface lib, that way instead of having to run:
+    #
+    #   `target_include_directories(foo ${CMAKE_BINARY_DIR}/zmq/include/)`
+    #   `target_link_libraries(foo ${CMAKE_BINARY_DIR}/zmq/lib/libzmq.so)`
+    #
+    # we can simply link to the interface library which has this information (includes and
+    # libs) associated:
+    #
+    #   `target_link_libraries(foo zmq_lib)`
+    #
+    # That makes it cleaner when we have to link to these deps on other executables or unit tests.
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${dep}_lib)
+  endforeach()
+endif()
+
+if(IS_TEST_BUILD)
+  set(
+    ${PROJECT_NAME}_unit_tests
+    test_utils
+  )
+  foreach(${PROJECT_NAME}_unit_test ${${PROJECT_NAME}_unit_tests})
+    add_executable(${${PROJECT_NAME}_unit_test} tests/${${PROJECT_NAME}_unit_test}.c)
+    target_link_libraries(${${PROJECT_NAME}_unit_test} PUBLIC ${PROJECT_NAME})
+    add_test(${${PROJECT_NAME}_unit_test} ${${PROJECT_NAME}_unit_test})
+  endforeach()
+endif()
+

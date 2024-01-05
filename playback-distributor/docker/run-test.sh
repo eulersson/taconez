@@ -12,6 +12,12 @@
 # not run from root we protect the script by finding the root as follows.
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
+ENTRYPOINT="$1"
+entrypoint=""
+if [ "$ENTRYPOINT" ]; then
+	entrypoint="--entrypoint $ENTRYPOINT"
+fi
+
 set -x # Print commands as they run.
 
 docker run \
@@ -21,6 +27,8 @@ docker run \
 	--volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
 	--volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/anesowa/playback-distributor/CMakeLists.txt \
 	--volume $ANESOWA_ROOT/playback-distributor/tests:/anesowa/playback-distributor/tests \
+	--volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/anesowa/lib/c/commons/CMakeLists.txt \
+	--volume $ANESOWA_ROOT/lib/c/commons/tests:/anesowa/lib/c/commons/tests \
 	$entrypoint \
 	anesowa/playback-distributor:test
 
