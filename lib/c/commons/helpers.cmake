@@ -11,7 +11,7 @@ endfunction()
 # - https://github.com/ThrowTheSwitch/CMock/issues/379
 # - https://github.com/mihaiolteanu/calculator
 #
-function(create_test test_name test_src test_dep mock_dep)
+function(create_test test_name test_src)
   if(NOT DEFINED VENDOR_DIR)
     message(FATAL_ERROR "Missing VENDOR_DIR variable.")
   endif()
@@ -32,7 +32,6 @@ function(create_test test_name test_src test_dep mock_dep)
   )
 
   add_executable        (${test_name} ${test_src} ${test_name}_runner.c)
-  target_link_libraries (${test_name} ${test_dep} ${mock_dep})
   add_test              (${test_name} ${test_name})
 endfunction()
 

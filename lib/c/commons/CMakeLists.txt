@@ -5,6 +5,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
+# TODO: From kebab-case to camel_case.
 project(anesowa-commons)
 
 if(NOT DEFINED BUILD_TYPE)
@@ -182,11 +183,6 @@ if(IS_TEST_BUILD)
   create_mock(mock_multiplier ${multiplier_header_abs_path})
 
   # Create the tests.
-  set(
-    anesowa-commons_unit_tests
-    test_commons
-  )
-  foreach(unit_test ${anesowa-commons_unit_tests})
-    create_test(${unit_test} tests/${unit_test}.c anesowa-commons mock_multiplier)
-  endforeach()
+  create_test(test_commons tests/test_commons.c)
+  target_link_libraries(test_commons anesowa-commons mock_multiplier)
 endif()
