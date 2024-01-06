@@ -5,8 +5,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-# TODO: From kebab-case to camel_case.
-project(sound-player)
+project(sound_player)
 
 if(NOT DEFINED BUILD_TYPE)
   message(
@@ -46,31 +45,28 @@ set(WANTS_PULSEAUDIO ON)
 
 # By linking to anesowa-common after the WANTS_CJSON, WANTS_PULSEAUDIO, ... options
 # there's no further need to link or add include directories for cJSON, PulseAudio, ...
-# since it will be provided through the anesowa-commons lib. See the CMakeLists.txt on
+# since it will be provided through the anesowa_commons lib. See the CMakeLists.txt on
 # `lib/c/commons/CMakeLists.txt`.
-add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa-commons)
+add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
 
 if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
   set(${PROJECT_NAME}_SOURCE_FILES src/sound_player.c)
   add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCE_FILES})
-  target_link_libraries(${PROJECT_NAME} anesowa-commons)
+  target_link_libraries(${PROJECT_NAME} anesowa_commons)
 endif()
 
 if(BUILD_TYPE STREQUAL test)
   # Create the mocks.
   get_filename_component(
-    add_header_abs_path
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/add.h
+    adder_header_abs_path
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/adder.h
     REALPATH
   )
-  create_mock(mock_add ${add_header_abs_path})
+  create_mock(mock_adder ${adder_header_abs_path})
+
+  # TODO: Try to mock zmq header file.
 
   # Create the tests.
-  set(
-    sound-player_unit_tests
-    test_sound_player
-  )
-  foreach(unit_test ${sound-player_unit_tests})
-    create_test(${unit_test} tests/${unit_test}.c anesowa-commons)
-  endforeach()
+  create_test(test_sound_player tests/test_sound_player.c)
+  target_link_libraries(test_sound_player anesowa_commons mock_adder)
 endif()

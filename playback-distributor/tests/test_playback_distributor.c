@@ -1,19 +1,12 @@
-#include <stdarg.h>
-#include <setjmp.h>
-#include <stddef.h>
-#include <cmocka.h>
+#include <unity.h>
 
-static void test(void **state)
-{
-    assert_int_equal(2, 2);
-}
+#include "mocks/mock_adder.h"
 
-int main()
-{
-    const struct CMUnitTest tests[] =
-    {
-        cmocka_unit_test(test),
-    };
+void setUp(void) {}
 
-    return cmocka_run_group_tests(tests, NULL, NULL);
+void tearDown(void) {}
+
+void test_add(void) {
+  add_ExpectAndReturn(1, 2, 4);
+  TEST_ASSERT_EQUAL(4, add(1, 2));
 }
