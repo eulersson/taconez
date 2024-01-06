@@ -28,7 +28,9 @@ ARG BUILD_DEPENDENCIES="\
   gcc \
   g++ \
   make \
+  ruby \
   "
+# TODO: gem pristine ruby-filemagic --version 0.7.2???
 
 # Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\

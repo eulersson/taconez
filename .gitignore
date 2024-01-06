@@ -14,6 +14,8 @@ pyrightconfig.json
 .cache/
 build/
 
+**/mocks/**
+
 */tests/Testing
 
 prerolls/*.wav

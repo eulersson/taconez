@@ -49,6 +49,9 @@ ZMQ_DISTRIBUTOR_SUB_ADDR = "tcp://host.docker.internal:5556"
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
 DETECTED_RECORDINGS_DIR = "/recordings"
 
+# Folder where prerolls to be played before the sound detection live.
+PREROLLS_DIR = "/prerolls"
+
 IGNORE_SOUNDS = []
 with open("./.ignore-sounds", "r") as f:
     IGNORE_SOUNDS = f.read().splitlines()
@@ -95,6 +98,9 @@ p = pyaudio.PyAudio()
 
 # Last time a sound was played backed over the speakers.
 last_play: datetime | None = None
+
+# Duration in seconds of the last preroll that was selected.
+preroll_durations: Dict[str, float] = {}
 
 
 def model_predict(model, waveform: NDArray) -> NDArray:
@@ -340,7 +346,7 @@ def detect_specific_sounds(
             datetime.now(tz=timezone.utc) - last_play
         ).total_seconds()
         is_sound_playing = seconds_since_last_play < (
-            AUDIO_INFERENCE_BATCH_SIZE * AUDIO_INFERENCE_SECONDS
+            AUDIO_INFERENCE_BATCH_SIZE * AUDIO_INFERENCE_SECONDS + last_preroll_duration
         )
         if is_sound_playing:
             logging.info(
@@ -430,6 +436,16 @@ def pull_sound_play_events(socket: zmq.Socket):
         if isinstance(msg, dict) and msg.get("when"):
             global last_play
             last_play = datetime.fromisoformat(msg["when"])
+
+
+def parse_preroll_durations():
+    for preroll_file_name in os.listdir(PREROLLS_DIR):
+        with wave.open(os.path.join(PREROLLS_DIR, preroll_file_name)) as wavefile:
+            duration_seconds = wavefile.getnframes() / wavefile.getframerate()
+            logging.info(
+                f"Preroll {preroll_file_name}'s duration: ${duration_seconds}s"
+            )
+            preroll_durations[preroll_file_name] = duration_seconds
 
 
 if __name__ == "__main__":

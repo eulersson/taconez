@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 project(sound-player)
 
 if(NOT DEFINED BUILD_TYPE)
@@ -9,6 +14,13 @@ if(NOT DEFINED BUILD_TYPE)
     "pass it on the cmake command as -DBUILD_TYPE=[production | development | test]."
   )
 endif()
+
+get_filename_component(
+  ANESOWA_COMMONS_DIR
+  ${PROJECT_SOURCE_DIR}/../lib/c/commons
+  ABSOLUTE
+)
+set(VENDOR_DIR ${ANESOWA_COMMONS_DIR}/vendor)
 
 # NOTE: Must be included at the top so any call to add_test by subproject and third
 # party dependencies get included and simply running `ctest` on the build folder would
@@ -35,8 +47,7 @@ set(WANTS_PULSEAUDIO ON)
 # there's no further need to link or add include directories for cJSON, PulseAudio, ...
 # since it will be provided through the anesowa-commons lib. See the CMakeLists.txt on
 # `lib/c/commons/CMakeLists.txt`.
-add_subdirectory(../lib/c/commons anesowa_commons)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib/c/commons/include)
+add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa-commons)
 
 if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
   set(${PROJECT_NAME}_SOURCE_FILES src/sound_player.c)
@@ -45,13 +56,20 @@ if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
 endif()
 
 if(BUILD_TYPE STREQUAL test)
+  # Create the mocks.
+  get_filename_component(
+    add_header_abs_path
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/add.h
+    REALPATH
+  )
+  create_mock(mock_add ${add_header_abs_path})
+
+  # Create the tests.
   set(
-    ${PROJECT_NAME}_unit_tests
+    sound-player_unit_tests
     test_sound_player
   )
-  foreach(${PROJECT_NAME}_unit_test ${${PROJECT_NAME}_unit_tests})
-    add_executable(${${PROJECT_NAME}_unit_test} tests/${${PROJECT_NAME}_unit_test}.c)
-    target_link_libraries(${${PROJECT_NAME}_unit_test} PUBLIC anesowa-commons)
-    add_test(${${PROJECT_NAME}_unit_test} ${${PROJECT_NAME}_unit_test})
+  foreach(unit_test ${sound-player_unit_tests})
+    create_test(${unit_test} tests/${unit_test}.c anesowa-commons)
   endforeach()
 endif()
