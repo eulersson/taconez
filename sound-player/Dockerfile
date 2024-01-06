@@ -102,13 +102,13 @@ RUN cmake --build build --verbose
 
 # TODO: Collect results together so one test suite does not stop subsequent ones.
 ENTRYPOINT echo "RUNNING PROJECT TESTS" \
- && ctest --test-dir build \
+ && ctest --output-on-failure --test-dir build  \
  && echo "RUNNING DEPENDENCY TESTS: cJSON" \
- && ctest --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
+ && ctest --output-on-failure --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
  && echo "RUNNING DEPENDENCY TESTS: cmocka" \
- && ctest --test-dir build/anesowa_commons/cmocka-prefix/src/cmocka-build \
+ && ctest --output-on-failure --test-dir build/anesowa_commons/cmocka-prefix/src/cmocka-build \
  && echo "RUNNING DEPENDENCY TESTS: ZeroMQ" \
- && ctest --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build
+ && ctest --output-on-failure --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build
 
 # docker run ... --target prod
 FROM base as production

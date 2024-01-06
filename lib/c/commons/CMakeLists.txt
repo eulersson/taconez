@@ -187,6 +187,6 @@ if(IS_TEST_BUILD)
     test_commons
   )
   foreach(unit_test ${anesowa-commons_unit_tests})
-    create_test(${unit_test} tests/${unit_test}.c anesowa-commons)
+    create_test(${unit_test} tests/${unit_test}.c anesowa-commons mock_multiplier)
   endforeach()
 endif()
