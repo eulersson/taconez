@@ -32,41 +32,6 @@ function(create_test test_name test_src)
   )
 
   add_executable        (${test_name} ${test_src} ${test_name}_runner.c)
+  target_link_libraries (${test_name} PRIVATE unity_lib fff) # fff is a mocking library
   add_test              (${test_name} ${test_name})
 endfunction()
-
-# Generates a mock library based on a module's header file
-function(create_mock mock_name header_abs_path)
-  if(NOT DEFINED VENDOR_DIR)
-    message(FATAL_ERROR "Missing VENDOR_DIR variable.")
-  endif()
-
-
-  get_filename_component(header_folder ${header_abs_path} DIRECTORY)
-  file(MAKE_DIRECTORY ${header_folder}/mocks)
-
-  message(
-    "[create_mock] ${mock_name} \n"
-    "VENDOR_DIR: ${VENDOR_DIR} \n"
-    "Mocks will be placed at ${header_folder}/mocks}"
-  )
-
-  add_custom_command(
-    OUTPUT ${header_folder}/mocks/${mock_name}.c
-    COMMAND
-      ruby
-        ${VENDOR_DIR}/cmock/lib/cmock.rb
-        -o${VENDOR_DIR}/../project.yml
-        ${header_abs_path}
-    WORKING_DIRECTORY ${header_folder}
-    DEPENDS
-      ${header_abs_path}
-  )
-
-  add_library                (${mock_name} ${header_folder}/mocks/${mock_name}.c)
-  target_include_directories (${mock_name} PUBLIC ${header_folder})
-  target_include_directories (${mock_name} PUBLIC ${header_folder}/mocks)
-  target_link_libraries      (${mock_name} unity_lib)
-  target_link_libraries      (${mock_name} cmock_lib)
-endfunction()
-

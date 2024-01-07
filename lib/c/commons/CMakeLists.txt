@@ -52,11 +52,15 @@ if(DEFINED ENV{DEPENDENCIES_COMPILE_FROM_SOURCE})
 endif()
 
 # Create the project's library.
-set(COMMONS_UTILS_SOURCE_FILES src/multiplier.c src/utils.c)
+set(
+  COMMONS_UTILS_SOURCE_FILES
+  src/multiplier.c
+  src/utils.c
+)
 add_library(anesowa_commons ${COMMONS_UTILS_SOURCE_FILES})
 target_include_directories(anesowa_commons PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Unity & CMock (Testing Utilities)
+# Unity & fff (Testing Utilities)
 if(IS_TEST_BUILD)
   if(NOT EXISTS ${VENDOR_DIR}/Unity/src OR NOT EXISTS ${VENDOR_DIR}/cmock/src)
     message(
@@ -71,11 +75,12 @@ if(IS_TEST_BUILD)
   target_include_directories(unity_lib PUBLIC vendor/Unity/src/)
   target_link_libraries(anesowa_commons PUBLIC unity_lib)
 
-  message("[Dependency] [CMock] Compile from source.")
-  add_library(cmock_lib ${VENDOR_DIR}/cmock/src/cmock.c vendor/Unity)
-  target_link_libraries(cmock_lib unity_lib)
-  target_include_directories(cmock_lib PUBLIC vendor/cmock/src)
-  target_link_libraries(anesowa_commons PUBLIC cmock_lib)
+  FetchContent_Declare(
+    fff # Fake Function Framework (fff)
+    GIT_REPOSITORY https://github.com/meekrosoft/fff.git
+    GIT_TAG 5111c61e1ef7848e3afd3550044a8cf4405f4199 # A stable commit in master.
+  )
+  FetchContent_MakeAvailable(fff)
 endif()
 
 # ZeroMQ
@@ -91,10 +96,16 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
   list(APPEND anesowa_commons_external_project_added_dependencies zmq)
 else()
   message("[Dependency] [ZeroMQ] Using from installed package.")
+
   find_package(PkgConfig REQUIRED)
   pkg_search_module(ZMQ REQUIRED libzmq)
-  target_include_directories(anesowa_commons PUBLIC ${ZMQ_INCLUDE_DIRS})
-  target_link_libraries(anesowa_commons PUBLIC ${ZMQ_LINK_LIBRARIES})
+
+  add_library(zmq_lib INTERFACE)
+  target_include_directories(zmq_lib INTERFACE ${ZMQ_INCLUDE_DIRS})
+  target_link_libraries(zmq_lib INTERFACE ${ZMQ_LINK_LIBRARIES})
+
+  target_link_libraries(anesowa_commons PUBLIC zmq_lib)
+
 endif()
 
 # PulseAudio
@@ -137,26 +148,19 @@ endif()
 # instead of compiling from source would have used `find_package()` calls.
 if(DEPENDENCIES_COMPILE_FROM_SOURCE)
   foreach(dep ${anesowa_commons_external_project_added_dependencies})
-    add_dependencies(anesowa_commons ${dep})
-
+    add_dependencies(anesowa_commons ${dep}) # otherwise does not download sources
     add_library(${dep}_lib INTERFACE)
     target_include_directories(
       ${dep}_lib
       INTERFACE
       ${CMAKE_BINARY_DIR}/${dep}/include/
     )
-    # Test dependencies (unity, cmocka) should be compiled against statically. 
-    if(dep ${anesowa_commons_external_project_added_test_dependencies})
-    else()
-      target_link_libraries(
-        ${dep}_lib
-        INTERFACE
-        ${CMAKE_BINARY_DIR}/${dep}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${dep}${CMAKE_SHARED_LIBRARY_SUFFIX}
-      )
-    endif()
-  endforeach()
+    target_link_libraries(
+      ${dep}_lib
+      INTERFACE
+      ${CMAKE_BINARY_DIR}/${dep}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${dep}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
 
-  foreach(dep ${anesowa_commons_external_project_added_dependencies})
     # Link against the interface lib, that way instead of having to run:
     #
     #   `target_include_directories(foo ${CMAKE_BINARY_DIR}/zmq/include/)`
@@ -173,17 +177,13 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
 endif()
 
 if(IS_TEST_BUILD)
-  # Create the mocks.
-  get_filename_component(
-    multiplier_header_abs_path
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons/multiplier.h
-    REALPATH
-  )
-  create_mock(mock_multiplier ${multiplier_header_abs_path})
-
-  # TODO: Try to mock zmq header file.
-
   # Create the tests.
-  create_test(test_commons tests/test_commons.c)
-  target_link_libraries(test_commons anesowa_commons mock_multiplier)
+  create_test(test_utils tests/test_utils.c)
+  target_include_directories(test_utils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_utils PRIVATE zmq_lib)
+
+  # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
+  file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
+  list(REMOVE_ITEM sources src/potato.c)
+  target_sources(test_utils PRIVATE ${sources})
 endif()
