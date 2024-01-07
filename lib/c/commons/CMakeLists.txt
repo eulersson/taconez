@@ -26,9 +26,11 @@ else()
   set(IS_TEST_BUILD OFF)
 endif()
 
-if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(VENDOR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
-endif()
+set(
+  VENDOR_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+  CACHE INTERNAL "Folder where all third-party dependencies are stored."
+)
 
 include(CMakePrintHelpers)
 include(ExternalProject)
@@ -58,18 +60,15 @@ set(
   src/utils.c
 )
 add_library(anesowa_commons ${COMMONS_UTILS_SOURCE_FILES})
-target_include_directories(anesowa_commons PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Only within the anesowa_commons CMake project we will be able to include like
+# `#include "utils.h"` instead of `#include "anesowa/commons/utils.h`, the latter will
+# be so elsewhere (from single_player or playback_distributor CMake projects).
+target_include_directories(anesowa_commons PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(anesowa_commons PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons)
 
 # Unity & fff (Testing Utilities)
 if(IS_TEST_BUILD)
-  if(NOT EXISTS ${VENDOR_DIR}/Unity/src OR NOT EXISTS ${VENDOR_DIR}/cmock/src)
-    message(
-      FATAL_ERROR
-      "Vendor code not available, you must clone the repository with: `git clone "
-      "--recurse-submodules`, if not please run `git submodule update --init --recursive`"
-    )
-  endif()
-
   message("[Dependency] [Unity] Compile from source.")
   add_library(unity_lib ${VENDOR_DIR}/Unity/src/unity.c)
   target_include_directories(unity_lib PUBLIC vendor/Unity/src/)
@@ -90,8 +89,10 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
     zmq
     URL https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.5.tar.gz
     URL_HASH MD5=cfb80c6ad694cacc2f7c99bf44e8b686
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/zmq
-    CMAKE_CACHE_ARGS -DBUILD_TESTS:BOOL=${IS_TEST_BUILD}
+    CMAKE_ARGS
+      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/zmq
+    CMAKE_CACHE_ARGS
+      -DBUILD_TESTS:BOOL=${IS_TEST_BUILD}
   )
   list(APPEND anesowa_commons_external_project_added_dependencies zmq)
 else()
@@ -105,7 +106,6 @@ else()
   target_link_libraries(zmq_lib INTERFACE ${ZMQ_LINK_LIBRARIES})
 
   target_link_libraries(anesowa_commons PUBLIC zmq_lib)
-
 endif()
 
 # PulseAudio
@@ -125,7 +125,8 @@ if(WANTS_CJSON)
       cjson
       URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.16.tar.gz
       URL_HASH MD5=9422f73fb9e4e524d77d9467d4b73536
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
+      CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
       CMAKE_CACHE_ARGS
         -DENABLE_CJSON_TEST:BOOL=${IS_TEST_BUILD}
     )
@@ -161,6 +162,10 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
       ${CMAKE_BINARY_DIR}/${dep}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${dep}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
 
+    # Force downloading the project any time anyone links against zmq_lib, cjson_lib,
+    # etc... Otherwise it might happen the sources are not downloaded.
+    add_dependencies(${dep}_lib ${dep})
+
     # Link against the interface lib, that way instead of having to run:
     #
     #   `target_include_directories(foo ${CMAKE_BINARY_DIR}/zmq/include/)`
@@ -179,7 +184,11 @@ endif()
 if(IS_TEST_BUILD)
   # Create the tests.
   create_test(test_utils tests/test_utils.c)
-  target_include_directories(test_utils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(
+    test_utils
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons
+  )
   target_link_libraries(test_utils PRIVATE zmq_lib)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.

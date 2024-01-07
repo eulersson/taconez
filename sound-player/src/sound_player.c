@@ -96,13 +96,12 @@ int main(void) {
     printf("[player] Received: %s\n", message);
 
     cJSON *json = cJSON_Parse(message);
-    char* sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
-    char* when = cJSON_GetObjectItem(json, "when")->valuestring;
-
-    char* abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
+    char *when = cJSON_GetObjectItem(json, "when")->valuestring;
+    char *sound_file = cJSON_GetObjectItem(json, "sound_file")->valuestring;
+    char *abs_sound_file_path = strcat("/anesowa/recordings/", sound_file);
 
     time_t rawtime;
-    struct tm * timeinfo;
+    struct tm *timeinfo;
     timeinfo = localtime(&rawtime);
 
     printf("[distributor] When: %s\n", when);
@@ -113,7 +112,10 @@ int main(void) {
     play_sound(abs_sound_file_path);
 
     int finished = strcmp(message, "exit") == 0;
+
     free(message);
+    free(abs_sound_file_path);
+
     if (finished) {
       break;
     }

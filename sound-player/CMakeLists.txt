@@ -56,17 +56,18 @@ if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
 endif()
 
 if(BUILD_TYPE STREQUAL test)
-  # Create the mocks.
-  get_filename_component(
-    adder_header_abs_path
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/adder.h
-    REALPATH
-  )
-  create_mock(mock_adder ${adder_header_abs_path})
-
-  # TODO: Try to mock zmq header file.
-
   # Create the tests.
   create_test(test_sound_player tests/test_sound_player.c)
-  target_link_libraries(test_sound_player anesowa_commons mock_adder)
+  target_include_directories(
+    test_sound_player
+    PRIVATE
+    ${ANESOWA_COMMONS_DIR}/include
+  )
+  target_link_libraries(test_sound_player PRIVATE zmq_lib)
+  target_include_directories(test_playback_distributor PRIVATE src)
+
+  # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
+  file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
+  list(REMOVE_ITEM sources src/sound_player.c)
+  target_sources(test_sound_player PRIVATE ${sources})
 endif()

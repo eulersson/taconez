@@ -1,4 +1,4 @@
-#include "anesowa/commons/potato.h"
+#include "potato.h"
 
 int multiply(int a, int b) {
   potato();

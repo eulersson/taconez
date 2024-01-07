@@ -15,12 +15,7 @@ if(NOT DEFINED BUILD_TYPE)
   )
 endif()
 
-get_filename_component(
-  ANESOWA_COMMONS_DIR
-  ${PROJECT_SOURCE_DIR}/../lib/c/commons
-  ABSOLUTE
-)
-set(VENDOR_DIR ${ANESOWA_COMMONS_DIR}/vendor)
+set(ANESOWA_COMMONS_DIR ${PROJECT_SOURCE_DIR}/../lib/c/commons)
 
 # NOTE: Must be included at the top so any call to add_test by subproject and third
 # party dependencies get included and simply running `ctest` on the build folder would
@@ -49,23 +44,45 @@ set(WANTS_CJSON ON)
 add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
 
 if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
-  set(PLAYBACK_DISTRIBUTOR_SOURCE_FILES src/playback_distributor.c)
-  add_executable(${PROJECT_NAME} ${PLAYBACK_DISTRIBUTOR_SOURCE_FILES})
-  target_link_libraries(${PROJECT_NAME} anesowa_commons)
+  set(
+    PLAYBACK_DISTRIBUTOR_SOURCE_FILES
+    src/message.h
+    src/message.c
+    src/process_loop.h
+    src/process_loop.c
+    src/playback_distributor.c
+  )
+  add_executable(playback_distributor ${PLAYBACK_DISTRIBUTOR_SOURCE_FILES})
+  target_include_directories(playback_distributor src)
+  target_link_libraries(playback_distributor anesowa_commons)
 endif()
 
 if(BUILD_TYPE STREQUAL test)
-  # Create the mocks.
-  get_filename_component(
-    adder_header_abs_path
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/adder.h
-    REALPATH
-  )
-  create_mock(mock_adder ${adder_header_abs_path})
-
-  # TODO: Try to mock zmq header file.
-
   # Create the tests.
   create_test(test_playback_distributor tests/test_playback_distributor.c)
-  target_link_libraries(test_playback_distributor anesowa_commons mock_adder)
+  target_include_directories(
+    test_playback_distributor
+    PRIVATE
+    ${ANESOWA_COMMONS_DIR}/include
+  )
+
+  target_include_directories(test_playback_distributor PRIVATE src)
+
+  # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
+  file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
+  list(REMOVE_ITEM sources src/playback_distributor.c)
+
+  # Add common sources removing mocked code to avoid "duplicate symbol" linking errors.
+  set(common_sources ${COMMONS_UTILS_SOURCE_FILES})
+  list(REMOVE_ITEM common_sources src/utils.c)
+  list(TRANSFORM common_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
+
+  target_link_libraries(test_playback_distributor PRIVATE cjson_lib)
+
+  target_sources(
+    test_playback_distributor
+    PRIVATE
+    ${sources}
+    ${common_sources}
+  )
 endif()
