@@ -2,7 +2,3 @@
 	path = lib/c/commons/vendor/Unity
 	url = https://github.com/ThrowTheSwitch/Unity
   tag = v2.5.2
-[submodule "lib/c/commons/vendor/cmock"]
-	path = lib/c/commons/vendor/cmock
-	url = https://github.com/ThrowTheSwitch/cmock
-  tag = v2.5.2
