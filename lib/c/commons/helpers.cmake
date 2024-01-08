@@ -24,7 +24,7 @@ function(create_test test_name test_src)
     OUTPUT ${test_name}_runner.c
     COMMAND
       ruby
-      ${VENDOR_DIR}/unity/auto/generate_test_runner.rb
+      ${VENDOR_DIR}/Unity/auto/generate_test_runner.rb
       ${VENDOR_DIR}/../project.yml
       ${test_src_absolute}
       ${test_name}_runner.c
