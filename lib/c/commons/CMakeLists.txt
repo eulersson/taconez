@@ -118,8 +118,12 @@ if(WANTS_PULSEAUDIO)
   message("[Dependency] [PulseAudio] Using from installed package.")
   find_package(PulseAudio REQUIRED)
   find_library(PULSEAUDIO_SIMPLE_LIBRARY pulse-simple REQUIRED)
-  target_include_directories(anesowa_commons PUBLIC ${PULSEAUDIO_INCLUDE_DIR})
-  target_link_libraries(anesowa_commons PUBLIC ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY})
+  add_library(pulseaudio_lib INTERFACE)
+  target_include_directories(pulseaudio_lib INTERFACE ${PULSEAUDIO_INCLUDE_DIR})
+  target_link_libraries(
+    pulseaudio_lib INTERFACE ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY}
+  )
+  target_link_libraries(anesowa_commons PUBLIC pulseaudio_lib)
 endif()
 
 if(DEPENDENCIES_COMPILE_FROM_SOURCE)
@@ -198,5 +202,3 @@ if(IS_TEST_BUILD)
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
   target_sources(test_duration PRIVATE ${sources})
 endif()
-
-# add_executable(duration src/duration.c)

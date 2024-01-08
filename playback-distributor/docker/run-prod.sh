@@ -35,6 +35,7 @@ docker run \
 	--tty \
 	--name $ANESOWA_CONTAINER_NAME \
 	--volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
+	--volume $ANESOWA_ROOT/prerolls:/anesowa/prerolls:ro \
 	$extra_flags \
 	anesowa/playback-distributor:$ANESOWA_VERSION
 

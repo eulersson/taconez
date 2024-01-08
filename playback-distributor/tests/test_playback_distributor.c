@@ -14,10 +14,12 @@ DEFINE_FFF_GLOBALS;
 
 FAKE_VALUE_FUNC(char *, s_recv, void *)
 FAKE_VALUE_FUNC(int, s_send, void *, char *)
+FAKE_VALUE_FUNC(float, get_duration, char *)
 
 #define FFF_FAKES_LIST(FAKE)                                                   \
   FAKE(s_recv)                                                                 \
-  FAKE(s_send)
+  FAKE(s_send)                                                                 \
+  FAKE(get_duration)
 
 void setUp(void) {
   FFF_FAKES_LIST(RESET_FAKE);
@@ -33,10 +35,18 @@ void tearDown(void) {}
  * Players.
  */
 void test_message_is_propagated_to_players(void) {
-  char *receives = "{ \"when\": \"2024-01-07T17:02:47.679046+00:00\", "
-                   "\"sound_file\": \"a_file_name.wav\" }";
-  char *sends = "{ \"when\": \"2024-01-07T17:02:47.679046+00:00\", "
-                "\"sound_file\": \"a_file_name.wav\" }";
+  float get_duration_return_vals[2] = {6.1, 10.2 };
+  SET_RETURN_SEQ(get_duration, get_duration_return_vals, 2);
+
+  char *receives = "{ \"when\": \"1704719500\", "
+                   "\"sound_file_path\": \"a_file_name.wav\" }";
+  char *sends = "{ \"when\": \"1704719500\", "
+                "\"sound_file_path\": \"a_file_name.wav\","
+                "\"abs_sound_file_path\": \"/anesowa/recordings/a_file_name.wav\" ,"
+                "\"preroll_file_path\": \"posa-t-les-sabatilles.wav\" ,"
+                "\"abs_preroll_file_path\": \"/anesowa/prerolls/posa-t-les-sabatilles.wav\" ,"
+                "\"sound_duration\": \"10.2\" ,"
+                "\"preroll_duration\": \"6.1\" }";
 
   // This gets freed in process_loop.c.
   char *mocked_msg = strdup(receives);
@@ -49,8 +59,9 @@ void test_message_is_propagated_to_players(void) {
 
   int finish = process_loop(NULL, NULL);
 
-  TEST_ASSERT_EQUAL(finish, 0);
-  TEST_ASSERT_EQUAL(s_recv_fake.call_count, 1);
+  TEST_ASSERT_EQUAL(0, finish);
+  TEST_ASSERT_EQUAL(2, get_duration_fake.call_count);
+  TEST_ASSERT_EQUAL(1, s_recv_fake.call_count);
   TEST_ASSERT_EQUAL_STRING(receives, s_send_fake.arg1_val);
 }
 
@@ -75,7 +86,7 @@ void test_exits_when_receiving_exit_string(void) {
 
   int finish = process_loop(NULL, NULL);
 
-  TEST_ASSERT_EQUAL(finish, 1);
-  TEST_ASSERT_EQUAL(s_recv_fake.call_count, 1);
+  TEST_ASSERT_EQUAL(1, finish);
+  TEST_ASSERT_EQUAL(1, s_recv_fake.call_count);
   TEST_ASSERT_EQUAL_STRING(receives, s_send_fake.arg1_val);
 }

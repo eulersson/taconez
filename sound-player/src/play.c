@@ -1,5 +1,14 @@
-#define BUFSIZE 2048
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
+#include <pulse/error.h>
+#include <pulse/simple.h>
+
+#define BUFSIZE 2048
 
 // The sample format to use.
 static const pa_sample_spec ss = {

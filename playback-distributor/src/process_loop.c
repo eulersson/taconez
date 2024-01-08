@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <anesowa/commons/socket.h>
+#include <anesowa/commons/duration.h>
 #include <anesowa/commons/message.h>
+#include <anesowa/commons/socket.h>
 
 int process_loop(void *pull_socket, void *pub_socket) {
   char *message = s_recv(pull_socket);
@@ -23,8 +24,37 @@ int process_loop(void *pull_socket, void *pub_socket) {
     s_send(pub_socket, processed_message);
   } else {
     struct DetectorMessage pm = parse_detector_message(message);
-    printf("[distributor] When: %s | Sound file: %s (absolute path %s)\n",
-           pm.when, pm.sound_file, pm.abs_sound_file_path);
+    printf("[distributor] When: %ld | Sound file: %s (absolute path %s)\n",
+           pm.when, pm.sound_file_path, pm.abs_sound_file_path);
+
+    // TODO: Instead of hardcoding the prerolls, we should read them from the folder.
+    char* prerolls[2];
+    prerolls[0] = "posa-t-sabatilles.wav";
+    prerolls[1] = "vale-ja-amb-els-tacons.wav";
+
+    int chosen_preroll_index = rand() % 2;
+    char* preroll_file_path = prerolls[chosen_preroll_index];
+
+    char *abs_preroll_file_path = malloc(
+      strlen("/anesowa/prerolls/") + strlen(preroll_file_path) + 1
+    );
+    strcpy(abs_preroll_file_path, "/anesowa/prerolls/");
+    strcat(abs_preroll_file_path, preroll_file_path);
+
+    float sound_duration = get_duration(pm.abs_sound_file_path);
+    printf("[distributor] Sound duration: %f\n", sound_duration);
+    float preroll_duration = get_duration(abs_preroll_file_path);
+    printf("[distributor] Preroll duration: %f\n", preroll_duration);
+
+    struct DistributorMessage dm = {
+      pm.when,
+      pm.sound_file_path,
+      pm.abs_sound_file_path,
+      preroll_file_path,
+      abs_preroll_file_path,
+      sound_duration,
+      preroll_duration
+    };
 
     printf("[distributor] Publishing: %s\n", processed_message);
     s_send(pub_socket, processed_message);

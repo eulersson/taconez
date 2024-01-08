@@ -19,33 +19,49 @@ int process_loop(void *sub_socket) {
     printf("[distributor] Received orders to shut down (message: %s)\n",
            message);
   } else {
-    struct ParsedMessage pm = parse_message(message);
-    printf("[distributor] When: %s | Sound file: %s (absolute path %s)\n",
-           pm.when, pm.sound_file, pm.abs_sound_file_path);
+    struct DistributorMessage pm = parse_distributor_message(message);
+    printf("[distributor] When: %ld | "
+           "Sound file: %s (absolute path %s) | "
+           "Preroll file: %s (absolute path %s) | "
+           "Sound duration: %f |"
+           "Prefix duration: %f\n",
+           pm.when, pm.sound_file_path, pm.abs_sound_file_path,
+           pm.preroll_file_path, pm.abs_preroll_file_path, pm.sound_duration,
+           pm.preroll_duration);
 
-    int detected_sound_duration = get_duration(pm.abs_sound_file_path);
-    int preroll_sound_duration = get_duration(pm.abs_preroll_file_path);
-    int duration_playing = detected_sound_duration + preroll_sound_duration;
+    int duration_playing = pm.sound_duration + pm.preroll_duration;
 
-    time_t when = parse_time(pm.when);
     time_t now = get_now();
 
-    // Make sure it's not too late to play the sound.
-    if(difftime(now - duration_playing, when) < 10) {
-      printf("[distributor] In time to play the sound. Playing.\n")
-    } else{
-      printf("[distributor] It's too late to play the sound. Skipping.\n");
+    printf("when: %ld\n", pm.when);
+    printf("now: %ld\n", now);
 
-      // TODO: Play pre-roll.
-      play_sound(abs_preroll_file_path);
+    // Make sure it's not too late to play the sound.
+    long time_delta = difftime(now, pm.when);
+    printf("[distributor] Time delta: %ld\n", time_delta);
+    // TODO: Make the 10 seconds a configuration parameter.
+    if (time_delta < 10) {
+      printf("[distributor] In time to play the sound. Honouring the play.\n");
+
+      // TODO: Play pre-roll before the sound... After the preroll is finished it should
+      // play the following sound afterwards.
+      // // play_sound(pm.abs_preroll_file_path);
 
       // TODO: Synchronize it so the sound is played after the preroll.
-      play_sound(abs_sound_file_path);
-      free(pm.abs_sound_file_path);
+      play_sound(pm.abs_sound_file_path);
+    } else {
+      printf(
+        "[distributor] It's too late to play the sound (%ld seconds ago). Skipping.\n",
+        time_delta
+      );
     }
+
+    // Free the dynamically allocated string (see message.c).
+    free(pm.abs_preroll_file_path);
+
+    // Free the dynamically allocated string created by ZeroMQ.
     free(message);
   }
-
 
   return finished;
 }

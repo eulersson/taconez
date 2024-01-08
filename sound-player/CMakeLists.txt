@@ -66,17 +66,29 @@ if(BUILD_TYPE STREQUAL test)
     test_sound_player
     PRIVATE
     ${ANESOWA_COMMONS_DIR}/include
+    ${ANESOWA_COMMONS_DIR}/include/anesowa/commons
   )
-  target_link_libraries(test_sound_player PRIVATE zmq_lib)
+
+  target_link_libraries(test_sound_player PRIVATE cjson_lib pulseaudio_lib)
+
   target_include_directories(test_sound_player PRIVATE src)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
-  list(REMOVE_ITEM sources src/playback_distributor.c)
+  list(
+    REMOVE_ITEM
+    sources 
+    src/sound_player.c
+    src/play.c
+  )
 
   # Add common sources removing mocked code to avoid "duplicate symbol" linking errors.
   set(commons_sources ${COMMONS_SOURCE_FILES})
-  list(REMOVE_ITEM commons_sources src/socket.c)
+  list(
+    REMOVE_ITEM
+    commons_sources
+    src/socket.c
+  )
   list(TRANSFORM commons_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
 
   target_sources(test_sound_player PRIVATE ${sources} ${commons_sources})

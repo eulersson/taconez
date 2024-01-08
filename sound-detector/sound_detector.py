@@ -7,11 +7,12 @@ https://github.com/eulersson/anesowa/tree/main/sound-detector
 import logging
 import os
 import tarfile
+import time
 import threading
 import urllib.request
 import wave
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import influxdb_client
@@ -97,7 +98,7 @@ AUDIO_INFERENCE_BATCH_SIZE = 5
 p = pyaudio.PyAudio()
 
 # Last time a sound was played backed over the speakers.
-last_play: datetime | None = None
+last_play: int | None = None
 
 # Duration in seconds of the last preroll that was selected.
 preroll_durations: Dict[str, float] = {}
@@ -218,13 +219,13 @@ def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     if suffix:
         suffix = f"_{suffix}"
 
-    now = datetime.now()
+    now_dt = datetime.now()
 
     # E.g. '2023-12-10T17:05:52.578411_knock.wav'
-    file_name = f"{now.isoformat()}{suffix}.wav"
+    file_name = f"{now_dt.isoformat()}{suffix}.wav"
 
     # E.g. '2023/12/22'
-    year_month_day_folder = os.path.join(str(now.year), str(now.month), str(now.day))
+    year_month_day_folder = os.path.join(str(now_dt.year), str(now_dt.month), str(now_dt.day))
 
     # E.g. '2023/12/22/2023-12-10T17:05:52.578411_knock.wav'
     relative_file_path = os.path.join(year_month_day_folder, file_name)
@@ -342,9 +343,7 @@ def detect_specific_sounds(
     # recorded while a speaker was playing a recorded sound and hence avoid feedback
     # speaker-microphone.
     if last_play:
-        seconds_since_last_play = (
-            datetime.now(tz=timezone.utc) - last_play
-        ).total_seconds()
+        seconds_since_last_play = int(time.time()) - last_play
         is_sound_playing = seconds_since_last_play < (
             AUDIO_INFERENCE_BATCH_SIZE * AUDIO_INFERENCE_SECONDS + last_preroll_duration
         )
@@ -423,7 +422,7 @@ def detect_specific_sounds(
             zmq_socket.send_json(
                 {
                     "sound_file": relative_sound_path,
-                    "when": datetime.now(tz=timezone.utc).isoformat(),
+                    "when": time.time(),
                 }
             )
 
@@ -435,7 +434,7 @@ def pull_sound_play_events(socket: zmq.Socket):
 
         if isinstance(msg, dict) and msg.get("when"):
             global last_play
-            last_play = datetime.fromisoformat(msg["when"])
+            last_play = msg["when"]
 
 
 def parse_preroll_durations():
