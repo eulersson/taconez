@@ -1,7 +1,7 @@
 // ====================================================================================
-// Utils & Helpers (utils.h)
+// ZeroMQ Socket Utils & Helpers (socket.h)
 //
-// Helpers and utils for the application.
+// Reusable methods to interact with sockets, such as reading or writing.
 //
 // Source:
 //

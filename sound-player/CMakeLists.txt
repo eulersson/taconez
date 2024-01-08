@@ -15,12 +15,7 @@ if(NOT DEFINED BUILD_TYPE)
   )
 endif()
 
-get_filename_component(
-  ANESOWA_COMMONS_DIR
-  ${PROJECT_SOURCE_DIR}/../lib/c/commons
-  ABSOLUTE
-)
-set(VENDOR_DIR ${ANESOWA_COMMONS_DIR}/vendor)
+set(ANESOWA_COMMONS_DIR ${PROJECT_SOURCE_DIR}/../lib/c/commons)
 
 # NOTE: Must be included at the top so any call to add_test by subproject and third
 # party dependencies get included and simply running `ctest` on the build folder would
@@ -40,7 +35,6 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Shared dependencies: Add anesowa common library and include paths.
-set(WANTS_CJSON ON)
 set(WANTS_PULSEAUDIO ON)
 
 # By linking to anesowa-common after the WANTS_CJSON, WANTS_PULSEAUDIO, ... options
@@ -50,9 +44,19 @@ set(WANTS_PULSEAUDIO ON)
 add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
 
 if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
-  set(${PROJECT_NAME}_SOURCE_FILES src/sound_player.c)
-  add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCE_FILES})
-  target_link_libraries(${PROJECT_NAME} anesowa_commons)
+  set(
+    SOUND_PLAYER_SOURCE_FILES
+    src/sound_player.c
+    src/play.h
+    src/play.c
+    src/process_loop.h
+    src/process_loop.c
+    src/time_utils.h
+    src/time_utils.c
+  )
+  add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
+  target_include_directories(playback_distributor PRIVATE src)
+  target_link_libraries(sound_player PRIVATE anesowa_commons)
 endif()
 
 if(BUILD_TYPE STREQUAL test)
@@ -64,10 +68,16 @@ if(BUILD_TYPE STREQUAL test)
     ${ANESOWA_COMMONS_DIR}/include
   )
   target_link_libraries(test_sound_player PRIVATE zmq_lib)
-  target_include_directories(test_playback_distributor PRIVATE src)
+  target_include_directories(test_sound_player PRIVATE src)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
-  list(REMOVE_ITEM sources src/sound_player.c)
-  target_sources(test_sound_player PRIVATE ${sources})
+  list(REMOVE_ITEM sources src/playback_distributor.c)
+
+  # Add common sources removing mocked code to avoid "duplicate symbol" linking errors.
+  set(commons_sources ${COMMONS_SOURCE_FILES})
+  list(REMOVE_ITEM commons_sources src/socket.c)
+  list(TRANSFORM commons_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
+
+  target_sources(test_sound_player PRIVATE ${sources} ${commons_sources})
 endif()

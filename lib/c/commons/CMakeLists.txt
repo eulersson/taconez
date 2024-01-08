@@ -55,14 +55,19 @@ endif()
 
 # Create the project's library.
 set(
-  COMMONS_UTILS_SOURCE_FILES
-  src/multiplier.c
-  src/utils.c
+  COMMONS_SOURCE_FILES
+  include/anesowa/commons/socket.h
+  src/socket.c
+  include/anesowa/commons/duration.h
+  src/duration.c
+  include/anesowa/commons/message.h
+  src/message.c
+  CACHE INTERNAL "Source files for the anesowa_commons library."
 )
-add_library(anesowa_commons ${COMMONS_UTILS_SOURCE_FILES})
+add_library(anesowa_commons ${COMMONS_SOURCE_FILES})
 
 # Only within the anesowa_commons CMake project we will be able to include like
-# `#include "utils.h"` instead of `#include "anesowa/commons/utils.h`, the latter will
+# `#include "socket.h"` instead of `#include "anesowa/commons/socket.h`, the latter will
 # be so elsewhere (from single_player or playback_distributor CMake projects).
 target_include_directories(anesowa_commons PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(anesowa_commons PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons)
@@ -117,25 +122,22 @@ if(WANTS_PULSEAUDIO)
   target_link_libraries(anesowa_commons PUBLIC ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY})
 endif()
 
-# cJSON
-if(WANTS_CJSON)
-  if(DEPENDENCIES_COMPILE_FROM_SOURCE)
-    message("[Dependency] [cjson] Compile from source.")
-    ExternalProject_Add(
-      cjson
-      URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.16.tar.gz
-      URL_HASH MD5=9422f73fb9e4e524d77d9467d4b73536
-      CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
-      CMAKE_CACHE_ARGS
-        -DENABLE_CJSON_TEST:BOOL=${IS_TEST_BUILD}
-    )
-    list(APPEND anesowa_commons_external_project_added_dependencies cjson)
-  else()
-    message("[Dependency] [cjson] Using from installed package.")
-    find_package(cJSON REQUIRED)
-    target_link_libraries(anesowa_commons PUBLIC cjson)
-  endif()
+if(DEPENDENCIES_COMPILE_FROM_SOURCE)
+  message("[Dependency] [cjson] Compile from source.")
+  ExternalProject_Add(
+    cjson
+    URL https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.16.tar.gz
+    URL_HASH MD5=9422f73fb9e4e524d77d9467d4b73536
+    CMAKE_ARGS
+      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
+    CMAKE_CACHE_ARGS
+      -DENABLE_CJSON_TEST:BOOL=${IS_TEST_BUILD}
+  )
+  list(APPEND anesowa_commons_external_project_added_dependencies cjson)
+else()
+  message("[Dependency] [cjson] Using from installed package.")
+  find_package(cJSON REQUIRED)
+  target_link_libraries(anesowa_commons PUBLIC cjson)
 endif()
 
 # Link all dependencies to the shared "anesowa_commons" library so the other projects
@@ -183,16 +185,18 @@ endif()
 
 if(IS_TEST_BUILD)
   # Create the tests.
-  create_test(test_utils tests/test_utils.c)
+  create_test(test_duration tests/test_duration.c)
   target_include_directories(
-    test_utils
+    test_duration
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons
   )
-  target_link_libraries(test_utils PRIVATE zmq_lib)
+  # add_dependencies(test_duration cjson)
+  target_link_libraries(test_duration PRIVATE zmq_lib cjson_lib)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
-  list(REMOVE_ITEM sources src/potato.c)
-  target_sources(test_utils PRIVATE ${sources})
+  target_sources(test_duration PRIVATE ${sources})
 endif()
+
+# add_executable(duration src/duration.c)

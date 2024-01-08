@@ -4,7 +4,8 @@
 
 #include <unity.h>
 
-#include "message.h"
+#include <anesowa/commons/message.h>
+
 #include "process_loop.h"
 
 #include "fff.h"
@@ -52,15 +53,6 @@ void test_message_is_propagated_to_players(void) {
   TEST_ASSERT_EQUAL(s_recv_fake.call_count, 1);
   TEST_ASSERT_EQUAL_STRING(receives, s_send_fake.arg1_val);
 }
-
-/**
- * Given a string received from Sound Detectors
- * When is received by the Playback Distributor
- * Then it gets parsed before passing it down to the Sound Players.
- *
- * TODO: At the moment it's a simple passthrough...
- */
-void test_parse_message(void) { TEST_ASSERT_EQUAL(1, 1); }
 
 /**
  * Given a Playback Distributor

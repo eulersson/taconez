@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <zmq.h>
 #include <cjson/cJSON.h>
+#include <zmq.h>
 
 #include "message.h"
 #include "process_loop.h"
 
-int main(void)
-{
+int main(void) {
   void *context = zmq_ctx_new();
 
   void *pull_socket = zmq_socket(context, ZMQ_PULL);
@@ -20,11 +19,9 @@ int main(void)
 
   printf("[distributor] Broker (PULL and PUB sockets) ready!\n");
 
-  while (1)
-  {
+  while (1) {
     int finished = process_loop(pull_socket, pub_socket);
-    if (finished)
-    {
+    if (finished) {
       break;
     }
   }
