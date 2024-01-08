@@ -28,9 +28,9 @@ ARG BUILD_DEPENDENCIES="\
   gcc \
   g++ \
   make \
+  ruby \
   "
 
-# Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\
   iputils-ping \
   pulseaudio-utils \
@@ -40,7 +40,6 @@ ARG DEBUG_DEPENDENCIES="\
 # Choose between installing dependencies or having them built from source with CMake.
 ARG DEPENDENCIES_COMPILE_FROM_SOURCE=1
 ARG COMPILABLE_DEPENDENCIES="\
-  cmocka-dev \
   cjson-dev \
   zeromq-dev \
   "
@@ -105,8 +104,6 @@ ENTRYPOINT echo "RUNNING PROJECT TESTS" \
  && ctest --test-dir build \
  && echo "RUNNING DEPENDENCY TESTS: cJSON" \
  && ctest --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
- && echo "RUNNING DEPENDENCY TESTS: cmocka" \
- && ctest --test-dir build/anesowa_commons/cmocka-prefix/src/cmocka-build \
  && echo "RUNNING DEPENDENCY TESTS: ZeroMQ" \
  && ctest --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build
 
