@@ -81,8 +81,8 @@ if(IS_TEST_BUILD)
 
   FetchContent_Declare(
     fff # Fake Function Framework (fff)
-    GIT_REPOSITORY https://github.com/meekrosoft/fff.git
-    GIT_TAG 5111c61e1ef7848e3afd3550044a8cf4405f4199 # A stable commit in master.
+    URL https://github.com/meekrosoft/fff/archive/5111c61e1ef7848e3afd3550044a8cf4405f4199.tar.gz
+    URL_HASH MD5=b625c2711139acb60004d79851113c0f
   )
   FetchContent_MakeAvailable(fff)
 endif()
