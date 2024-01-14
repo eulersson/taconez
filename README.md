@@ -25,8 +25,8 @@ This project is composed of various pieces:
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./anesowa.drawio.dark.svg">
-    <img alt="Architecture Diagram" src="./anesowa.drawio.light.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/anesowa.drawio.dark.svg">
+    <img alt="Architecture Diagram" src="./docs/images/anesowa.drawio.light.svg">
   </picture>
 </p>
 
