@@ -17,11 +17,11 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 set -x # Print commands as they run.
 
 docker build \
-	--build-arg DEBUG=1 \
-	--tag anesowa/playback-distributor:dev \
-	--file $ANESOWA_ROOT/playback-distributor/Dockerfile \
-	--target development \
-	$(echo $@) \
-	$ANESOWA_ROOT
+  --build-arg DEBUG=1 \
+  --tag anesowa/playback-distributor:dev \
+  --file $ANESOWA_ROOT/playback-distributor/Dockerfile \
+  --target development \
+  $(echo $@) \
+  $ANESOWA_ROOT
 
 set +x
