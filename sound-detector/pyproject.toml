@@ -39,7 +39,6 @@ tensorflow-cpu-aws = { version = "~2.13.0", platform = "linux", markers = "platf
 tensorflow-io = "~0.34.0"
 tensorflow-hub = "~0.15.0"
 
-
 [tool.poetry.group.dev.dependencies]
 matplotlib = "^3.8.1"
 black = "^23.11.0"
@@ -48,6 +47,7 @@ ipython = "^8.17.2"
 notebook = "^7.0.6"
 pynvim = "^0.4.3"
 pyright = "^1.1.337"
+jupyterlab = "^4.0.10"
 
 [build-system]
 requires = ["poetry-core"]

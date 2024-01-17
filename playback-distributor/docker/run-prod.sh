@@ -34,8 +34,8 @@ set -x # Print commands as they run.
 docker run \
   --tty \
   --name $ANESOWA_CONTAINER_NAME \
-  --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
-  --volume $ANESOWA_ROOT/prerolls:/anesowa/prerolls:ro \
+  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
+  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
   $extra_flags \
   anesowa/playback-distributor:$ANESOWA_VERSION
 

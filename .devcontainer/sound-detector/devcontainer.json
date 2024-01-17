@@ -1,0 +1,53 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+  "name": "Anesowa Sound Detector",
+
+  "containerUser": "root",
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "installTools": true,
+      "installJupyterlab": true,
+      "version": "none"
+    }
+  },
+
+  "build": {
+    // Since this repository is multi-project, the context of the docker build command
+    // must be two levels up because it might need files from libraries shared across
+    // the various projects.
+    "context": "../..",
+    "dockerfile": "../../sound-detector/Dockerfile",
+    "args": {
+      "DEBUG": "1",
+      "INSTALL_DEV_DEPS": "1",
+      "USE_TFLITE": "0"
+    }
+  },
+
+  "containerEnv": {
+    "SKIP_RECORDING": "0",
+    "SKIP_DETECTION_NOTIFICATION": "0",
+    "INFLUX_DB_TOKEN": "no_token"
+  },
+
+  "mounts": [
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.config/pulse/cookie",
+      "target": "/root/.config/pulse/cookie"
+    }
+  ],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  }
+}

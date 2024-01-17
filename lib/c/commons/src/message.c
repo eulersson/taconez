@@ -17,8 +17,8 @@ struct DetectorMessage parse_detector_message(char *message)
   char *sound_file_path = cJSON_GetObjectItem(json, "sound_file_path")->valuestring;
   printf("[parse_detector_message] Sound file path: %s\n", sound_file_path);
 
-  char *abs_sound_file_path = malloc(strlen("/anesowa/recordings/") + strlen(sound_file_path) + 1);
-  strcpy(abs_sound_file_path, "/anesowa/recordings/");
+  char *abs_sound_file_path = malloc(strlen("/app/recordings/") + strlen(sound_file_path) + 1);
+  strcpy(abs_sound_file_path, "/app/recordings/");
   strcat(abs_sound_file_path, sound_file_path);
   printf("[parse_detector_message] Absolute sound file path: %s\n", abs_sound_file_path);
 
@@ -42,8 +42,8 @@ struct DistributorMessage parse_distributor_message(char *message)
   char *preroll_file_path = cJSON_GetObjectItem(json, "preroll_file_path")->valuestring;
   printf("[parse_message] Preroll file path: %s\n", preroll_file_path);
 
-  char *abs_preroll_file_path = malloc(strlen("/anesowa/recordings/") + strlen(preroll_file_path) + 1);
-  strcpy(abs_preroll_file_path, "/anesowa/recordings/");
+  char *abs_preroll_file_path = malloc(strlen("/app/recordings/") + strlen(preroll_file_path) + 1);
+  strcpy(abs_preroll_file_path, "/app/recordings/");
   strcat(abs_preroll_file_path, preroll_file_path);
   printf("[parse_detector_message] Absolute prefix file path: %s\n", abs_preroll_file_path);
 

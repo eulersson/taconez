@@ -25,13 +25,15 @@ ARG DEBUG=0
 #
 ARG BUILD_DEPENDENCIES="\
   cmake \
-  gcc \
   g++ \
+  gcc \
+  git \
   make \
   ruby \
   "
 
 ARG DEBUG_DEPENDENCIES="\
+  git \
   iputils-ping \
   pulseaudio-utils \
   alsa-utils \
@@ -53,11 +55,13 @@ FROM alpine:3.19.0 as base
 #
 ARG DEBUG
 ARG BUILD_DEPENDENCIES
+ARG DEBUG_DEPENDENCIES
 ARG DEPENDENCIES_COMPILE_FROM_SOURCE
-ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
 ARG COMPILABLE_DEPENDENCIES
 
-WORKDIR /anesowa/playback-distributor
+ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
+
+WORKDIR /app/playback-distributor
 
 EXPOSE 5555
 EXPOSE 5556
@@ -69,7 +73,7 @@ RUN apk --no-cache --update add \
   $( [ $DEPENDENCIES_COMPILE_FROM_SOURCE = 0 ] && echo $COMPILABLE_DEPENDENCIES )
 
 # Build the module.
-COPY lib /anesowa/lib
+COPY lib /app/lib
 COPY playback-distributor/CMakeLists.txt  ./
 COPY playback-distributor/src ./src
 
@@ -80,32 +84,6 @@ RUN cmake -S . -B build -DBUILD_TYPE=development
 RUN cmake --build build --verbose
 
 ENTRYPOINT [ "./build/playback-distributor" ]
-
-# docker run ... --target test
-FROM base as test
-
-# Use args from the global scope.
-#
-#  - Share ARG in multi-stage Dockerfile
-#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
-#
-ARG DEBUG
-ENV DEBUG=$DEBUG
-ARG DEPENDENCIES_COMPILE_FROM_SOURCE
-ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
-
-COPY playback-distributor/tests ./tests
-
-RUN cmake -S . -B build -DBUILD_TYPE=test
-RUN cmake --build build --verbose
-
-# TODO: Collect results together so one test suite does not stop subsequent ones.
-ENTRYPOINT echo "RUNNING PROJECT TESTS" \
- && ctest --test-dir build \
- && echo "RUNNING DEPENDENCY TESTS: cJSON" \
- && ctest --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
- && echo "RUNNING DEPENDENCY TESTS: ZeroMQ" \
- && ctest --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build
 
 # docker run ... --target prod
 FROM base as production
@@ -128,3 +106,36 @@ RUN \
   fi
 
 ENTRYPOINT [ "./playback-distributor" ]
+
+# docker run ... --target test
+FROM base as test
+
+# NOTE: When using DEV containers VS Code will extend this Dockerfile adding their own
+# build stages, that means that the three we have here (test, production and development)
+# will be ignored and the very last one in the file will be used. Hence, it's important
+# for the test stage to be the last one for development purposes (since we will likely
+# be writing tests and running them in the container).
+
+# Use args from the global scope.
+#
+#  - Share ARG in multi-stage Dockerfile
+#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
+#
+ARG DEBUG
+ARG DEPENDENCIES_COMPILE_FROM_SOURCE
+
+ENV DEBUG=$DEBUG
+ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
+
+COPY playback-distributor/tests ./tests
+
+RUN cmake -S . -B build -DBUILD_TYPE=test
+RUN cmake --build build --verbose
+
+# TODO: Collect results together so one test suite does not stop subsequent ones.
+ENTRYPOINT echo "RUNNING PROJECT TESTS" \
+  && ctest --test-dir build \
+  && echo "RUNNING DEPENDENCY TESTS: cJSON" \
+  && ctest --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
+  && echo "RUNNING DEPENDENCY TESTS: ZeroMQ" \
+  && ctest --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build

@@ -32,12 +32,12 @@ docker run \
   --rm \
   --tty \
   --interactive \
-  --volume $ANESOWA_ROOT/playback-distributor/src:/anesowa/playback-distributor/src \
-  --volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/anesowa/playback-distributor/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/playback-distributor/tests:/anesowa/playback-distributor/tests \
-  --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/anesowa/lib/c/commons/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/recordings:/anesowa/recordings:ro \
-  --volume $ANESOWA_ROOT/prerolls:/anesowa/prerolls:ro \
+  --volume $ANESOWA_ROOT/playback-distributor/src:/app/playback-distributor/src \
+  --volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt \
+  --volume $ANESOWA_ROOT/playback-distributor/tests:/app/playback-distributor/tests \
+  --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
+  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
+  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
   $extra_flags \
   $entrypoint \
   anesowa/playback-distributor:dev

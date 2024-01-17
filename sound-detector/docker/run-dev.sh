@@ -30,7 +30,7 @@ docker run --rm --tty --interactive \
   --env SKIP_RECORDING=False \
   --env SKIP_DETECTION_NOTIFICATION=False \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $ANESOWA_ROOT/sound-detector:/anesowa/sound-detector \
+  --volume $ANESOWA_ROOT/sound-detector:/app/sound-detector \
   --volume $RECORDINGS_DIR:/recordings \
   $extra_flags \
   $entrypoint \

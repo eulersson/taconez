@@ -1,0 +1,42 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+  "name": "Anesowa Sound Player",
+
+  "containerUser": "root",
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
+  "build": {
+    // Since this repository is multi-project, the context of the docker build command
+    // must be two levels up because it might need files from libraries shared across
+    // the various projects.
+    "context": "../..",
+    "dockerfile": "../../sound-player/Dockerfile",
+    "args": {
+      "DEBUG": "1",
+      "DEPENDENCIES_COMPILE_FROM_SOURCE": "1"
+    }
+  },
+
+  "mounts": [
+    "source=${localEnv:HOME}/.config/pulse/cookie,target=/root/.config/pulse/cookie,type=bind,consistency=cached"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "cmake.sourceDirectory": "${workspaceFolder}/sound-player",
+        "cmake.buildDirectory": "${workspaceFolder}/sound-player/build",
+        "cmake.configureArgs": ["-DBUILD_TYPE=test"],
+        "cmake.generator": "Unix Makefiles"
+      },
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "ms-vscode.cpptools",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

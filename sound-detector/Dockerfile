@@ -8,7 +8,7 @@
 
 FROM python:3.10.13-slim-bookworm
 
-WORKDIR /anesowa/sound-detector
+WORKDIR /app/sound-detector
 
 # Set to `1` if you are not on a Raspberry Pi. Accessible during build time (build
 # argument) as well as during run time (environment variable).
@@ -35,6 +35,7 @@ ARG RUN_TIME_DEPENDENCIES="\
   "
 
 ARG DEBUG_DEPENDENCIES="\
+  git \
   iputils-ping=3:20221126-1 \
   pulseaudio-utils=16.1+dfsg1-2+b1 \
   alsa-utils=1.2.8-1 \
@@ -96,8 +97,8 @@ RUN eval poetry install --no-interaction \
 
 COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py .
 
-ENV SKIP_RECORDING=False
-ENV SKIP_DETECTION_NOTIFICATION=False
-ENV INFLUX_DB_TOKEN=
+ENV SKIP_RECORDING=0
+ENV SKIP_DETECTION_NOTIFICATION=0
+ENV INFLUX_DB_TOKEN=no_token
 
 ENTRYPOINT [ "python", "sound_detector.py" ]

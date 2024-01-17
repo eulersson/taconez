@@ -5,7 +5,8 @@
 #include <cjson/cJSON.h>
 #include <zmq.h>
 
-#include "message.h"
+#include <anesowa/commons/message.h>
+
 #include "process_loop.h"
 
 int main(void) {
