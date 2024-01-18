@@ -1,0 +1,11 @@
+# NOTE: On Linux run with:
+#
+#   docker-compose -f docker-compose.yml -f docker-compose.linux.yml up
+#
+services:
+  sound-detector:
+      extra_hosts:
+      - "host.docker.internal:host-gateway"
+  playback-distributor:
+      extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -4,6 +4,7 @@
   "name": "Anesowa Sound Detector",
 
   "containerUser": "root",
+  // TODO: Only do it if we are not on Linux.
   "runArgs": ["--add-host=host.docker.internal:host-gateway"],
 
   // Features to add to the dev container. More info: https://containers.dev/features.

@@ -27,6 +27,8 @@ mkdir -p $RECORDINGS_DIR
 
 docker run --rm --tty --interactive \
   --env PULSE_SERVER=host.docker.internal \
+  --env INFLUX_DB_HOST=host.docker.internal \
+  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --env SKIP_RECORDING=False \
   --env SKIP_DETECTION_NOTIFICATION=False \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \

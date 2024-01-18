@@ -4,6 +4,7 @@
   "name": "Anesowa Sound Player",
 
   "containerUser": "root",
+  // TODO: Only do it if we are not on Linux.
   "runArgs": ["--add-host=host.docker.internal:host-gateway"],
 
   "build": {

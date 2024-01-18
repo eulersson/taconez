@@ -53,23 +53,23 @@ set(
   src/time_utils.h
   src/time_utils.c
 )
-add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
-target_include_directories(sound_player PRIVATE src)
-target_link_libraries(sound_player PRIVATE anesowa_commons)
+add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
+target_include_directories(sound-player PRIVATE src)
+target_link_libraries(sound-player PRIVATE anesowa_commons)
 
 if(BUILD_TYPE STREQUAL test)
   # Create the tests.
-  create_test(test_sound_player tests/test_sound_player.c)
+  create_test(test-sound-player tests/test_sound_player.c)
   target_include_directories(
-    test_sound_player
+    test-sound-player
     PRIVATE
     ${ANESOWA_COMMONS_DIR}/include
     ${ANESOWA_COMMONS_DIR}/include/anesowa/commons
   )
 
-  target_link_libraries(test_sound_player PRIVATE cjson_lib pulseaudio_lib)
+  target_link_libraries(test-sound-player PRIVATE cjson_lib pulseaudio_lib)
 
-  target_include_directories(test_sound_player PRIVATE src)
+  target_include_directories(test-sound-player PRIVATE src)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
@@ -89,5 +89,5 @@ if(BUILD_TYPE STREQUAL test)
   )
   list(TRANSFORM commons_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
 
-  target_sources(test_sound_player PRIVATE ${sources} ${commons_sources})
+  target_sources(test-sound-player PRIVATE ${sources} ${commons_sources})
 endif()

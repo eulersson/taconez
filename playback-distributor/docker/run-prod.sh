@@ -23,12 +23,6 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
-if [ "$(uname)" == "Linux" ]; then
-  extra_flags="--add-host=host.docker.internal:host-gateway"
-else
-  extra_flags=""
-fi
-
 set -x # Print commands as they run.
 
 docker run \
@@ -36,7 +30,6 @@ docker run \
   --name $ANESOWA_CONTAINER_NAME \
   --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  $extra_flags \
   anesowa/playback-distributor:$ANESOWA_VERSION
 
 set +x

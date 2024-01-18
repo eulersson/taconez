@@ -80,7 +80,7 @@ eulersson@macbook:~ $ brew services start pulseaudio
 eulersson@macbook:~ $ paplay sample.wav
 ```
 
-Open `/usr/local/Cellar/pulseaudio/14.2_1/etc/pulse/default.pa` and uncomment:
+Open `/usr/local/Cellar/pulseaudio/16.1/etc/pulse/default.pa` and uncomment:
 
 ```
 load-module module-native-protocol-tcp

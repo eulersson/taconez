@@ -81,7 +81,7 @@ FROM base as development
 RUN cmake -S . -B build -DBUILD_TYPE=development --fresh
 RUN cmake --build build --verbose
 
-ENTRYPOINT [ "./build/sound-player" ]
+ENTRYPOINT [ "/app/sound-player/build/sound-player" ]
 # docker run ... --target prod
 FROM base as production
 
@@ -102,7 +102,7 @@ RUN \
   echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
-ENTRYPOINT [ "./sound-player" ]
+ENTRYPOINT [ "/app/sound-player" ]
 
 # docker run ... --target test
 FROM base as test

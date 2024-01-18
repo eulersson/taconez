@@ -57,16 +57,16 @@ target_link_libraries(playback_distributor PRIVATE anesowa_commons)
 # some of its functions, that means we have to exclude the mocked code from the sources.
 if(BUILD_TYPE STREQUAL test)
   # Create the tests.
-  create_test(test_playback_distributor tests/test_playback_distributor.c)
+  create_test(test-playback-distributor tests/test_playback_distributor.c)
   target_include_directories(
-    test_playback_distributor
+    test-playback-distributor
     PRIVATE
     ${ANESOWA_COMMONS_DIR}/include
     ${ANESOWA_COMMONS_DIR}/include/anesowa/commons
   )
 
-  target_include_directories(test_playback_distributor PRIVATE src)
-  target_link_libraries(test_playback_distributor PRIVATE cjson_lib)
+  target_include_directories(test-playback-distributor PRIVATE src)
+  target_link_libraries(test-playback-distributor PRIVATE cjson_lib)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
@@ -86,5 +86,5 @@ if(BUILD_TYPE STREQUAL test)
   )
   list(TRANSFORM commons_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
 
-  target_sources(test_playback_distributor PRIVATE ${sources} ${commons_sources})
+  target_sources(test-playback-distributor PRIVATE ${sources} ${commons_sources})
 endif()

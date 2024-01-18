@@ -189,16 +189,16 @@ endif()
 
 if(IS_TEST_BUILD)
   # Create the tests.
-  create_test(test_duration tests/test_duration.c)
+  create_test(test-duration tests/test_duration.c)
   target_include_directories(
-    test_duration
+    test-duration
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons
   )
-  # add_dependencies(test_duration cjson)
-  target_link_libraries(test_duration PRIVATE zmq_lib cjson_lib)
+  # add_dependencies(test-duration cjson)
+  target_link_libraries(test-duration PRIVATE zmq_lib cjson_lib)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
-  target_sources(test_duration PRIVATE ${sources})
+  target_sources(test-duration PRIVATE ${sources})
 endif()

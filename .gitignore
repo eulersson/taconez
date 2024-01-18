@@ -22,4 +22,7 @@ prerolls/*.wav
 
 recordings/
 
+influx-db/data/
+influx-db/config/
+
 yamnet-classification.tflite

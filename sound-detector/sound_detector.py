@@ -36,16 +36,18 @@ logging.basicConfig(
 
 SKIP_DETECTION_NOTIFICATION = env.bool("SKIP_DETECTION_NOTIFICATION", False)
 
-INFLUX_DB_ADDR = "http://host.docker.internal:8086"
+INFLUX_DB_HOST = env("INFLUX_DB_HOST") # Raises error if not set.
+INFLUX_DB_ADDR = f"http://{INFLUX_DB_HOST}:8086"
 INFLUX_DB_TOKEN = env("INFLUX_DB_TOKEN")
 
 # Endpoint where the distributor PULL socket is bound and therefore the endpoint we must
 # connect to. The distributor runs as a container connecting port 5555 to the host.
-ZMQ_DISTRIBUTOR_PUSH_ADDR = "tcp://host.docker.internal:5555"
+PLAYBACK_DISTRIBUTOR_HOST = env("PLAYBACK_DISTRIBUTOR_HOST")
+ZMQ_DISTRIBUTOR_PUSH_ADDR = f"tcp://{PLAYBACK_DISTRIBUTOR_HOST}:5555"
 
 # Endpoint where the distributor PUSH socket is bound and therefore the endpoint we must
 # connects to. The distributor runs as a container connecting port 5556 to the host.
-ZMQ_DISTRIBUTOR_SUB_ADDR = "tcp://host.docker.internal:5556"
+ZMQ_DISTRIBUTOR_SUB_ADDR = f"tcp://{PLAYBACK_DISTRIBUTOR_HOST}:5556"
 
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
 DETECTED_RECORDINGS_DIR = "/recordings"

@@ -1,3 +1,7 @@
+# NOTE: On Linux run with:
+#
+#   docker-compose -f docker-compose.yml -f docker-compose.linux.yml up
+#
 version: '3'
 services:
   # --- Sound Detector -----------------------------------------------------------------
@@ -10,15 +14,15 @@ services:
         INSTALL_DEV_DEPS: 1
         USE_TFLITE: 1
     environment:
-    - PULSE_SERVER=host.docker.internal
-    - SKIP_RECORDING=False
-    - SKIP_DETECTION_NOTIFICATION=False
+      - PULSE_SERVER=host.docker.internal
+      - SKIP_RECORDING=False
+      - SKIP_DETECTION_NOTIFICATION=False
+      - INFLUX_DB_HOST=influx-db-server
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
       - ./sound-detector:/app/sound-detector
       - ./recordings:/recordings
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     tty: true
     depends_on:
       - influx-db-server
@@ -38,8 +42,6 @@ services:
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
       - ./recordings:/app/recordings:ro
     tty: true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
@@ -57,15 +59,12 @@ services:
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
       - ./recordings:/app/recordings:ro
     tty: true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    links:
+    - playback-distributor
 
   # --- InfluxDB Server ----------------------------------------------------------------
   influx-db-server:
     image: influxdb:2.7.4-alpine
-    volumes:
-      - ./influx_db/data:/var/lib/influxdb2
-      - ./influx_db/config:/etc/influxdb2
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: anesowa
@@ -75,5 +74,3 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token
     ports:
       - "8086:8086"
-
-  # --- Network ------------------------------------------------------------------------

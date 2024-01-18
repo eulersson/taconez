@@ -24,7 +24,10 @@
 int main(void) {
   void *context = zmq_ctx_new();
   void *sub_socket = zmq_socket(context, ZMQ_SUB);
-  zmq_connect(sub_socket, "tcp://host.docker.internal:5556");
+
+  // TODO: Read from environment variable or pass as CLI argument.
+  zmq_connect(sub_socket, "tcp://playback-distributor:5556");
+
   zmq_setsockopt(sub_socket, ZMQ_SUBSCRIBE, "", 0);
 
   printf("[player] Ready!\n");

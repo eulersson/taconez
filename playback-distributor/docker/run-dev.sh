@@ -20,12 +20,6 @@ if [ "$ENTRYPOINT" ]; then
   entrypoint="--entrypoint $ENTRYPOINT"
 fi
 
-if [ "$(uname)" == "Linux" ]; then
-  extra_flags=--add-host=host.docker.internal:host-gateway
-else
-  extra_flags=""
-fi
-
 set -x # Print commands as they run.
 
 docker run \
@@ -38,7 +32,6 @@ docker run \
   --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
   --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  $extra_flags \
   $entrypoint \
   anesowa/playback-distributor:dev
 

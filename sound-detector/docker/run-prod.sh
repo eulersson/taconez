@@ -37,6 +37,8 @@ set -x
 
 docker run --tty \
   --env PULSE_SERVER=host.docker.internal \
+  --env INFLUX_DB_HOST=host.docker.internal \
+  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $recordings_source_dir:/recordings \
