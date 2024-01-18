@@ -48,6 +48,7 @@ notebook = "^7.0.6"
 pynvim = "^0.4.3"
 pyright = "^1.1.337"
 jupyterlab = "^4.0.10"
+pytest = "^7.4.4"
 
 [build-system]
 requires = ["poetry-core"]
