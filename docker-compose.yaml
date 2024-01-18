@@ -1,0 +1,79 @@
+version: '3'
+services:
+  # --- Sound Detector -----------------------------------------------------------------
+  sound-detector:
+    build:
+      context: .
+      dockerfile: ./sound-detector/Dockerfile
+      args:
+        DEBUG: 1
+        INSTALL_DEV_DEPS: 1
+        USE_TFLITE: 1
+    environment:
+    - PULSE_SERVER=host.docker.internal
+    - SKIP_RECORDING=False
+    - SKIP_DETECTION_NOTIFICATION=False
+    volumes:
+      - ./sound-detector:/app/sound-detector
+      - ./recordings:/recordings
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    depends_on:
+      - influx-db-server
+
+  # --- Playback Distributor -----------------------------------------------------------
+  playback-distributor:
+    build:
+      context: .
+      dockerfile: ./playback-distributor/Dockerfile
+      args:
+        DEBUG: 1
+      target: development
+    volumes:
+      - ./playback-distributor/src:/app/playback-distributor/src
+      - ./playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt
+      - ./playback-distributor/tests:/app/playback-distributor/tests
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
+      - ./recordings:/app/recordings:ro
+    tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # --- Sound Player -------------------------------------------------------------------
+  sound-player:
+    build:
+      context: .
+      dockerfile: ./sound-player/Dockerfile
+      args:
+        DEBUG: 1
+      target: development
+    image: anesowa/sound-player:dev
+    volumes:
+      - ./sound-player/src:/app/sound-player/src
+      - ./sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt
+      - ./sound-player/tests:/app/sound-player/tests
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
+      - ./recordings:/app/recordings:ro
+    tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # --- InfluxDB Server ----------------------------------------------------------------
+  influx-db-server:
+    image: influxdb:2.7.4-alpine
+    volumes:
+      - ./influx_db/data:/var/lib/influxdb2
+      - ./influx_db/config:/etc/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: anesowa
+      DOCKER_INFLUXDB_INIT_PASSWORD: ufftQDZNDESRALXi5NbS
+      DOCKER_INFLUXDB_INIT_ORG: anesowa
+      DOCKER_INFLUXDB_INIT_BUCKET: anesowa
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token
+    ports:
+      - "8086:8086"
+
+  # --- Network ------------------------------------------------------------------------

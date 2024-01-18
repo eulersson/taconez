@@ -43,17 +43,15 @@ set(WANTS_PULSEAUDIO OFF)
 # `lib/c/commons/CMakeLists.txt`.
 add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
 
-if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
-  set(
-    PLAYBACK_DISTRIBUTOR_SOURCE_FILES
-    src/process_loop.h
-    src/process_loop.c
-    src/playback_distributor.c
-  )
-  add_executable(playback_distributor ${PLAYBACK_DISTRIBUTOR_SOURCE_FILES})
-  target_include_directories(playback_distributor PRIVATE src)
-  target_link_libraries(playback_distributor PRIVATE anesowa_commons)
-endif()
+set(
+  PLAYBACK_DISTRIBUTOR_SOURCE_FILES
+  src/process_loop.h
+  src/process_loop.c
+  src/playback_distributor.c
+)
+add_executable(playback_distributor ${PLAYBACK_DISTRIBUTOR_SOURCE_FILES})
+target_include_directories(playback_distributor PRIVATE src)
+target_link_libraries(playback_distributor PRIVATE anesowa_commons)
 
 # We don't simply link anesowa_commons to the test target because we might want to mock
 # some of its functions, that means we have to exclude the mocked code from the sources.

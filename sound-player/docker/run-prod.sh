@@ -37,7 +37,7 @@ docker run \
 	--tty \
 	--name $ANESOWA_CONTAINER_NAME \
 	--volume /mnt/nfs/anesowa:/app/recordings:ro \
-	--volume $ANESOWA_ROOT/prerolls:/anesowa/prerolls:ro \
+	--volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
 	--env PULSE_SERVER=host.docker.internal \
 	--volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
 	$extra_flags \

@@ -35,12 +35,12 @@ docker run \
 	--tty \
 	--interactive \
 	--env PULSE_SERVER=host.docker.internal \
-	--volume $ANESOWA_ROOT/sound-player/src:/anesowa/sound-player/src \
-	--volume $ANESOWA_ROOT/sound-player/CMakeLists.txt:/anesowa/sound-player/CMakeLists.txt \
-	--volume $ANESOWA_ROOT/sound-player/tests:/anesowa/sound-player/tests \
-	--volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/anesowa/lib/c/commons/CMakeLists.txt \
+	--volume $ANESOWA_ROOT/sound-player/src:/app/sound-player/src \
+	--volume $ANESOWA_ROOT/sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt \
+	--volume $ANESOWA_ROOT/sound-player/tests:/app/sound-player/tests \
+	--volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
 	--volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
-	--volume $ANESOWA_ROOT/prerolls:/anesowa/prerolls:ro \
+	--volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
 	--volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
 	$extra_flags \
 	$entrypoint \

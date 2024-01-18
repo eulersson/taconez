@@ -43,21 +43,19 @@ set(WANTS_PULSEAUDIO ON)
 # `lib/c/commons/CMakeLists.txt`.
 add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
 
-if(BUILD_TYPE STREQUAL production OR BUILD_TYPE STREQUAL development)
-  set(
-    SOUND_PLAYER_SOURCE_FILES
-    src/sound_player.c
-    src/play.h
-    src/play.c
-    src/process_loop.h
-    src/process_loop.c
-    src/time_utils.h
-    src/time_utils.c
-  )
-  add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
-  target_include_directories(playback_distributor PRIVATE src)
-  target_link_libraries(sound_player PRIVATE anesowa_commons)
-endif()
+set(
+  SOUND_PLAYER_SOURCE_FILES
+  src/sound_player.c
+  src/play.h
+  src/play.c
+  src/process_loop.h
+  src/process_loop.c
+  src/time_utils.h
+  src/time_utils.c
+)
+add_executable(sound_player ${SOUND_PLAYER_SOURCE_FILES})
+target_include_directories(sound_player PRIVATE src)
+target_link_libraries(sound_player PRIVATE anesowa_commons)
 
 if(BUILD_TYPE STREQUAL test)
   # Create the tests.

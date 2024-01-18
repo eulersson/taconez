@@ -17,7 +17,7 @@
 #include <pulse/simple.h>
 #include <zmq.h>
 
-#include <anesowa/commons/utils.h>
+#include <anesowa/commons/socket.h>
 
 #include "process_loop.h"
 
@@ -30,7 +30,7 @@ int main(void) {
   printf("[player] Ready!\n");
 
   while (1) {
-    int finished = process_loop(pull_socket);
+    int finished = process_loop(sub_socket);
     if (finished) {
       break;
     }

@@ -71,7 +71,7 @@ RUN apk --no-cache --update add \
   $( [ $DEPENDENCIES_COMPILE_FROM_SOURCE = 0 ] && echo $COMPILABLE_DEPENDENCIES )
 
 # Build the module.
-COPY lib /anesowa/lib
+COPY lib /app/lib
 COPY sound-player/CMakeLists.txt ./
 COPY sound-player/src ./src
 
