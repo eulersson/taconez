@@ -1,6 +1,10 @@
 # Dockerfile to build Sound Player
 #
-# NOTE: It's encouraged to use the scripts that wrap the `docker build` and `docker run`:
+# NOTE: (VS Code users) Dev Containers are provided:
+#
+#   https://github.com/eulersson/anesowa/blob/main/docs/5-vs-code.md
+#
+# NOTE: (non-VS Code users) Scripts that wrap the `docker build` and `docker run`:
 #
 #   ./sound-player/docker/build-dev.sh
 #   ./sound-player/docker/run-dev.sh
@@ -46,6 +50,12 @@ ARG COMPILABLE_DEPENDENCIES="\
   zeromq-dev \
   "
 
+# For Visual Studio Dev Containers. That way we don't have to wait to compile since the
+# build folder will disappear once we map the volume on top. VS Code mounts the entire
+# repository folder as a volume on top of the container, it's not as selective as the
+# docker scripts in `playback-distributor/docker/run-{dev|pro}`.
+ARG SKIP_BUILD=0
+
 FROM alpine:3.19.0 as base
 
 # Use args from the global scope.
@@ -75,20 +85,35 @@ COPY lib /app/lib
 COPY sound-player/CMakeLists.txt ./
 COPY sound-player/src ./src
 
-# docker run ... --target dev
+# --- docker run ... --target development ----------------------------------------------
 FROM base as development
 
-RUN cmake -S . -B build -DBUILD_TYPE=development --fresh
-RUN cmake --build build --verbose
+ARG SKIP_BUILD
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=development --fresh; \
+  fi
+RUN if [ $SKIP_BUILD = 0 ]; cmake --build build --verbose; fi
 
 ENTRYPOINT [ "/app/sound-player/build/sound-player" ]
-# docker run ... --target prod
+
+# --- docker run ... --target production -----------------------------------------------
 FROM base as production
 
-RUN cmake -S . -B build -DBUILD_TYPE=production
-RUN cmake --build build --verbose \
-  && mv ./build/sound-player . \
-  && rm -rf build
+ARG SKIP_BUILD
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=production; \
+  fi
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake --build build --verbose && \
+    mv ./build/sound-player . && \
+    rm -rf build; \
+  fi
 
 # Cleanup build-time dependencies.
 #
@@ -99,12 +124,12 @@ RUN cmake --build build --verbose \
 #
 RUN \
   if [ $DEBUG == 0 ]; then \
-  echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
+    echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
 ENTRYPOINT [ "/app/sound-player" ]
 
-# docker run ... --target test
+# --- docker run ... --target test -----------------------------------------------------
 FROM base as test
 
 # NOTE: When using DEV containers VS Code will extend this Dockerfile adding their own
@@ -126,11 +151,18 @@ ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
 
 COPY sound-player/tests ./tests
 
-RUN cmake -S . -B build -DBUILD_TYPE=test
-RUN cmake --build build --verbose
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=test; \
+  fi
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake --build build --verbose; \
+  fi
 
 # TODO: Collect results together so one test suite does not stop subsequent ones.
-ENTRYPOINT echo "RUNNING PROJECT TESTS" \
+ENTRYPOINT \
+  echo "RUNNING PROJECT TESTS" \
   && ctest --output-on-failure --test-dir build  \
   && echo "RUNNING DEPENDENCY TESTS: cJSON" \
   && ctest --output-on-failure --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \

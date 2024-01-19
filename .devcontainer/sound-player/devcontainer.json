@@ -4,8 +4,9 @@
   "name": "Anesowa Sound Player",
 
   "containerUser": "root",
-  // TODO: Only do it if we are not on Linux.
-  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
+  // // TODO: Only do it if we are not on Linux.
+  // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
 
   "build": {
     // Since this repository is multi-project, the context of the docker build command
@@ -20,7 +21,24 @@
   },
 
   "mounts": [
-    "source=${localEnv:HOME}/.config/pulse/cookie,target=/root/.config/pulse/cookie,type=bind,consistency=cached"
+    {
+      "source": "${localEnv:HOME}/.config/pulse/cookie",
+      "target": "/root/.config/pulse/cookie",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "${localWorkspaceFolder}/recordings",
+      "target": "/app/recordings",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "${localWorkspaceFolder}/prerolls",
+      "target": "/app/prerolls",
+      "type": "bind",
+      "consistency": "cached"
+    }
   ],
 
   "customizations": {

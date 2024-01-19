@@ -5,6 +5,14 @@
 #
 #   docker build -f sound-detector/Dockerfile -t manually-created-sound-detector-image .
 #
+# NOTE: Some development dependencies have been brought in after seeing what the 
+# devcontainer's python features bring you. The Python features only work when using
+# Dev Containers without Docker Compose but we use Compose for meshing together the
+# various containers.
+#
+#   https://containers.dev/features
+#   https://github.com/devcontainers/features/blob/main/src/python/install.sh
+#
 
 FROM python:3.10.13-slim-bookworm
 
@@ -95,10 +103,11 @@ RUN eval poetry install --no-interaction \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
   && apt-get autoremove -y --purge
 
-COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py .
+COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py ./
 
 ENV SKIP_RECORDING=0
 ENV SKIP_DETECTION_NOTIFICATION=0
-ENV INFLUX_DB_TOKEN=no_token
+ENV INFLUX_DB_HOST=host.docker.internal
+ENV PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal
 
 ENTRYPOINT [ "python", "sound_detector.py" ]

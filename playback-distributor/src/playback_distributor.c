@@ -6,6 +6,7 @@
 #include <zmq.h>
 
 #include <anesowa/commons/message.h>
+#include <anesowa/commons/socket.h>
 
 #include "process_loop.h"
 
@@ -28,6 +29,8 @@ int main(void) {
   }
 
   printf("[distributor] Bye!\n");
+
+  // TODO: Why doesn't it exit cleanly? It hangs here...
   zmq_close(pull_socket);
   zmq_ctx_destroy(context);
   return 0;

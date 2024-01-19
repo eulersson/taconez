@@ -1,9 +1,13 @@
 # Dockerfile to build Playback Distributor
 #
-# NOTE: It's encouraged to use the scripts that wrap the `docker build` and `docker run`:
+# NOTE: (VS Code users) Dev Containers are provided:
 #
-#   ./sound-player/docker/build-dev.sh
-#   ./sound-player/docker/run-dev.sh
+#   https://github.com/eulersson/anesowa/blob/main/docs/5-vs-code.md
+#
+# NOTE: (non-VS Code users) Scripts that wrap the `docker build` and `docker run`:
+#
+#   ./playback-distributor/docker/build-dev.sh
+#   ./playback-distributor/docker/run-dev.sh
 #
 # This file is a multi-stage build so we can target either "development", "production"
 # or test with the `docker build` `--target` argument.
@@ -32,7 +36,9 @@ ARG BUILD_DEPENDENCIES="\
   ruby \
   "
 
+# Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\
+  gdb \
   git \
   iputils-ping \
   pulseaudio-utils \
@@ -45,6 +51,12 @@ ARG COMPILABLE_DEPENDENCIES="\
   cjson-dev \
   zeromq-dev \
   "
+
+# For Visual Studio Dev Containers. That way we don't have to wait to compile since the
+# build folder will disappear once we map the volume on top. VS Code mounts the entire
+# repository folder as a volume on top of the container, it's not as selective as the
+# docker scripts in `playback-distributor/docker/run-{dev|pro}`.
+ARG SKIP_BUILD=0
 
 FROM alpine:3.19.0 as base
 
@@ -77,21 +89,35 @@ COPY lib /app/lib
 COPY playback-distributor/CMakeLists.txt  ./
 COPY playback-distributor/src ./src
 
-# docker run ... --target dev
+# --- docker run ... --target development ----------------------------------------------
 FROM base as development
 
-RUN cmake -S . -B build -DBUILD_TYPE=development
-RUN cmake --build build --verbose
+ARG SKIP_BUILD
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=development --fresh; \
+  fi
+RUN if [ $SKIP_BUILD = 0 ]; cmake --build build --verbose; fi
 
 ENTRYPOINT [ "/app/playback-distributor/build/playback_distributor" ]
 
-# docker run ... --target prod
+# --- docker run ... --target production -----------------------------------------------
 FROM base as production
 
-RUN cmake -S . -B build -DBUILD_TYPE=production
-RUN cmake --build build --verbose \
-  && mv ./build/playback-distributor . \
-  && rm -rf build
+ARG SKIP_BUILD
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=production; \
+  fi
+
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake --build build --verbose && \
+    mv ./build/playback-distributor . && \
+    rm -rf build; \
+  fi
 
 # Cleanup build-time dependencies.
 #
@@ -102,12 +128,13 @@ RUN cmake --build build --verbose \
 #
 RUN \
   if [ $DEBUG == 0 ]; then \
-  echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
+    echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
-ENTRYPOINT [ "/app/playback_distributor" ]
+ENTRYPOINT [ "/app/playback-distributor" ]
 
-# docker run ... --target test
+
+# --- docker run ... --target test -----------------------------------------------------
 FROM base as test
 
 # NOTE: When using DEV containers VS Code will extend this Dockerfile adding their own
@@ -129,9 +156,15 @@ ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
 
 COPY playback-distributor/tests ./tests
 
-RUN cmake -S . -B build -DBUILD_TYPE=test
-RUN cmake --build build --verbose
-
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake -S . -B build -DBUILD_TYPE=test; \
+  fi
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake --build build --verbose; \
+  fi
+  
 # TODO: Collect results together so one test suite does not stop subsequent ones.
 ENTRYPOINT echo "RUNNING PROJECT TESTS" \
   && ctest --test-dir build \

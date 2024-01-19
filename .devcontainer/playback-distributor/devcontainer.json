@@ -5,6 +5,9 @@
 
   "containerUser": "root",
 
+  // // TODO: Only do it if we are not on Linux.
+  // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
   "build": {
     // Since this repository is multi-project, the context of the docker build command
     // must be two levels up because it might need files from libraries shared across
@@ -13,9 +16,25 @@
     "dockerfile": "../../playback-distributor/Dockerfile",
     "args": {
       "DEBUG": "1",
-      "DEPENDENCIES_COMPILE_FROM_SOURCE": "1"
+      "DEPENDENCIES_COMPILE_FROM_SOURCE": "1",
+      "SKIP_BUILD": "1"
     }
   },
+
+  "mounts": [
+    {
+      "source": "${localWorkspaceFolder}/recordings",
+      "target": "/app/recordings",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "${localWorkspaceFolder}/prerolls",
+      "target": "/app/prerolls",
+      "type": "bind",
+      "consistency": "cached"
+    }
+  ],
 
   "customizations": {
     "vscode": {

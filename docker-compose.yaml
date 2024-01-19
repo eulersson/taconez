@@ -20,6 +20,7 @@ services:
       - INFLUX_DB_HOST=influx-db-server
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
+      # TODO: .git folder should be mapped too?
       - ./sound-detector:/app/sound-detector
       - ./recordings:/recordings
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
@@ -36,10 +37,13 @@ services:
         DEBUG: 1
       target: development
     volumes:
+      # TODO: .git folder should be mapped too?
       - ./playback-distributor/src:/app/playback-distributor/src
       - ./playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt
       - ./playback-distributor/tests:/app/playback-distributor/tests
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/include
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/src
       - ./recordings:/app/recordings:ro
     tty: true
 
@@ -53,10 +57,13 @@ services:
       target: development
     image: anesowa/sound-player:dev
     volumes:
+      # TODO: .git folder should be mapped too?
       - ./sound-player/src:/app/sound-player/src
       - ./sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt
       - ./sound-player/tests:/app/sound-player/tests
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/include
+      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/src
       - ./recordings:/app/recordings:ro
     tty: true
     links:

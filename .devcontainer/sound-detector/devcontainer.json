@@ -4,11 +4,14 @@
   "name": "Anesowa Sound Detector",
 
   "containerUser": "root",
-  // TODO: Only do it if we are not on Linux.
-  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+
+  // // TODO: Only do it if we are not on Linux.
+  // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
+    // https://github.com/devcontainers/features/tree/main/src/python
+    // https://github.com/devcontainers/features/blob/main/src/python/install.sh
     "ghcr.io/devcontainers/features/python:1": {
       "installTools": true,
       "installJupyterlab": true,

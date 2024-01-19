@@ -418,6 +418,8 @@ def detect_specific_sounds(
 
         if INFLUX_DB_TOKEN:
             write_db_entry(slugified_top_class_name, relative_sound_path)
+        else:
+            logging.info("Not writing database entry.")
 
         if not SKIP_DETECTION_NOTIFICATION and zmq_socket:
             logging.info("Notifying distributor about detected sound")
