@@ -48,10 +48,12 @@
 
   "customizations": {
     "vscode": {
-      "extensions": [
-        "ms-azuretools.vscode-docker",
-        "ms-toolsai.jupyter"
-      ]
+      "settings": {
+        "python.testing.pytestArgs": ["sound-detector"],
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true
+      },
+      "extensions": ["ms-azuretools.vscode-docker", "ms-toolsai.jupyter"]
     }
   }
 }
