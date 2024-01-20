@@ -1,11 +1,9 @@
-# NOTE: On Linux run with:
-#
-#   docker-compose -f docker-compose.yml -f docker-compose.linux.yml up
-#
-version: '3'
+version: "3"
 services:
+
   # --- Sound Detector -----------------------------------------------------------------
   sound-detector:
+    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./sound-detector/Dockerfile
@@ -13,61 +11,81 @@ services:
         DEBUG: 1
         INSTALL_DEV_DEPS: 1
         USE_TFLITE: 1
+    # TODO: Run with non-root user
+    user: root
     environment:
       - PULSE_SERVER=host.docker.internal
       - SKIP_RECORDING=False
       - SKIP_DETECTION_NOTIFICATION=False
       - INFLUX_DB_HOST=influx-db-server
+      - INFLUX_DB_TOKEN=no_token
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
-      # TODO: .git folder should be mapped too?
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      - ./.git:/app/.git
       - ./sound-detector:/app/sound-detector
       - ./recordings:/app/recordings
-      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      - ./prerolls:/app/prerolls
     tty: true
     depends_on:
       - influx-db-server
+      - playback-distributor
 
   # --- Playback Distributor -----------------------------------------------------------
   playback-distributor:
+    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./playback-distributor/Dockerfile
       args:
         DEBUG: 1
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1,
       target: development
+    # TODO: Run with non-root user
+    user: root
     volumes:
-      # TODO: .git folder should be mapped too?
+      - ./.git:/app/.git
+      - ./playback-distributor/Dockerfile:/app/playback-distributor/Dockerfile
       - ./playback-distributor/src:/app/playback-distributor/src
       - ./playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt
       - ./playback-distributor/tests:/app/playback-distributor/tests
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/include
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/src
+      - ./lib/c/commons/include:/app/lib/c/commons/include
+      - ./lib/c/commons/src:/app/lib/c/commons/src
       - ./recordings:/app/recordings:ro
+      - ./prerolls:/app/prerolls:ro
     tty: true
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
+    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./sound-player/Dockerfile
       args:
         DEBUG: 1
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1,
       target: development
     image: anesowa/sound-player:dev
+    # TODO: Run with non-root user
+    user: root
+    environment:
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
-      # TODO: .git folder should be mapped too?
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      - ./.git:/app/.git
+      - ./sound-player/Dockerfile:/app/sound-player/Dockerfile
       - ./sound-player/src:/app/sound-player/src
       - ./sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt
       - ./sound-player/tests:/app/sound-player/tests
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/include
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/src
+      - ./lib/c/commons/include:/app/lib/c/commons/include
+      - ./lib/c/commons/src:/app/lib/c/commons/src
       - ./recordings:/app/recordings:ro
+      - ./prerolls:/app/prerolls:ro
     tty: true
-    links:
-    - playback-distributor
+    depends_on:
+      - playback-distributor
 
   # --- InfluxDB Server ----------------------------------------------------------------
   influx-db-server:
@@ -79,5 +97,3 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: anesowa
       DOCKER_INFLUXDB_INIT_BUCKET: anesowa
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token
-    ports:
-      - "8086:8086"

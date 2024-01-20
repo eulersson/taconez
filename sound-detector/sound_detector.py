@@ -36,9 +36,9 @@ logging.basicConfig(
 
 SKIP_DETECTION_NOTIFICATION = env.bool("SKIP_DETECTION_NOTIFICATION", False)
 
-INFLUX_DB_HOST = env("INFLUX_DB_HOST") # Raises error if not set.
+INFLUX_DB_HOST = env("INFLUX_DB_HOST")  # Raises error if not set.
 INFLUX_DB_ADDR = f"http://{INFLUX_DB_HOST}:8086"
-INFLUX_DB_TOKEN = env("INFLUX_DB_TOKEN")
+INFLUX_DB_TOKEN = env("INFLUX_DB_TOKEN", None)
 
 # Endpoint where the distributor PULL socket is bound and therefore the endpoint we must
 # connect to. The distributor runs as a container connecting port 5555 to the host.
@@ -50,10 +50,10 @@ ZMQ_DISTRIBUTOR_PUSH_ADDR = f"tcp://{PLAYBACK_DISTRIBUTOR_HOST}:5555"
 ZMQ_DISTRIBUTOR_SUB_ADDR = f"tcp://{PLAYBACK_DISTRIBUTOR_HOST}:5556"
 
 # This folder is shared over NFS, therefore all other clients will be able to mount it.
-DETECTED_RECORDINGS_DIR = "/recordings"
+DETECTED_RECORDINGS_DIR = "/app/recordings"
 
 # Folder where prerolls to be played before the sound detection live.
-PREROLLS_DIR = "/prerolls"
+PREROLLS_DIR = "/app/prerolls"
 
 IGNORE_SOUNDS = []
 with open("./.ignore-sounds", "r") as f:
@@ -227,7 +227,9 @@ def write_audio(frames: bytes, suffix: Optional[str] = "") -> str:
     file_name = f"{now_dt.isoformat()}{suffix}.wav"
 
     # E.g. '2023/12/22'
-    year_month_day_folder = os.path.join(str(now_dt.year), str(now_dt.month), str(now_dt.day))
+    year_month_day_folder = os.path.join(
+        str(now_dt.year), str(now_dt.month), str(now_dt.day)
+    )
 
     # E.g. '2023/12/22/2023-12-10T17:05:52.578411_knock.wav'
     relative_file_path = os.path.join(year_month_day_folder, file_name)
@@ -467,15 +469,15 @@ if __name__ == "__main__":
         push_socket.connect(ZMQ_DISTRIBUTOR_PUSH_ADDR)
         logging.info("Connected ZMQ PUSH socket.")
 
-        sub_socket = context.socket(zmq.SUB)
-        sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
-        logging.info("Connected ZMQ SUB socket.")
+        # sub_socket = context.socket(zmq.SUB)
+        # sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
+        # logging.info("Connected ZMQ SUB socket.")
 
-        # Listen to "sound playing" messages as a separate thread.
-        thread = threading.Thread(
-            target=pull_sound_play_events, args=(sub_socket,), daemon=True
-        )
-        thread.start()
+        # # Listen to "sound playing" messages as a separate thread.
+        # thread = threading.Thread(
+        #     target=pull_sound_play_events, args=(sub_socket,), daemon=True
+        # )
+        # thread.start()
 
     model, labels = load_model_and_labels()
 

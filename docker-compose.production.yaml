@@ -1,0 +1,22 @@
+# An overrides overlay for the default configuration to be used by Visual Studio Code.
+services:
+
+  sound-detector:
+    build:
+      target: production
+      args:
+        DEBUG: 0
+        INSTALL_DEV_DEPS: 0
+        USE_TFLITE: 1
+
+  playback-distributor:
+    build:
+      target: production
+      args:
+        DEBUG: 0
+
+  sound-player:
+    build:
+      target: production
+      args:
+        DEBUG: 0

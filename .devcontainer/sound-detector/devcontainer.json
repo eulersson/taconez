@@ -2,45 +2,13 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
   "name": "Anesowa Sound Detector",
-  "containerUser": "root",
-  // // TODO: Only do it if we are not on Linux.
-  // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
-  "build": {
-    // Since this repository is multi-project, the context of the docker build command
-    // must be two levels up because it might need files from libraries shared across
-    // the various projects.
-    "context": "../..",
-    "dockerfile": "../../sound-detector/Dockerfile",
-    "args": {
-      "DEBUG": "1",
-      "INSTALL_DEV_DEPS": "1",
-      "USE_TFLITE": "0"
-    }
-  },
-  "containerEnv": {
-    "SKIP_RECORDING": "0",
-    "SKIP_DETECTION_NOTIFICATION": "0",
-    "INFLUX_DB_TOKEN": "no_token"
-  },
-  "mounts": [
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.config/pulse/cookie",
-      "target": "/root/.config/pulse/cookie"
-    },
-    {
-      "source": "${localWorkspaceFolder}/recordings",
-      "target": "/app/recordings",
-      "type": "bind",
-      "consistency": "cached"
-    },
-    {
-      "source": "${localWorkspaceFolder}/prerolls",
-      "target": "/app/prerolls",
-      "type": "bind",
-      "consistency": "cached"
-    }
+  "dockerComposeFile": [
+    "../../docker-compose.yaml",
+    "../../docker-compose.vs-code.yaml"
   ],
+  "service": "sound-detector",
+  "workspaceFolder": "/app",
+  "shutdownAction": "none",
   "customizations": {
     "vscode": {
       "settings": {
@@ -62,7 +30,7 @@
       "configurations": [
         {
           // Do not run unless you are within the container.
-          "name": "(Container) Sound Detector",
+          "name": "Debug Sound Detector",
           "type": "python",
           "request": "launch",
           "cwd": "${workspaceFolder}/sound-detector",

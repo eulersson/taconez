@@ -34,31 +34,33 @@ int process_loop(void *pull_socket, void *pub_socket) {
 
     int chosen_preroll_index = rand() % 2;
     char* preroll_file_path = prerolls[chosen_preroll_index];
+    printf("[distributor] Preroll file path: %s\n", preroll_file_path);
 
-    char *abs_preroll_file_path = malloc(
-      strlen("/anesowa/prerolls/") + strlen(preroll_file_path) + 1
-    );
-    strcpy(abs_preroll_file_path, "/anesowa/prerolls/");
-    strcat(abs_preroll_file_path, preroll_file_path);
+    // char *abs_preroll_file_path = malloc(
+    //   strlen("/anesowa/prerolls/") + strlen(preroll_file_path) + 1
+    // );
+    // strcpy(abs_preroll_file_path, "/anesowa/prerolls/");
+    // strcat(abs_preroll_file_path, preroll_file_path);
 
-    float sound_duration = get_duration(pm.abs_sound_file_path);
-    printf("[distributor] Sound duration: %f\n", sound_duration);
-    float preroll_duration = get_duration(abs_preroll_file_path);
-    printf("[distributor] Preroll duration: %f\n", preroll_duration);
+    // float sound_duration = get_duration(pm.abs_sound_file_path);
+    // printf("[distributor] Sound duration: %f\n", sound_duration);
+    // float preroll_duration = get_duration(abs_preroll_file_path);
+    // printf("[distributor] Preroll duration: %f\n", preroll_duration);
 
-    struct DistributorMessage dm = {
-      pm.when,
-      pm.sound_file_path,
-      pm.abs_sound_file_path,
-      preroll_file_path,
-      abs_preroll_file_path,
-      sound_duration,
-      preroll_duration
-    };
+    // struct DistributorMessage dm = {
+    //   pm.when,
+    //   pm.sound_file_path,
+    //   pm.abs_sound_file_path,
+    //   preroll_file_path,
+    //   abs_preroll_file_path,
+    //   sound_duration,
+    //   preroll_duration
+    // };
 
-    printf("[distributor] Publishing: %s\n", processed_message);
-    s_send(pub_socket, processed_message);
+    // printf("[distributor] Publishing: %s\n", processed_message);
+    // s_send(pub_socket, processed_message);
   }
+
   free(message);
 
   return finished;

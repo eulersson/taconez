@@ -2,7 +2,7 @@
 #
 # NOTE: (VS Code users) Dev Containers are provided:
 #
-#   https://github.com/eulersson/anesowa/blob/main/docs/5-vs-code.md
+#   https://github.com/eulersson/anesowa/blob/main/docs/5-configuring-your-ide.md#visual-studio-code
 #
 # NOTE: (non-VS Code users) Scripts that wrap the `docker build` and `docker run`:
 #
