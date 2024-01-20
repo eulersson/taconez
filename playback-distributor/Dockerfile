@@ -98,7 +98,10 @@ RUN \
   if [ $SKIP_BUILD = 0 ]; then \
     cmake -S . -B build -DBUILD_TYPE=development --fresh; \
   fi
-RUN if [ $SKIP_BUILD = 0 ]; cmake --build build --verbose; fi
+RUN \
+  if [ $SKIP_BUILD = 0 ]; then \
+    cmake --build build --verbose; \
+  fi
 
 ENTRYPOINT [ "/app/playback-distributor/build/playback_distributor" ]
 
