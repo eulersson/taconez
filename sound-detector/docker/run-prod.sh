@@ -41,7 +41,7 @@ docker run --tty \
   --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $recordings_source_dir:/recordings \
+  --volume $recordings_source_dir:/app/recordings \
   --name $ANESOWA_CONTAINER_NAME \
   $extra_flags \
   anesowa/sound-detector:$ANESOWA_VERSION

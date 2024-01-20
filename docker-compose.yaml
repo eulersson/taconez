@@ -22,7 +22,7 @@ services:
     volumes:
       # TODO: .git folder should be mapped too?
       - ./sound-detector:/app/sound-detector
-      - ./recordings:/recordings
+      - ./recordings:/app/recordings
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
     tty: true
     depends_on:

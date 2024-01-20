@@ -2,23 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
   "name": "Anesowa Sound Detector",
-
   "containerUser": "root",
-
   // // TODO: Only do it if we are not on Linux.
   // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
-
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  "features": {
-    // https://github.com/devcontainers/features/tree/main/src/python
-    // https://github.com/devcontainers/features/blob/main/src/python/install.sh
-    "ghcr.io/devcontainers/features/python:1": {
-      "installTools": true,
-      "installJupyterlab": true,
-      "version": "none"
-    }
-  },
-
   "build": {
     // Since this repository is multi-project, the context of the docker build command
     // must be two levels up because it might need files from libraries shared across
@@ -31,29 +17,59 @@
       "USE_TFLITE": "0"
     }
   },
-
   "containerEnv": {
     "SKIP_RECORDING": "0",
     "SKIP_DETECTION_NOTIFICATION": "0",
     "INFLUX_DB_TOKEN": "no_token"
   },
-
   "mounts": [
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.config/pulse/cookie",
       "target": "/root/.config/pulse/cookie"
+    },
+    {
+      "source": "${localWorkspaceFolder}/recordings",
+      "target": "/app/recordings",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "${localWorkspaceFolder}/prerolls",
+      "target": "/app/prerolls",
+      "type": "bind",
+      "consistency": "cached"
     }
   ],
-
   "customizations": {
     "vscode": {
       "settings": {
-        "python.testing.pytestArgs": ["sound-detector"],
         "python.testing.unittestEnabled": false,
-        "python.testing.pytestEnabled": true
+        "python.testing.pytestEnabled": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
       },
-      "extensions": ["ms-azuretools.vscode-docker", "ms-toolsai.jupyter"]
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-toolsai.jupyter",
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "settings": {
+    "launch": {
+      "configurations": [
+        {
+          // Do not run unless you are within the container.
+          "name": "(Container) Sound Detector",
+          "type": "python",
+          "request": "launch",
+          "cwd": "${workspaceFolder}/sound-detector",
+          "program": "${workspaceFolder}/sound-detector/sound_detector.py",
+          "console": "integratedTerminal",
+        },
+      ]
     }
   }
 }

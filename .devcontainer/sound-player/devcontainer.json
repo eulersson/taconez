@@ -2,12 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
   "name": "Anesowa Sound Player",
-
   "containerUser": "root",
-
   // // TODO: Only do it if we are not on Linux.
   // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
-
   "build": {
     // Since this repository is multi-project, the context of the docker build command
     // must be two levels up because it might need files from libraries shared across
@@ -19,7 +16,6 @@
       "DEPENDENCIES_COMPILE_FROM_SOURCE": "1"
     }
   },
-
   "mounts": [
     {
       "source": "${localEnv:HOME}/.config/pulse/cookie",
@@ -40,13 +36,14 @@
       "consistency": "cached"
     }
   ],
-
   "customizations": {
     "vscode": {
       "settings": {
         "cmake.sourceDirectory": "${workspaceFolder}/sound-player",
         "cmake.buildDirectory": "${workspaceFolder}/sound-player/build",
-        "cmake.configureArgs": ["-DBUILD_TYPE=test"],
+        "cmake.configureArgs": [
+          "-DBUILD_TYPE=test"
+        ],
         "cmake.generator": "Unix Makefiles"
       },
       "extensions": [
@@ -54,7 +51,39 @@
         "ms-vscode.cmake-tools",
         "twxs.cmake",
         "ms-vscode.cpptools",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "settings": {
+    "launch": {
+      "configurations": [
+        {
+          // Do not run unless you are within the container.
+          "name": "(Container) Sound Player",
+          "type": "cppdbg",
+          "request": "launch",
+          "program": "${workspaceFolder}/sound-player/build/sound_player",
+          "args": [],
+          "stopAtEntry": false,
+          "cwd": "${workspaceFolder}/sound-player",
+          "environment": [],
+          "externalConsole": false,
+          "MIMode": "gdb",
+          "setupCommands": [
+            {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+            },
+            {
+              "description": "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+            }
+          ]
+        }
       ]
     }
   }

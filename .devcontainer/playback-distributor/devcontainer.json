@@ -2,12 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
   "name": "Anesowa Playback Distributor",
-
   "containerUser": "root",
-
   // // TODO: Only do it if we are not on Linux.
   // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
-
   "build": {
     // Since this repository is multi-project, the context of the docker build command
     // must be two levels up because it might need files from libraries shared across
@@ -20,7 +17,6 @@
       "SKIP_BUILD": "1"
     }
   },
-
   "mounts": [
     {
       "source": "${localWorkspaceFolder}/recordings",
@@ -35,13 +31,14 @@
       "consistency": "cached"
     }
   ],
-
   "customizations": {
     "vscode": {
       "settings": {
         "cmake.sourceDirectory": "${workspaceFolder}/playback-distributor",
         "cmake.buildDirectory": "${workspaceFolder}/playback-distributor/build",
-        "cmake.configureArgs": ["-DBUILD_TYPE=test"],
+        "cmake.configureArgs": [
+          "-DBUILD_TYPE=test"
+        ],
         "cmake.generator": "Unix Makefiles"
       },
       "extensions": [
@@ -49,7 +46,39 @@
         "ms-vscode.cmake-tools",
         "twxs.cmake",
         "ms-vscode.cpptools",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "settings": {
+    "launch": {
+      "configurations": [
+        {
+          // Do not run unless you are within the container.
+          "name": "(Container) Playback Distributor",
+          "type": "cppdbg",
+          "request": "launch",
+          "program": "${workspaceFolder}/playback-distributor/build/playback_distributor",
+          "args": [],
+          "stopAtEntry": false,
+          "cwd": "${workspaceFolder}/playback-distributor",
+          "environment": [],
+          "externalConsole": false,
+          "MIMode": "gdb",
+          "setupCommands": [
+            {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+            },
+            {
+              "description": "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+            }
+          ]
+        },
       ]
     }
   }

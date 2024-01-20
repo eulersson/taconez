@@ -1,8 +1,8 @@
 # VS Code
 
-Use the **Dev Containers**'s **Rebuild and Reopen in Container** that shows in the
-Commands Palette (<kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> on macOS or *Ctrl* instead
-of ⌘ otherwise) and select the corresponding container:
+Use the **Dev Containers**'s **Reopen in Container** that shows in the Commands Palette
+(<kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> on macOS or *Ctrl* instead of ⌘ otherwise)
+and select the corresponding container:
 
 - Sound Detector
 - Playback Distributor
