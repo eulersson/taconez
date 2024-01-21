@@ -3,7 +3,6 @@ services:
 
   # --- Sound Detector -----------------------------------------------------------------
   sound-detector:
-    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./sound-detector/Dockerfile
@@ -33,7 +32,6 @@ services:
 
   # --- Playback Distributor -----------------------------------------------------------
   playback-distributor:
-    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./playback-distributor/Dockerfile
@@ -58,7 +56,6 @@ services:
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
-    entrypoint: sleep infinity
     build:
       context: .
       dockerfile: ./sound-player/Dockerfile
