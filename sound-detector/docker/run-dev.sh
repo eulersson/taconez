@@ -25,7 +25,6 @@ fi
 RECORDINGS_DIR=$ANESOWA_ROOT/recordings
 mkdir -p $RECORDINGS_DIR
 
-
 docker run --rm --tty --interactive \
   --env PULSE_SERVER=host.docker.internal \
   --env INFLUX_DB_HOST=host.docker.internal \

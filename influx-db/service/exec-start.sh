@@ -18,7 +18,7 @@ INFLUX_DB_TOKEN=${INFLUX_DB_TOKEN:-no_token}
 
 if [[ "$(docker ps -aq --filter name=$INFLUX_DB_CONTAINER_NAME)" = "" ]]; then
   echo Container $INFLUX_DB_CONTAINER_NAME does not exist, creating a new one.
-  set -x;
+  set -x
   docker run \
     --publish 8086:8086 \
     --volume $INFLUX_DB_DATA_PATH:/var/lib/influxdb2 \
@@ -31,10 +31,10 @@ if [[ "$(docker ps -aq --filter name=$INFLUX_DB_CONTAINER_NAME)" = "" ]]; then
     --env DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=$INFLUX_DB_TOKEN \
     --name $INFLUX_DB_CONTAINER_NAME \
     $INFLUX_DB_SERVER_DOCKER_IMAGE
-  set +x;
+  set +x
 else
   echo Container $INFLUX_DB_CONTAINER_NAME already exists, starting instead of creating a new one.
-  set -x;
+  set -x
   docker start --attach $INFLUX_DB_CONTAINER_NAME
-  set +x;
+  set +x
 fi

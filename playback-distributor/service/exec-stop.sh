@@ -2,6 +2,6 @@
 
 ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
 
-set -x;
+set -x
 docker stop $ANESOWA_CONTAINER_NAME
-set +x;
+set +x

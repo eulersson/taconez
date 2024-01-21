@@ -11,13 +11,11 @@
 RUN_DEPENDENCY_TESTS=0
 
 # Check for --with-dependency-tests flag
-for arg in "$@"
-do
-    if [ "$arg" == "--with-dependency-tests" ]
-    then
-        RUN_DEPENDENCY_TESTS=1
-        break
-    fi
+for arg in "$@"; do
+  if [ "$arg" == "--with-dependency-tests" ]; then
+    RUN_DEPENDENCY_TESTS=1
+    break
+  fi
 done
 
 set -x # Print commands as they run.

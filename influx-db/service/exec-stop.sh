@@ -2,6 +2,6 @@
 
 INFLUX_DB_CONTAINER_NAME=${INFLUX_DB_CONTAINER_NAME:-influx-db-server}
 
-set -x;
+set -x
 docker stop $INFLUX_DB_CONTAINER_NAME
-set +x;
+set +x

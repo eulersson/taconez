@@ -17,11 +17,12 @@
         "editor.defaultFormatter": "ms-python.black-formatter"
       },
       "extensions": [
+        "esbenp.prettier-vscode",
+        "foxundermoon.shell-format",
         "ms-azuretools.vscode-docker",
-        "ms-toolsai.jupyter",
-        "ms-python.python",
         "ms-python.black-formatter",
-        "esbenp.prettier-vscode"
+        "ms-python.python",
+        "ms-toolsai.jupyter"
       ]
     }
   },
