@@ -19,7 +19,7 @@ int s_send(void *socket, char *string) {
 // Receive ZeroMQ string from socket and convert into C string. Caller must free
 // returned string. Returns NULL if the context is being terminated.
 char *s_recv(void *socket) {
-  enum { cap = 256 };
+  enum { cap = 1024 };
 
   char buffer[cap];
 

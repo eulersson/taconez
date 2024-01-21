@@ -44,7 +44,7 @@ void test_message_is_propagated_to_players(void) {
                 "\"sound_file_path\": \"a_file_name.wav\","
                 "\"abs_sound_file_path\": \"/app/recordings/a_file_name.wav\" ,"
                 "\"preroll_file_path\": \"posa-t-les-sabatilles.wav\" ,"
-                "\"abs_preroll_file_path\": \"/anesowa/prerolls/posa-t-les-sabatilles.wav\" ,"
+                "\"abs_preroll_file_path\": \"/app/prerolls/posa-t-les-sabatilles.wav\" ,"
                 "\"sound_duration\": \"10.2\" ,"
                 "\"preroll_duration\": \"6.1\" }";
 

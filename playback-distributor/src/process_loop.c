@@ -7,25 +7,25 @@
 #include <anesowa/commons/socket.h>
 
 int process_loop(void *pull_socket, void *pub_socket) {
-  char *message = s_recv(pull_socket);
+  char *message_in_str = s_recv(pull_socket);
 
   // This helps us do assertions on s_send in the tests, since otherwise the string
   // would be freed and would not be able to check the arguments of the s_send mocked
   // function.
-  char processed_message[256];
-  strcpy(processed_message, message);
+  char processed_message_in[256];
+  strcpy(processed_message_in, message_in_str);
 
-  printf("[distributor] Received: %s\n", message);
+  printf("[distributor] Received: %s\n", message_in_str);
 
-  int finished = strcmp(message, "exit") == 0;
+  int finished = strcmp(message_in_str, "exit") == 0;
   if (finished) {
-    printf("[distributor] Telling other players to exit (message: %s)\n",
-           message);
-    s_send(pub_socket, processed_message);
+    printf("[distributor] Telling other players to exit (message_in_str: %s)\n",
+           message_in_str);
+    s_send(pub_socket, processed_message_in);
   } else {
-    struct DetectorMessage pm = parse_detector_message(message);
+    struct DetectorMessage msg_in = parse_detector_message(message_in_str);
     printf("[distributor] When: %ld | Sound file: %s (absolute path %s)\n",
-           pm.when, pm.sound_file_path, pm.abs_sound_file_path);
+           msg_in.when, msg_in.sound_file_path, msg_in.abs_sound_file_path);
 
     // TODO: Instead of hardcoding the prerolls, we should read them from the folder.
     char* prerolls[2];
@@ -36,32 +36,37 @@ int process_loop(void *pull_socket, void *pub_socket) {
     char* preroll_file_path = prerolls[chosen_preroll_index];
     printf("[distributor] Preroll file path: %s\n", preroll_file_path);
 
-    // char *abs_preroll_file_path = malloc(
-    //   strlen("/anesowa/prerolls/") + strlen(preroll_file_path) + 1
-    // );
-    // strcpy(abs_preroll_file_path, "/anesowa/prerolls/");
-    // strcat(abs_preroll_file_path, preroll_file_path);
+    int bytes_to_alloc = strlen("/app/prerolls/") + strlen(preroll_file_path) + 1;
+    char *abs_preroll_file_path = malloc(bytes_to_alloc);
+    strcpy(abs_preroll_file_path, "/app/prerolls/");
+    strcat(abs_preroll_file_path, preroll_file_path);
 
-    // float sound_duration = get_duration(pm.abs_sound_file_path);
-    // printf("[distributor] Sound duration: %f\n", sound_duration);
-    // float preroll_duration = get_duration(abs_preroll_file_path);
-    // printf("[distributor] Preroll duration: %f\n", preroll_duration);
+    float sound_duration = get_duration(msg_in.abs_sound_file_path);
+    printf("[distributor] Sound duration: %f\n", sound_duration);
+    float preroll_duration = get_duration(abs_preroll_file_path);
+    printf("[distributor] Preroll duration: %f\n", preroll_duration);
 
-    // struct DistributorMessage dm = {
-    //   pm.when,
-    //   pm.sound_file_path,
-    //   pm.abs_sound_file_path,
-    //   preroll_file_path,
-    //   abs_preroll_file_path,
-    //   sound_duration,
-    //   preroll_duration
-    // };
+    struct DistributorMessage msg_out = {
+      msg_in.when,
+      msg_in.sound_file_path,
+      msg_in.abs_sound_file_path,
+      preroll_file_path,
+      abs_preroll_file_path,
+      sound_duration,
+      preroll_duration
+    };
 
-    // printf("[distributor] Publishing: %s\n", processed_message);
-    // s_send(pub_socket, processed_message);
+    char *msg_out_str = write_distributor_message(&msg_out);
+
+    printf("[distributor] Publishing: %s\n", msg_out_str);
+    s_send(pub_socket, msg_out_str);
+
+    free(msg_in.abs_sound_file_path);
+    free(abs_preroll_file_path);
+    free(msg_out_str);
   }
 
-  free(message);
+  free(message_in_str);
 
   return finished;
 }
