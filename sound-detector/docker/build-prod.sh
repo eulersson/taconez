@@ -5,11 +5,12 @@
 # Intended for local container development mainly.
 
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
+ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
 docker build \
   --build-arg="DEBUG=0" \
   --build-arg="INSTALL_DEV_DEPS=0" \
   --build-arg="USE_TFLITE=1" \
-  --tag anesowa/sound-detector:prod \
+  --tag anesowa/sound-detector:$ANESOWA_VERSION \
   --file $ANESOWA_ROOT/sound-detector/Dockerfile \
   $ANESOWA_ROOT

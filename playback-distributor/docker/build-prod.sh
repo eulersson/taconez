@@ -11,12 +11,13 @@
 # shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
 ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
+ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
 set -x # Print commands as they run.
 
 docker build \
   --build-arg DEBUG=0 \
-  --tag anesowa/playback-distributor:prod \
+  --tag anesowa/playback-distributor:$ANESOWA_VERSION \
   --file $ANESOWA_ROOT/playback-distributor/Dockerfile \
   --target production \
   $(echo $@) \

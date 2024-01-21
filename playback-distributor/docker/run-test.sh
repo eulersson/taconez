@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Runs the tests of the Playback Distributor module.
+# Runs a test container of the Playback Distributor module.
+#
+# To build an image for it first run ./playback-distributor/docker/build-test.sh (from project root).
 #
 # Usage:
 #

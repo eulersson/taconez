@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Runs the tests of the Playback Distributor module.
+# Runs a test container of the Sound Player module.
+#
+# To build an image for it first run ./sound-player/docker/build-test.sh (from project root).
 #
 # Usage:
 #

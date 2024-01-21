@@ -15,11 +15,11 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
 set -x # Print commands as they run.
 
 docker build \
-	--build-arg DEBUG=0 \
-	--tag anesowa/sound-player:test \
-	--file $ANESOWA_ROOT/sound-player/Dockerfile \
-	--target test \
-	$(echo $@) \
-	$ANESOWA_ROOT
+  --build-arg DEBUG=0 \
+  --tag anesowa/sound-player:test \
+  --file $ANESOWA_ROOT/sound-player/Dockerfile \
+  --target test \
+  $(echo $@) \
+  $ANESOWA_ROOT
 
 set +x

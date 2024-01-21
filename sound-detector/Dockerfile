@@ -103,7 +103,7 @@ RUN eval poetry install --no-interaction \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
   && apt-get autoremove -y --purge
 
-COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py ./
+COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./
 
 ENV SKIP_RECORDING=0
 ENV SKIP_DETECTION_NOTIFICATION=0

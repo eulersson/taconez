@@ -24,9 +24,9 @@ ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-player}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
 if [ "$(uname)" == "Linux" ]; then
-	extra_flags="--add-host=host.docker.internal:host-gateway"
+  extra_flags="--add-host=host.docker.internal:host-gateway"
 else
-	extra_flags=""
+  extra_flags=""
 fi
 
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
@@ -34,13 +34,13 @@ PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 set -x # Print commands as they run.
 
 docker run \
-	--tty \
-	--name $ANESOWA_CONTAINER_NAME \
-	--volume /mnt/nfs/anesowa:/app/recordings:ro \
-	--volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-	--env PULSE_SERVER=host.docker.internal \
-	--volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-	$extra_flags \
-	anesowa/sound-player:$ANESOWA_VERSION
+  --tty \
+  --name $ANESOWA_CONTAINER_NAME \
+  --volume /mnt/nfs/anesowa:/app/recordings:ro \
+  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
+  --env PULSE_SERVER=host.docker.internal \
+  --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
+  $extra_flags \
+  anesowa/sound-player:$ANESOWA_VERSION
 
 set +x
