@@ -12,11 +12,18 @@
   "customizations": {
     "vscode": {
       "settings": {
+        "cmake.automaticReconfigure": true,
+        "cmake.configureOnEdit": true,
         "cmake.sourceDirectory": "${workspaceFolder}/sound-player",
         "cmake.buildDirectory": "${workspaceFolder}/sound-player/build",
         "cmake.configureArgs": [
-          "-DBUILD_TYPE=test"
+          "-DANESOWA_BUILD_TESTS:BOOL=TRUE",
+          "-DANESOWA_BUILD_COMMON_TESTS:BOOL=TRUE",
         ],
+        // TODO: Building Ninja. If you do, you get this error:
+        //
+        //   [build] ninja: file is missing and not created by any action: 'zmq/lib/libzmq.so
+        //
         "cmake.generator": "Unix Makefiles"
       },
       "extensions": [
@@ -37,7 +44,7 @@
           "name": "Debug Sound Player",
           "type": "cppdbg",
           "request": "launch",
-          "program": "${workspaceFolder}/sound-player/build/sound_player",
+          "program": "${workspaceFolder}/sound-player/build/sound-player",
           "args": [],
           "stopAtEntry": false,
           "cwd": "${workspaceFolder}/sound-player",

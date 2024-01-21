@@ -5,22 +5,15 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-project(sound_player)
-
-if(NOT DEFINED BUILD_TYPE)
-  message(
-    FATAL_ERROR
-    "Missing BUILD_TYPE when configuring CMake project, "
-    "pass it on the cmake command as -DBUILD_TYPE=[production | development | test]."
-  )
-endif()
+project(sound-player)
 
 set(ANESOWA_COMMONS_DIR ${PROJECT_SOURCE_DIR}/../lib/c/commons)
 
 # NOTE: Must be included at the top so any call to add_test by subproject and third
 # party dependencies get included and simply running `ctest` on the build folder would
 # run them all.
-if(BUILD_TYPE STREQUAL test)
+option(ANESOWA_BUILD_TESTS "Build playback distribution tests" OFF)
+if(ANESOWA_BUILD_TESTS)
   include(CTest)
   enable_testing()
 endif()
@@ -57,7 +50,17 @@ add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
 target_include_directories(sound-player PRIVATE src)
 target_link_libraries(sound-player PRIVATE anesowa_commons)
 
-if(BUILD_TYPE STREQUAL test)
+# Install playback_distributor binary and all its dependencies so it can run outside the
+# build folder.
+install(TARGETS sound-player)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/zmq/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/zmq/lib DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/cjson/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/cjson/lib DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# We don't simply link anesowa_commons to the test target because we might want to mock
+# some of its functions, that means we have to exclude the mocked code from the sources.
+if(ANESOWA_BUILD_TESTS)
   # Create the tests.
   create_test(test-sound-player tests/test_sound_player.c)
   target_include_directories(

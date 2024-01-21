@@ -1,43 +1,31 @@
 #!/bin/bash
 
-# Runs container of the Sound Player module that runs the tests.
+# Runs the tests of the Playback Distributor module.
 #
 # Usage:
 #
-# ./sound-player/docker/run-test.sh [... extra args to pass to docker run command]
+# ./sound-player/docker/run-test.sh [--with-dependency-tests]
 #
 
-# NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
-# not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
+# Default value
+RUN_DEPENDENCY_TESTS=0
 
-ENTRYPOINT="$1"
-entrypoint=""
-if [ "$ENTRYPOINT" ]; then
-	entrypoint="--entrypoint $ENTRYPOINT"
-fi
-
-if [ "$(uname)" == "Linux" ]; then
-	extra_flags=--add-host=host.docker.internal:host-gateway
-else
-	extra_flags=""
-fi
+# Check for --with-dependency-tests flag
+for arg in "$@"
+do
+    if [ "$arg" == "--with-dependency-tests" ]
+    then
+        RUN_DEPENDENCY_TESTS=1
+        break
+    fi
+done
 
 set -x # Print commands as they run.
 
 docker run \
-	--rm \
-	--tty \
-	--interactive \
-	--volume $ANESOWA_ROOT/sound-player/src:/app/sound-player/src \
-	--volume $ANESOWA_ROOT/sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt \
-	--volume $ANESOWA_ROOT/sound-player/tests:/app/sound-player/tests \
-	--volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
-	--volume $ANESOWA_ROOT/lib/c/commons/tests:/app/lib/c/commons/tests \
-	--volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
-	$entrypoint \
-	$extra_flags \
-	anesowa/sound-player:test
-
+  --rm \
+  --tty \
+  --interactive \
+  -e RUN_DEPENDENCY_TESTS=$RUN_DEPENDENCY_TESTS \
+  anesowa/sound-player:test
 set +x

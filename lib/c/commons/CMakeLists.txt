@@ -7,23 +7,10 @@ endif()
 
 project(anesowa_commons)
 
-if(NOT DEFINED BUILD_TYPE)
-  message(
-    FATAL_ERROR
-    "Missing BUILD_TYPE when configuring CMake project, "
-    "pass it on the cmake command as -DBUILD_TYPE=[production | development | test]."
-  )
-endif()
-
-# NOTE: Must be included at the top so any call to add_test by subproject and third
-# party dependencies get included and simply running `ctest` on the build folder would
-# run them all.
-if(BUILD_TYPE STREQUAL test)
-  set(IS_TEST_BUILD ON)
+option(ANESOWA_BUILD_COMMON_TESTS "Build common (shared library) tests" OFF)
+if(ANESOWA_BUILD_COMMON_TESTS)
   include(CTest)
   enable_testing()
-else()
-  set(IS_TEST_BUILD OFF)
 endif()
 
 set(
@@ -73,7 +60,7 @@ target_include_directories(anesowa_commons PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/i
 target_include_directories(anesowa_commons PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/anesowa/commons)
 
 # Unity & fff (Testing Utilities)
-if(IS_TEST_BUILD)
+if(ANESOWA_BUILD_COMMON_TESTS)
   message("[Dependency] [Unity] Compile from source.")
   add_library(unity_lib ${VENDOR_DIR}/Unity/src/unity.c)
   target_include_directories(unity_lib PUBLIC vendor/Unity/src/)
@@ -97,7 +84,7 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
     CMAKE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/zmq
     CMAKE_CACHE_ARGS
-      -DBUILD_TESTS:BOOL=${IS_TEST_BUILD}
+      -DBUILD_TESTS:BOOL=${ANESOWA_BUILD_COMMON_TESTS}
   )
   list(APPEND anesowa_commons_external_project_added_dependencies zmq)
 else()
@@ -135,7 +122,7 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
     CMAKE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/cjson
     CMAKE_CACHE_ARGS
-      -DENABLE_CJSON_TEST:BOOL=${IS_TEST_BUILD}
+      -DENABLE_CJSON_TEST:BOOL=${ANESOWA_BUILD_COMMON_TESTS}
   )
   list(APPEND anesowa_commons_external_project_added_dependencies cjson)
 else()
@@ -187,7 +174,7 @@ if(DEPENDENCIES_COMPILE_FROM_SOURCE)
   endforeach()
 endif()
 
-if(IS_TEST_BUILD)
+if(ANESOWA_BUILD_COMMON_TESTS)
   # Create the tests.
   create_test(test-duration tests/test_duration.c)
   target_include_directories(

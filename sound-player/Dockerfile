@@ -53,7 +53,7 @@ ARG COMPILABLE_DEPENDENCIES="\
 # For Visual Studio Dev Containers. That way we don't have to wait to compile since the
 # build folder will disappear once we map the volume on top. VS Code mounts the entire
 # repository folder as a volume on top of the container, it's not as selective as the
-# docker scripts in `playback-distributor/docker/run-{dev|pro}`.
+# docker scripts in `sound-player/docker/run-{dev|pro}`.
 ARG SKIP_BUILD=0
 
 FROM alpine:3.19.0 as base
@@ -88,15 +88,24 @@ COPY sound-player/src ./src
 # --- docker run ... --target development ----------------------------------------------
 FROM base as development
 
+# Use args from the global scope.
+#
+#  - Share ARG in multi-stage Dockerfile
+#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
+#
 ARG SKIP_BUILD
 
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake -S . -B build -DBUILD_TYPE=development --fresh; \
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug --fresh; \
   fi
+
+# NOTE: The `--config Debug` is ignored because we use Unix Makefiles, so if you want to
+# change from Debug to Release you need to delete the build folder and configure again.
+# The flag would be honoured if we used Ninja multi-configuration generator.
 RUN \
   if [ $SKIP_BUILD = 0 ]; then\
-    cmake --build build --verbose; \
+    cmake --build build --config Debug --verbose; \
   fi
 
 ENTRYPOINT [ "/app/sound-player/build/sound-player" ]
@@ -104,18 +113,30 @@ ENTRYPOINT [ "/app/sound-player/build/sound-player" ]
 # --- docker run ... --target production -----------------------------------------------
 FROM base as production
 
+# Use args from the global scope.
+#
+#  - Share ARG in multi-stage Dockerfile
+#    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
+#
 ARG SKIP_BUILD
 
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake -S . -B build -DBUILD_TYPE=production; \
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release; \
   fi
 
+# Build the project, install it to the system and remove the source code to keep the
+# container thin.
+#
+# NOTE: The `--config Release` is ignored because we use Unix Makefiles, so if you want to
+# change from Debug to Release you need to delete the build folder and configure again.
+# The flag would be honoured if we used Ninja multi-configuration generator.
+#
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake --build build --verbose && \
-    mv ./build/sound-player . && \
-    rm -rf build; \
+    cmake --build build --config Release --verbose && \
+    && cmake --install build \
+    && rm -rf /app/sound-player; \
   fi
 
 # Cleanup build-time dependencies.
@@ -130,16 +151,10 @@ RUN \
     echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
   fi
 
-ENTRYPOINT [ "/app/sound-player" ]
+ENTRYPOINT [ "/usr/local/bin/sound-player" ]
 
 # --- docker run ... --target test -----------------------------------------------------
 FROM base as test
-
-# NOTE: When using DEV containers VS Code will extend this Dockerfile adding their own
-# build stages, that means that the three we have here (test, production and development)
-# will be ignored and the very last one in the file will be used. Hence, it's important
-# for the test stage to be the last one for development purposes (since we will likely
-# be writing tests and running them in the container).
 
 # Use args from the global scope.
 #
@@ -148,6 +163,7 @@ FROM base as test
 #
 ARG DEBUG
 ARG DEPENDENCIES_COMPILE_FROM_SOURCE
+ARG SKIP_BUILD
 
 ENV DEBUG=$DEBUG
 ENV DEPENDENCIES_COMPILE_FROM_SOURCE=$DEPENDENCIES_COMPILE_FROM_SOURCE
@@ -156,18 +172,32 @@ COPY sound-player/tests ./tests
 
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake -S . -B build -DBUILD_TYPE=test; \
+      cmake -S . -B build \
+        -DCMAKE_BUILD_TYPE:STRING=Debug \
+        -DANESOWA_BUILD_TESTS:BOOL=TRUE \
+        -DANESOWA_BUILD_COMMON_TESTS:BOOL=TRUE; \
   fi
+
+# NOTE: The `--config Debug` is ignored because we use Unix Makefiles, so if you want to
+# change from Debug to Release you need to delete the build folder and configure again.
+# The flag would be honoured if we used Ninja multi-configuration generator.
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake --build build --verbose; \
+    cmake --build build --config Debug --verbose; \
   fi
+
+ENV RUN_DEPENDENCY_TESTS=0
+ENV RUN_PROJECT_TESTS=1
 
 # TODO: Collect results together so one test suite does not stop subsequent ones.
 ENTRYPOINT \
-  echo "RUNNING PROJECT TESTS" \
-  && ctest --output-on-failure --test-dir build  \
-  && echo "RUNNING DEPENDENCY TESTS: cJSON" \
-  && ctest --output-on-failure --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build \
-  && echo "RUNNING DEPENDENCY TESTS: ZeroMQ" \
-  && ctest --output-on-failure --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build
+  if [ $RUN_DEPENDENCY_TESTS = 1 ]; then \
+    echo "::: RUNNING DEPENDENCY TESTS: cJSON :::" \
+      && ctest  --output-on-failure --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build; \
+    echo "::: RUNNING DEPENDENCY TESTS: ZeroMQ :::" \
+      && ctest  --output-on-failure --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build; \
+  fi && \
+  if [ $RUN_PROJECT_TESTS = 1 ]; then \
+    echo "::: RUNNING PROJECT TESTS :::" \
+      && ctest  --output-on-failure --test-dir build --output-on-failure; \
+  fi
