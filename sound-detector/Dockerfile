@@ -33,20 +33,19 @@ ENV DEBUG=$DEBUG
 # - gcc & libc-dev: Needed to compile TensorFlow modules.
 #
 ARG BUILD_TIME_DEPENDENCIES="\
-  gcc=4:12.2.0-3 \
-  libc-dev=2.36-9+deb12u3 \
+  gcc \
+  libc-dev \
   "
 
 ARG RUN_TIME_DEPENDENCIES="\
-  portaudio19-dev=19.6.0-1.2 \
-  libasound2-plugins=1.2.7.1-1 \
+  portaudio19-dev \
+  libasound2-plugins \
   "
 
 ARG DEBUG_DEPENDENCIES="\
-  git \
-  iputils-ping=3:20221126-1 \
-  pulseaudio-utils=16.1+dfsg1-2+b1 \
-  alsa-utils=1.2.8-1 \
+  iputils-ping \
+  pulseaudio-utils \
+  alsa-utils \
   "
 
 # The --no-install-recommends helps limit some of the install so that you can be more

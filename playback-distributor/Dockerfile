@@ -31,7 +31,6 @@ ARG BUILD_DEPENDENCIES="\
   cmake \
   g++ \
   gcc \
-  git \
   make \
   ruby \
   "
@@ -39,7 +38,6 @@ ARG BUILD_DEPENDENCIES="\
 # Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\
   gdb \
-  git \
   iputils-ping \
   pulseaudio-utils \
   alsa-utils \

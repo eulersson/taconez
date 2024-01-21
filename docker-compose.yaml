@@ -21,7 +21,6 @@ services:
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./.git:/app/.git
       - ./sound-detector:/app/sound-detector
       - ./recordings:/app/recordings
       - ./prerolls:/app/prerolls
@@ -42,7 +41,6 @@ services:
     # TODO: Run with non-root user
     user: root
     volumes:
-      - ./.git:/app/.git
       - ./playback-distributor/Dockerfile:/app/playback-distributor/Dockerfile
       - ./playback-distributor/src:/app/playback-distributor/src
       - ./playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt
@@ -70,7 +68,6 @@ services:
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./.git:/app/.git
       - ./sound-player/Dockerfile:/app/sound-player/Dockerfile
       - ./sound-player/src:/app/sound-player/src
       - ./sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt

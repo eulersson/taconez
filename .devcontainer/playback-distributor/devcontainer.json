@@ -24,7 +24,10 @@
         //
         //   [build] ninja: file is missing and not created by any action: 'zmq/lib/libzmq.so
         //
-        "cmake.generator": "Unix Makefiles"
+        "cmake.generator": "Unix Makefiles",
+        "files.associations": {
+          "system_error": "c"
+        }
       },
       "extensions": [
         "esbenp.prettier-vscode",
