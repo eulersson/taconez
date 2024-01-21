@@ -427,7 +427,7 @@ def detect_specific_sounds(
             logging.info("Notifying distributor about detected sound")
             zmq_socket.send_json(
                 {
-                    "sound_file": relative_sound_path,
+                    "sound_file_path": relative_sound_path,
                     "when": time.time(),
                 }
             )

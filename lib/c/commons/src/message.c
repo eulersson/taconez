@@ -17,6 +17,7 @@ struct DetectorMessage parse_detector_message(char *message)
   char *sound_file_path = cJSON_GetObjectItem(json, "sound_file_path")->valuestring;
   printf("[parse_detector_message] Sound file path: %s\n", sound_file_path);
 
+  // Make sure to free this later (it happens in `process_loop.c`).
   char *abs_sound_file_path = malloc(strlen("/app/recordings/") + strlen(sound_file_path) + 1);
   strcpy(abs_sound_file_path, "/app/recordings/");
   strcat(abs_sound_file_path, sound_file_path);
@@ -27,31 +28,32 @@ struct DetectorMessage parse_detector_message(char *message)
 
 struct DistributorMessage parse_distributor_message(char *message)
 {
-  printf("[parse_message] Parsing message: %s\n", message);
+  printf("[parse_distributor_message] Parsing message: %s\n", message);
   cJSON *json = cJSON_Parse(message);
 
   long when = cJSON_GetObjectItem(json, "when")->valueint;
-  printf("[parse_message] When: %ld\n", when);
+  printf("[parse_distributor_message] When: %ld\n", when);
 
   char *sound_file_path = cJSON_GetObjectItem(json, "sound_file_path")->valuestring;
-  printf("[parse_message] Sound file path: %s\n", sound_file_path);
+  printf("[parse_distributor_message] Sound file path: %s\n", sound_file_path);
 
   char *abs_sound_file_path = cJSON_GetObjectItem(json, "abs_sound_file_path")->valuestring;
-  printf("[parse_message] Absolute sound file path: %s\n", abs_sound_file_path);
+  printf("[parse_distributor_message] Absolute sound file path: %s\n", abs_sound_file_path);
 
   char *preroll_file_path = cJSON_GetObjectItem(json, "preroll_file_path")->valuestring;
-  printf("[parse_message] Preroll file path: %s\n", preroll_file_path);
+  printf("[parse_distributor_message] Preroll file path: %s\n", preroll_file_path);
 
+  // Make sure to free this later (it happens in `process_loop.c`).
   char *abs_preroll_file_path = malloc(strlen("/app/recordings/") + strlen(preroll_file_path) + 1);
   strcpy(abs_preroll_file_path, "/app/recordings/");
   strcat(abs_preroll_file_path, preroll_file_path);
-  printf("[parse_detector_message] Absolute prefix file path: %s\n", abs_preroll_file_path);
+  printf("[parse_distributor_message] Absolute prefix file path: %s\n", abs_preroll_file_path);
 
-  int sound_duration = cJSON_GetObjectItem(json, "sound_duration")->valuedouble;
-  printf("[parse_message] Sound duration: %d\n", sound_duration);
+  double sound_duration = cJSON_GetObjectItem(json, "sound_duration")->valuedouble;
+  printf("[parse_distributor_message] Sound duration: %f\n", sound_duration);
 
-  int preroll_duration = cJSON_GetObjectItem(json, "preroll_duration")->valuedouble;
-  printf("[parse_message] Preroll duration: %d\n", preroll_duration);
+  double preroll_duration = cJSON_GetObjectItem(json, "preroll_duration")->valuedouble;
+  printf("[parse_distributor_message] Preroll duration: %f\n", preroll_duration);
 
   return (struct DistributorMessage){
     when,

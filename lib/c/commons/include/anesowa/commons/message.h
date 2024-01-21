@@ -12,8 +12,8 @@ struct DistributorMessage
   char *abs_sound_file_path;
   char *preroll_file_path;
   char *abs_preroll_file_path;
-  float sound_duration;
-  float preroll_duration;
+  double sound_duration;
+  double preroll_duration;
 };
 
 struct DetectorMessage parse_detector_message(char *message);

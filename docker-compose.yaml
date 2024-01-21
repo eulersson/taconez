@@ -1,3 +1,10 @@
+# NOTE: Docker Compose is used only for development. In production the system uses
+# systemd to manage the services. Check the ansible files for more details.
+#
+# WARNING: Linux users will need to apply the `docker-compose.linux.yml` file too:
+#
+#   docker-compose -f docker-compose.yml -f docker-compose.linux.yml up
+#
 version: "3"
 services:
 
@@ -65,6 +72,7 @@ services:
     # TODO: Run with non-root user
     user: root
     environment:
+      - PULSE_SERVER=host.docker.internal
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie

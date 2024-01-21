@@ -1,0 +1,14 @@
+
+services:
+
+  sound-detector:
+    extra_hosts:
+      host.docker.internal: "host-gateway"
+
+  playback-distributor:
+    extra_hosts:
+      host.docker.internal: "host-gateway"
+
+  sound-player:
+    extra_hosts:
+      host.docker.internal: "host-gateway"
