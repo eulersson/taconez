@@ -18,8 +18,6 @@ build/
 
 prerolls/*.wav
 
-recordings/
-
 influx-db/data/
 influx-db/config/
 
