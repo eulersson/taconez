@@ -17,7 +17,7 @@
 # NOTE: Ideally should be run from project root so that docker can copy over files
 # shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
+ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 # If launched by the systemd service these two variables will be set.
 ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
