@@ -17,6 +17,7 @@
   synchronize:
     src: "{{ project_root_local }}/playback-distributor/"
     dest: "{{ project_root_remote }}/playback-distributor"
+    delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
   tags:

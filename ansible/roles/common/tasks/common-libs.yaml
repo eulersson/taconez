@@ -16,6 +16,7 @@
   synchronize:
     src: "{{ project_root_local }}/lib"
     dest: "{{ project_root_remote }}/"
+    delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
   tags: [sync-project, sync-common-lib]
@@ -24,6 +25,7 @@
   synchronize:
     src: "{{ project_root_local }}/{{ item }}"
     dest: "{{ project_root_remote }}/"
+    delete: true
   loop:
     - .asoundrc
     - .dockerignore

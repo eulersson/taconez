@@ -26,6 +26,7 @@
   synchronize:
     src: "{{ project_root_local }}/sound-detector/"
     dest: "{{ project_root_remote }}/sound-detector"
+    delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/sound-detector/.rsync-exclude"
   tags: [sync-project, sync-sound-detector]
