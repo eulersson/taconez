@@ -3,7 +3,6 @@ services:
 
   sound-detector:
     build:
-      target: production
       args:
         DEBUG: 0
         INSTALL_DEV_DEPS: 0

@@ -64,6 +64,9 @@
     build:
       dockerfile: "{{ project_root_remote }}/sound-player/Dockerfile"
       path: "{{ project_root_remote }}"
+      target: production
+      args:
+        DEBUG: 0
     name: anesowa/sound-player
     tag: "{{ project_version }}"
     source: build
