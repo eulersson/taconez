@@ -20,17 +20,17 @@ services:
     # TODO: Run with non-root user
     user: root
     environment:
-      - PULSE_SERVER=host.docker.internal
-      - SKIP_RECORDING=False
-      - SKIP_DETECTION_NOTIFICATION=False
       - INFLUX_DB_HOST=influx-db-server
       - INFLUX_DB_TOKEN=no_token
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
+      - PULSE_SERVER=host.docker.internal
+      - SKIP_DETECTION_NOTIFICATION=False
+      - SKIP_RECORDING=False
     volumes:
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
       - ./sound-detector:/app/sound-detector
-      - ./recordings:/app/recordings
       - ./prerolls:/app/prerolls
+      - ./recordings:/app/recordings
     tty: true
     depends_on:
       - influx-db-server
@@ -43,7 +43,7 @@ services:
       dockerfile: ./playback-distributor/Dockerfile
       args:
         DEBUG: 1
-        DEPENDENCIES_COMPILE_FROM_SOURCE: 1,
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1
       target: development
     # TODO: Run with non-root user
     user: root
@@ -55,8 +55,8 @@ services:
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
       - ./lib/c/commons/include:/app/lib/c/commons/include
       - ./lib/c/commons/src:/app/lib/c/commons/src
-      - ./recordings:/app/recordings:ro
       - ./prerolls:/app/prerolls:ro
+      - ./recordings:/app/recordings:ro
     tty: true
 
   # --- Sound Player -------------------------------------------------------------------
@@ -66,7 +66,7 @@ services:
       dockerfile: ./sound-player/Dockerfile
       args:
         DEBUG: 1
-        DEPENDENCIES_COMPILE_FROM_SOURCE: 1,
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1
       target: development
     image: anesowa/sound-player:dev
     # TODO: Run with non-root user
@@ -83,8 +83,8 @@ services:
       - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
       - ./lib/c/commons/include:/app/lib/c/commons/include
       - ./lib/c/commons/src:/app/lib/c/commons/src
-      - ./recordings:/app/recordings:ro
       - ./prerolls:/app/prerolls:ro
+      - ./recordings:/app/recordings:ro
     tty: true
     depends_on:
       - playback-distributor
