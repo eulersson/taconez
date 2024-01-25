@@ -50,9 +50,9 @@ This is intended to be run in a group of Raspberry Pi
 Under each folder in this repository you will find more information about the particular
 piece.
 
-- [Sound Detector](sound-detector)
-- [Sound Player](sound-player)
-- [Playback Distributor](playback-distributor)
+- [Sound Detector](sound-detector/README.md)
+- [Sound Player](sound-player/README.md)
+- [Playback Distributor](playback-distributor/README.md)
 
 If you are only interested in the provisioning and deployment of the architecture:
 
