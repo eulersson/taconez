@@ -10,6 +10,25 @@ took it as a personal attack, rejecting all kind of mediation. Since I received 
 I decided to use the mirror strategy to see if she realizes how unpleasant it becomes:
 to bounce back her sounds.
 
+## Quickstart
+
+This obviously has to be deployed to Raspberry Pis, automated provisioning and eployment
+is provided to do it and there's a [wiki page](../../wiki/1.-Provisioning-&-Deployment)
+is dedicated to it.
+
+But you can simulate the stack locally with Docker Compose!
+
+**NOTE**: For the microphone and speakers to interact from the container with your host
+computer you will need PulseAudio with the `module-native-protocol-tcp` enabled! And
+before running it ensure the selected default speaker and microphone are correct. The
+[wiki page on container sound](../../wiki/3.-Docker-Container-Sound) explains how to do
+it.
+
+```
+# Configure your PulseAudio sound server and then run:
+docker-compose up
+```
+
 ## Description
 
 This project is composed of various pieces:
