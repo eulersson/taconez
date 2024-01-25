@@ -25,7 +25,7 @@ function(create_test test_name test_src)
     COMMAND
       ruby
       ${VENDOR_DIR}/Unity/auto/generate_test_runner.rb
-      ${VENDOR_DIR}/../project.yml
+      ${VENDOR_DIR}/../project.yaml
       ${test_src_absolute}
       ${test_name}_runner.c
     DEPENDS ${test_src}

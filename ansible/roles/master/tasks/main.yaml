@@ -2,20 +2,20 @@
 # Tasks particular to the Raspberry Pi master node.
 
 - name: Install and configure InfluxDB
-  import_tasks: influx-db.yml
+  import_tasks: influx-db.yaml
   tags:
     - influx-db
 
 - name: Install NFS and configure a share
-  import_tasks: nfs.yml
+  import_tasks: nfs.yaml
   tags:
     - nfs
 
 - name: Building Playback Distributor module
-  import_tasks: playback-distributor.yml
+  import_tasks: playback-distributor.yaml
   tags: [playback-distributor]
 
 - name: Prepare Journal Web App
-  import_tasks: journal.yml
+  import_tasks: journal.yaml
   tags:
     - journal
