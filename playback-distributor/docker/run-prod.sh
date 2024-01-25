@@ -23,13 +23,22 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 
+if [ "$(uname)" == "Linux" ]; then
+  extra_flags="--add-host=host.docker.internal:host-gateway"
+else
+  extra_flags=""
+fi
+
 set -x # Print commands as they run.
 
 docker run \
   --tty \
-  --name $ANESOWA_CONTAINER_NAME \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
   --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
+  --name $ANESOWA_CONTAINER_NAME \
+  --publish 5555:5555 \
+  --publish 5556:5556 \
+  $extra_flags \
   anesowa/playback-distributor:$ANESOWA_VERSION
 
 set +x

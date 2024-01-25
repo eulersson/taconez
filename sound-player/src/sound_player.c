@@ -25,8 +25,17 @@ int main(void) {
   void *context = zmq_ctx_new();
   void *sub_socket = zmq_socket(context, ZMQ_SUB);
 
-  // TODO: Read from environment variable or pass as CLI argument.
-  zmq_connect(sub_socket, "tcp://playback-distributor:5556");
+  char *playback_distributor_host = getenv("PLAYBACK_DISTRIBUTOR_HOST");
+  if(playback_distributor_host == NULL) {
+    playback_distributor_host = "playback-distributor";
+  }
+
+  char playback_distributor_address[100];
+  sprintf(playback_distributor_address, "tcp://%s:5556", playback_distributor_host);
+
+  printf("[player] Connecting to distributor at %s...\n", playback_distributor_address);
+
+  zmq_connect(sub_socket, playback_distributor_address);
 
   zmq_setsockopt(sub_socket, ZMQ_SUBSCRIBE, "", 0);
 

@@ -35,11 +35,12 @@ set -x # Print commands as they run.
 
 docker run \
   --tty \
-  --name $ANESOWA_CONTAINER_NAME \
+  --env PULSE_SERVER=host.docker.internal \
+  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --volume /mnt/nfs/anesowa:/app/recordings:ro \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  --env PULSE_SERVER=host.docker.internal \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
+  --name $ANESOWA_CONTAINER_NAME \
   $extra_flags \
   anesowa/sound-player:$ANESOWA_VERSION
 
