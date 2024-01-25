@@ -41,9 +41,7 @@
 - name: Install Sound Player service
   become: true
   template:
-    src:
-      "{{ project_root_local
-      }}/sound-player/service/sound-player.service.j2"
+    src: "{{ project_root_local}}/sound-player/service/sound-player.service.j2"
     dest: /etc/systemd/system/anesowa-sound-player.service
   tags: [services]
 
@@ -88,7 +86,7 @@
     enabled: true
     state: restarted
     name: anesowa-sound-player.service
-  tags: 
+  tags:
     - services
     - update
     - sound-player-update

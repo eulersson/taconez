@@ -132,6 +132,7 @@ If you want to debug the output of a task you can place a debugger as follows:
   synchronize:
     src: "{{ project_root }}/"
     dest: /app/anesowa
+    delete: true
     rsync_opts:
       - "--exclude-from={{ project_root }}/.rsync-exclude"
   tags:

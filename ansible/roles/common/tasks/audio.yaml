@@ -5,7 +5,7 @@
   stat:
     path: /usr/bin/pulseaudio
   register: pulseaudio_result
-  tags: [ pulseaudio-install ]
+  tags: [pulseaudio-install]
 
 - name: Install PulseAudio
   become: true
@@ -14,120 +14,144 @@
     name: pulseaudio
     state: latest
     update_cache: true
-  tags: [ pulseaudio-install ]
+  tags: [pulseaudio-install]
 
 #
 # - Running PulseAudio as System-Wide Daemon
 #   https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SystemWide/
 #
 - name: Configure PulseAudio to run system-wide instead of per-user
-  tags: [ pulseaudio-system-wide ]
+  tags: [pulseaudio-system-wide]
   block:
     # Many distributions use systemd to start per-user instances of PulseAudio. When
     # using the system mode, the PulseAudio user services need to be disabled in systemd:
-  - name: Disable global PulseAudio service and sockets
-    become: true
-    systemd:
-      enabled: false
-      scope: global
-      name: "{{ item }}"
-    loop:
-      - pulseaudio.service
-      - pulseaudio.socket
+    - name: Disable global PulseAudio service and sockets
+      become: true
+      systemd:
+        enabled: false
+        scope: global
+        name: "{{ item }}"
+      loop:
+        - pulseaudio.service
+        - pulseaudio.socket
 
-  - name: Ensure our user's PulseAudio service and sockets are disabled
-    systemd:
-      enabled: false
-      scope: user
-      name: "{{ item }}"
-      state: stopped
-    loop:
-      - pulseaudio.service
-      - pulseaudio.socket
+    - name: Ensure our user's PulseAudio service and sockets are disabled
+      systemd:
+        enabled: false
+        scope: user
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - pulseaudio.service
+        - pulseaudio.socket
 
-  - name: Install a system-wide PulseAudio service
-    become: true
-    copy:
-      src: pulseaudio.service
-      dest: /etc/systemd/system/pulseaudio.service
+    - name: Install a system-wide PulseAudio service
+      become: true
+      copy:
+        src: pulseaudio.service
+        dest: /etc/systemd/system/pulseaudio.service
 
-  # It's also advisable to set autospawn = no in /etc/pulse/client.conf. It's not
-  # strictly necessary, because even if autospawning is enabled, it won't happen when
-  # PulseAudio is running in the system mode. However, if the daemon stops for some
-  # reason, then autospawning will happen, and that may make debugging more difficult.
-  - name: Disable autospawning on the client config
-    become: true
-    lineinfile:
-      path: /etc/pulse/client.conf
-      regexp: ^; autospawn = yes
-      line: autospawn = no
+    # It's also advisable to set autospawn = no in /etc/pulse/client.conf. It's not
+    # strictly necessary, because even if autospawning is enabled, it won't happen when
+    # PulseAudio is running in the system mode. However, if the daemon stops for some
+    # reason, then autospawning will happen, and that may make debugging more difficult.
+    - name: Disable autospawning on the client config
+      become: true
+      lineinfile:
+        path: /etc/pulse/client.conf
+        regexp: ^; autospawn = yes
+        line: autospawn = no
 
+    - name: Make sure not flat volumes are set
+      become: true
+      lineinfile:
+        path: /etc/pulse/daemon.conf
+        regexp: ^; flat-volumes = no
+        line: flat-volumes = no
 
-  - name: Make sure not flat volumes are set
-    become: true
-    lineinfile:
-      path: /etc/pulse/daemon.conf
-      regexp: ^; flat-volumes = no
-      line: flat-volumes = no
+    - name: Ensure the "pulse", "bluetooth" and "pulse-access" groups exist
+      become: true
+      group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - pulse
+        - audio
+        - bluetooth
+        - pulse-access
 
-  - name: Ensure the "pulse", "bluetooth" and "pulse-access" groups exist
-    become: true
-    group:
-      name: "{{ item }}"
-      state: present
-    loop:
-      - pulse
-      - audio
-      - bluetooth
-      - pulse-access
+    # When PulseAudio starts in the system mode, it will change its user and group from
+    # root to pulse in order to not have too many privileges. The pulse user needs to be
+    # in the audio and bluetooth groups in order to be able to use ALSA and bluetooth
+    # devices. All users that need access to PulseAudio have to be in the pulse-access
+    # group, even root.
+    - name: Add root and pulse users to the "pulse", "bluetooth" and "pulse-access" groups
+      become: true
+      user:
+        name: "{{ item }}"
+        groups: audio, bluetooth, pulse-access
+        append: yes
+      loop:
+        - root
+        - pulse
 
-  # When PulseAudio starts in the system mode, it will change its user and group from
-  # root to pulse in order to not have too many privileges. The pulse user needs to be
-  # in the audio and bluetooth groups in order to be able to use ALSA and bluetooth
-  # devices. All users that need access to PulseAudio have to be in the pulse-access
-  # group, even root.
-  - name: Add root and pulse users to the "pulse", "bluetooth" and "pulse-access" groups
-    become: true
-    user:
-      name: "{{ item }}"
-      groups: audio, bluetooth, pulse-access
-      append: yes
-    loop:
-      - root
-      - pulse
+    - name: Extend PulseAudio Server Startup Script
+      become: true
+      copy:
+        src: "{{ item }}"
+        # When run as --system instead of `/etc/pulse/default.pa` it uses `/etc/pulse/system.pa`.
+        dest: /etc/pulse/system.pa.d/
+      loop:
+        - combine-sinks-and-set-default.pa
+        - enable-tcp.pa
 
-  - name: Extend PulseAudio Server Startup Script
-    become: true
-    copy:
-      src: "{{ item }}"
-      # When run as --system instead of `/etc/pulse/default.pa` it uses `/etc/pulse/system.pa`.
-      dest: /etc/pulse/system.pa.d/
-    loop:
-      - combine-sinks-and-set-default.pa
-      - enable-tcp.pa
-
-  - name: Ensure our system-wide PulseAudio service is enabled and running
-    become: true
-    systemd:
-      enabled: true
-      daemon_reload: true
-      scope: system
-      name: pulseaudio.service 
-      state: restarted
+    - name: Ensure our system-wide PulseAudio service is enabled and running
+      become: true
+      systemd:
+        enabled: true
+        daemon_reload: true
+        scope: system
+        name: pulseaudio.service
+        state: restarted
 
 - name: Set volumes of each sink to maximum
   become: true
   command: pactl set-sink-volume {{ item }} 100%
   loop: "{{ pulse_audio_sinks + [ 'combined' ] }}"
 
-- name: Set volumes of the default source (microphone) to maximum
-  become: true
-  command: pactl set-source-volume {{ pulse_audio_default_source }} 100%
-
 - name: Set default sink to the combined group
   become: true
   command: pactl set-default-sink combined
 
+# Configure the source (microphone) to use.
+- name: Prompt the user for the source (microphone) to use if not defined as a variable
+  when: pulse_audio_default_source is not defined
+  block:
+    - name: Get list of sources available
+      become: true
+      changed_when: false
+      check_mode: no
+      shell: pactl list sources short | awk '{print $2}'
+      register: short_sources_output
+
+    - name: Extract the sources list into a variable
+      set_fact:
+        pa_sources_list: "{{ short_sources_output.stdout_lines }}"
+
+    - name: Prompt user to choose a source from the list
+      pause:
+        prompt: "Please TYPE a source from the list and press ENTER: {{ pa_sources_list }}"
+        echo: yes
+      register: user_choice
+
+    - name: Set user choice as a fact (removing any possible single quotes from the input)
+      set_fact:
+        pulse_audio_default_source: '{{ user_choice.user_input | replace("''", '''') }}'
+
 - name: Set default source (microphone)
   become: true
   command: pactl set-default-source {{ pulse_audio_default_source }}
+
+- name: Set volumes of the default source (microphone) to maximum
+  become: true
+  command: pactl set-source-volume {{ pulse_audio_default_source }} 100%

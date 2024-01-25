@@ -36,10 +36,10 @@ fi
 set -x
 
 docker run --tty \
-  --env PULSE_SERVER=host.docker.internal \
   --env INFLUX_DB_HOST=host.docker.internal \
-  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
+  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
+  --env PULSE_SERVER=host.docker.internal \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $recordings_source_dir:/app/recordings \
   --name $ANESOWA_CONTAINER_NAME \

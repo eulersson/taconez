@@ -16,7 +16,8 @@ ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
 set -x # Print commands as they run.
 
 docker build \
-  --build-arg DEBUG=0 \
+  --build-arg "DEBUG=0" \
+  --build-arg "DEPENDENCIES_COMPILE_FROM_SOURCE=1" \
   --tag anesowa/playback-distributor:$ANESOWA_VERSION \
   --file $ANESOWA_ROOT/playback-distributor/Dockerfile \
   --target production \

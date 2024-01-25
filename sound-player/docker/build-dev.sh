@@ -17,7 +17,8 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
 set -x # Print commands as they run.
 
 docker build \
-  --build-arg DEBUG=1 \
+  --build-arg "DEBUG=1" \
+  --build-arg "DEPENDENCIES_COMPILE_FROM_SOURCE=1" \
   --tag anesowa/sound-player:dev \
   --file $ANESOWA_ROOT/sound-player/Dockerfile \
   --target development \

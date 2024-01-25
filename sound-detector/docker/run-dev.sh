@@ -22,19 +22,17 @@ if [ "$ENTRYPOINT" ]; then
   entrypoint="--entrypoint $ENTRYPOINT"
 fi
 
-RECORDINGS_DIR=$ANESOWA_ROOT/recordings
-mkdir -p $RECORDINGS_DIR
-
 docker run --rm --tty --interactive \
-  --env PULSE_SERVER=host.docker.internal \
   --env INFLUX_DB_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=no_token \
   --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
-  --env SKIP_RECORDING=True \
-  --env SKIP_DETECTION_NOTIFICATION=True \
+  --env PULSE_SERVER=host.docker.internal \
+  --env SKIP_DETECTION_NOTIFICATION=False \
+  --env SKIP_RECORDING=False \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $ANESOWA_ROOT/sound-detector:/app/sound-detector \
-  --volume $RECORDINGS_DIR:/app/recordings \
+  --volume $ANESOWA_ROOT/prerolls:/app/prerolls \
+  --volume $ANESOWA_ROOT/recordings:/app/recordings \
   $extra_flags \
   $entrypoint \
   anesowa/sound-detector:dev

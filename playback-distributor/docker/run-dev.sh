@@ -30,8 +30,8 @@ docker run \
   --volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt \
   --volume $ANESOWA_ROOT/playback-distributor/tests:/app/playback-distributor/tests \
   --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
+  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
   $entrypoint \
   anesowa/playback-distributor:dev
 

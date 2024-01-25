@@ -136,7 +136,7 @@ RUN \
 #
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake --build build --config Release --verbose && \
+    cmake --build build --config Release --verbose \
     && cmake --install build \
     && rm -rf /app/playback-distributor; \
   fi
