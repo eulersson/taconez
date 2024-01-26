@@ -1,5 +1,15 @@
 ---
 # Configures NFS to be used as a client.
 
-- name: TODO Sound Player to implement
-  command: echo TODO
+- name: Create app folder to turn into an NFS share
+  become: true
+  file:
+    path: "/mnt/nfs/anesowa"
+    state: directory
+    owner: anesowa
+    group: anesowa
+    mode: 0755
+
+- name: Mount the NFS share from the master
+  become: true
+  command: mount --types nfs --verbose rpi-master.home:/mnt/nfs/anesowa /mnt/nfs/anesowa

@@ -1,5 +1,7 @@
 ---
 # Tasks particular to the Raspberry Pi slave nodes.
 
-- name: Slace main to implement
-  command: echo This is still to be implemented.
+- name: Configure NFS
+  import_tasks: nfs.yaml
+  tags:
+    - nfs

@@ -95,6 +95,31 @@
         - root
         - pulse
 
+    # Raspberry Pi OS Legacy (bullseye) uses PulseAudio 14.2 which does not load
+    # PulseAudio configuration from `/etc/pulse/system.pa.d/*.pa` out of the box, so we
+    # need to include that folder manually.
+    - name: Check if PulseAudio version is 14.2 or lower
+      become: true
+      shell: pulseaudio --version | awk '{print $2}'
+      register: pulseaudio_version
+      changed_when: false
+      check_mode: no
+    
+    - name: If PulseAudio version is 14.2 or lower, check if the line is already present
+      become: true
+      command: grep -qxF '.include /etc/pulse/system.pa.d' /etc/pulse/system.pa
+      changed_when: false
+      failed_when: false
+      register: grep_result
+      when: pulseaudio_version.stdout is version('14.2', '<=')
+
+    - name: Add line to /etc/pulse/system.pa if not already present
+      become: true
+      lineinfile:
+        path: /etc/pulse/system.pa
+        line: ".include /etc/pulse/system.pa.d"
+      when: pulseaudio_version.stdout is version('14.2', '<=') and grep_result.rc != 0
+
     - name: Extend PulseAudio Server Startup Script
       become: true
       copy:
@@ -151,7 +176,9 @@
 - name: Set default source (microphone)
   become: true
   command: pactl set-default-source {{ pulse_audio_default_source }}
+  when: pulse_audio_default_source is defined
 
 - name: Set volumes of the default source (microphone) to maximum
   become: true
   command: pactl set-source-volume {{ pulse_audio_default_source }} 100%
+  when: pulse_audio_default_source is defined
