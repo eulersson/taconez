@@ -10,3 +10,6 @@ influx_db_server_docker_image: influxdb:2.7.4-alpine
 #   docker exec influx-db-server influx auth list --user anesowa | cut -f 3
 #
 influx_db_token: vsC0Q_nELv6zi1rjkRKjqVnqdwWoRemazl-zfyWiO1bpfK9ET3WdEL3rAPZVAD_9HtPC0ij7qP7uXgkbKkIiXA==
+
+# Since this is the master itself, point to itself.
+playback_distributor_host: host.docker.internal

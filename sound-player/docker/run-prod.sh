@@ -22,6 +22,7 @@ ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
 # If launched by the systemd service these two variables will be set.
 ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-player}
 ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
+PLAYBACK_DISTRIBUTOR_HOST=${PLAYBACK_DISTRIBUTOR_HOST:-host.docker.internal}
 
 if [ "$(uname)" == "Linux" ]; then
   extra_flags="--add-host=host.docker.internal:host-gateway"
@@ -36,7 +37,7 @@ set -x # Print commands as they run.
 docker run \
   --tty \
   --env PULSE_SERVER=host.docker.internal \
-  --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
+  --env PLAYBACK_DISTRIBUTOR_HOST=$PLAYBACK_DISTRIBUTOR_HOST \
   --volume /mnt/nfs/anesowa:/app/recordings:ro \
   --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \

@@ -16,6 +16,7 @@
 - name: Build and run Sound Detector module
   import_tasks: sound-detector.yaml
   tags: [sound-detector]
+  when: has_microphone
 
 - name: Build and run Sound Player module
   import_tasks: sound-player.yaml

@@ -1,0 +1,2 @@
+# Since this is the master itself, point to itself.
+playback_distributor_host: rpi-master.local

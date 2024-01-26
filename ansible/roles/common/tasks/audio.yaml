@@ -150,7 +150,7 @@
 
 # Configure the source (microphone) to use.
 - name: Prompt the user for the source (microphone) to use if not defined as a variable
-  when: pulse_audio_default_source is not defined
+  when: has_microphone and pulse_audio_default_source is not defined
   block:
     - name: Get list of sources available
       become: true

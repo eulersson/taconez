@@ -12,4 +12,4 @@
 
 - name: Mount the NFS share from the master
   become: true
-  command: mount --types nfs --verbose rpi-master.home:/mnt/nfs/anesowa /mnt/nfs/anesowa
+  command: mount --types nfs --verbose rpi-master.local:/mnt/nfs/anesowa /mnt/nfs/anesowa

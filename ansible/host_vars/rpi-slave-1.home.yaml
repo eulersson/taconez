@@ -16,5 +16,8 @@ pulse_audio_sinks:
 # Default speaker to use when playing sound.
 pulse_audio_default_sink: combined
 
+# If no microphone no sound detector will be installed, only the other modules will.
+has_microphone: false
+
 # Default microphone to use when recording sound.
 # pulse_audio_default_source: alsa_input.usb-MUSIC-BOOST_USB_Microphone_MB-306-00.mono-fallback
