@@ -70,7 +70,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY .asoundrc /root/.asoundrc
 
 # Install Poetry and use it to install the project dependencies.
-COPY sound-detector/pyproject.toml sound-detector/poetry.lock sound-detector/README.md ./
+COPY sound-detector/pyproject.toml sound-detector/poetry.lock ./
 RUN pip install --upgrade setuptools wheel \
   && pip install --upgrade keyrings.alt \
   && pip install poetry==1.7.1 \

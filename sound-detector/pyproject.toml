@@ -3,7 +3,6 @@ name = "sound-detector"
 version = "0.1.0"
 description = ""
 authors = ["Ramon Blanquer <blanquer.ramon@gmail.com>"]
-readme = "README.md"
 
 [tool.poetry.dependencies]
 pandas = "^2.1.3"

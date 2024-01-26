@@ -143,6 +143,7 @@
   become: true
   command: pactl set-sink-volume {{ item }} 100%
   loop: "{{ pulse_audio_sinks + [ 'combined' ] }}"
+  when: has_speakers
 
 - name: Set default sink to the combined group
   become: true

@@ -48,9 +48,13 @@
         url: https://download.docker.com/linux/debian/gpg
         state: present
 
-    - name: Add Docker respository
+    - name: Get Debian distribution codename
+      shell: . /etc/os-release && echo "$VERSION_CODENAME"
+      register: debian_codename
+
+    - name: Add Docker repository
       apt_repository:
-        repo: deb https://download.docker.com/linux/debian {{ debian_distro_name }} stable
+        repo: deb https://download.docker.com/linux/debian {{ debian_codename.stdout }} stable
         state: present
 
     - name: Update apt and install docker-ce
