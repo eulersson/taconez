@@ -17,4 +17,4 @@ pulse_audio_sinks:
 pulse_audio_default_sink: combined
 
 # Default microphone to use when recording sound.
-pulse_audio_default_source: alsa_input.usb-MUSIC-BOOST_USB_Microphone_MB-306-00.mono-fallback
+# pulse_audio_default_source: alsa_input.usb-MUSIC-BOOST_USB_Microphone_MB-306-00.mono-fallback
