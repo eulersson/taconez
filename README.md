@@ -20,14 +20,23 @@ is dedicated to it.
 
 But you can simulate the stack locally with Docker Compose!
 
-**NOTE**: For the microphone and speakers to interact from the container with your host
-computer you will need PulseAudio with the `module-native-protocol-tcp` enabled! And
-before running it ensure the selected default speaker and microphone are correct. The
-[wiki page on container sound](../../wiki/3.-Docker-Container-Sound) explains how to do
-it.
+```bash
+# Clone the repository
+git clone https://github.com/eulersson/taconez.wiki.git
 
-```
-# Configure your PulseAudio sound server and then run:
+# Make sure all the submodules (third party dependencies) are installed:
+git submodule update --init --recursive
+
+# Configure your PulseAudio sound server
+brew install pulseaudio
+brew service start pulseaudio
+pactl load-module module-native-protocol-tcp
+pactl list sinks short # see your sound output devices
+pactl set-default-sink <sink-name> # set your default output device
+pactl list sources short # see your sound input devices
+pactl set-default-source <sink-name> # set your default input device
+
+# Start listening for sounds and bouncing them back upon detection. 
 docker-compose up
 ```
 
