@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-sound-detector}
+TACONEZ_CONTAINER_NAME=${TACONEZ_CONTAINER_NAME:-taconez-sound-detector}
 
 set -x
-docker stop $ANESOWA_CONTAINER_NAME
+docker stop $TACONEZ_CONTAINER_NAME
 set +x

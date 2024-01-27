@@ -2,7 +2,7 @@
 #
 # NOTE: (VS Code users) Dev Containers are provided:
 #
-#   https://github.com/eulersson/anesowa/blob/main/docs/5-configuring-your-ide.md#visual-studio-code
+#   https://github.com/eulersson/taconez/blob/main/docs/5-configuring-your-ide.md#visual-studio-code
 #
 # NOTE: (non-VS Code users) Scripts that wrap the `docker build` and `docker run`:
 #
@@ -177,8 +177,8 @@ RUN \
   if [ $SKIP_BUILD = 0 ]; then \
       cmake -S . -B build \
         -DCMAKE_BUILD_TYPE:STRING=Debug \
-        -DANESOWA_BUILD_TESTS:BOOL=TRUE \
-        -DANESOWA_BUILD_COMMON_TESTS:BOOL=TRUE; \
+        -DTACONEZ_BUILD_TESTS:BOOL=TRUE \
+        -DTACONEZ_BUILD_COMMON_TESTS:BOOL=TRUE; \
   fi
 
 # NOTE: The `--config Debug` is ignored because we use Unix Makefiles, so if you want to
@@ -196,9 +196,9 @@ ENV RUN_PROJECT_TESTS=1
 ENTRYPOINT \
   if [ $RUN_DEPENDENCY_TESTS = 1 ]; then \
     echo "::: RUNNING DEPENDENCY TESTS: cJSON :::" \
-      && ctest  --output-on-failure --test-dir build/anesowa_commons/cjson-prefix/src/cjson-build; \
+      && ctest  --output-on-failure --test-dir build/taconez_commons/cjson-prefix/src/cjson-build; \
     echo "::: RUNNING DEPENDENCY TESTS: ZeroMQ :::" \
-      && ctest  --output-on-failure --test-dir build/anesowa_commons/zmq-prefix/src/zmq-build; \
+      && ctest  --output-on-failure --test-dir build/taconez_commons/zmq-prefix/src/zmq-build; \
   fi && \
   if [ $RUN_PROJECT_TESTS = 1 ]; then \
     echo "::: RUNNING PROJECT TESTS :::" \

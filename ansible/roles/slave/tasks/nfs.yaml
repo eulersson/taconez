@@ -4,12 +4,12 @@
 - name: Create app folder to turn into an NFS share
   become: true
   file:
-    path: "/mnt/nfs/anesowa"
+    path: "/mnt/nfs/taconez"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
 
 - name: Mount the NFS share from the master
   become: true
-  command: mount --types nfs --verbose rpi-master.local:/mnt/nfs/anesowa /mnt/nfs/anesowa
+  command: mount --types nfs --verbose rpi-master.local:/mnt/nfs/taconez /mnt/nfs/taconez

@@ -1,6 +1,6 @@
 """Detects, records and informs upon detecting specific sounds.
 
-https://github.com/eulersson/anesowa/tree/main/sound-detector
+https://github.com/eulersson/taconez/tree/main/sound-detector
 
 """
 
@@ -260,7 +260,7 @@ def write_db_entry(slugified_class_name, relative_sound_path):
           `2023/12/10/2023-12-10-16-43.wav`.
     """
     client = influxdb_client.InfluxDBClient(
-        url=INFLUX_DB_ADDR, org="anesowa", token=INFLUX_DB_TOKEN
+        url=INFLUX_DB_ADDR, org="taconez", token=INFLUX_DB_TOKEN
     )
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -269,7 +269,7 @@ def write_db_entry(slugified_class_name, relative_sound_path):
         .tag("sound", slugified_class_name)
         .field("soundfile", relative_sound_path)
     )
-    write_api.write(bucket="anesowa", org="anesowa", record=p)
+    write_api.write(bucket="taconez", org="taconez", record=p)
 
 
 def record_audio() -> Tuple[List[NDArray], bytes]:

@@ -3,9 +3,9 @@
 #include <string.h>
 #include <time.h>
 
-#include <anesowa/commons/duration.h>
-#include <anesowa/commons/message.h>
-#include <anesowa/commons/socket.h>
+#include <taconez/commons/duration.h>
+#include <taconez/commons/message.h>
+#include <taconez/commons/socket.h>
 
 #include "play.h"
 #include "time_utils.h"

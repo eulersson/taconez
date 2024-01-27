@@ -7,13 +7,13 @@ endif()
 
 project(sound-player)
 
-set(ANESOWA_COMMONS_DIR ${PROJECT_SOURCE_DIR}/../lib/c/commons)
+set(TACONEZ_COMMONS_DIR ${PROJECT_SOURCE_DIR}/../lib/c/commons)
 
 # NOTE: Must be included at the top so any call to add_test by subproject and third
 # party dependencies get included and simply running `ctest` on the build folder would
 # run them all.
-option(ANESOWA_BUILD_TESTS "Build playback distribution tests" OFF)
-if(ANESOWA_BUILD_TESTS)
+option(TACONEZ_BUILD_TESTS "Build playback distribution tests" OFF)
+if(TACONEZ_BUILD_TESTS)
   include(CTest)
   enable_testing()
 endif()
@@ -27,14 +27,14 @@ endif()
 #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Shared dependencies: Add anesowa common library and include paths.
+# Shared dependencies: Add taconez common library and include paths.
 set(WANTS_PULSEAUDIO ON)
 
-# By linking to anesowa-common after the WANTS_CJSON, WANTS_PULSEAUDIO, ... options
+# By linking to taconez-common after the WANTS_CJSON, WANTS_PULSEAUDIO, ... options
 # there's no further need to link or add include directories for cJSON, PulseAudio, ...
-# since it will be provided through the anesowa_commons lib. See the CMakeLists.txt on
+# since it will be provided through the taconez_commons lib. See the CMakeLists.txt on
 # `lib/c/commons/CMakeLists.txt`.
-add_subdirectory(${ANESOWA_COMMONS_DIR} anesowa_commons)
+add_subdirectory(${TACONEZ_COMMONS_DIR} taconez_commons)
 
 set(
   SOUND_PLAYER_SOURCE_FILES
@@ -48,7 +48,7 @@ set(
 )
 add_executable(sound-player ${SOUND_PLAYER_SOURCE_FILES})
 target_include_directories(sound-player PRIVATE src)
-target_link_libraries(sound-player PRIVATE anesowa_commons)
+target_link_libraries(sound-player PRIVATE taconez_commons)
 
 # Install playback_distributor binary and all its dependencies so it can run outside the
 # build folder.
@@ -58,16 +58,16 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/zmq/lib DESTINATION ${CMAKE_INSTALL_PREFIX
 install(DIRECTORY ${CMAKE_BINARY_DIR}/cjson/include DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/cjson/lib DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# We don't simply link anesowa_commons to the test target because we might want to mock
+# We don't simply link taconez_commons to the test target because we might want to mock
 # some of its functions, that means we have to exclude the mocked code from the sources.
-if(ANESOWA_BUILD_TESTS)
+if(TACONEZ_BUILD_TESTS)
   # Create the tests.
   create_test(test-sound-player tests/test_sound_player.c)
   target_include_directories(
     test-sound-player
     PRIVATE
-    ${ANESOWA_COMMONS_DIR}/include
-    ${ANESOWA_COMMONS_DIR}/include/anesowa/commons
+    ${TACONEZ_COMMONS_DIR}/include
+    ${TACONEZ_COMMONS_DIR}/include/taconez/commons
   )
 
   target_link_libraries(test-sound-player PRIVATE cjson_lib pulseaudio_lib)
@@ -90,7 +90,7 @@ if(ANESOWA_BUILD_TESTS)
     commons_sources
     src/socket.c
   )
-  list(TRANSFORM commons_sources PREPEND "${ANESOWA_COMMONS_DIR}/")
+  list(TRANSFORM commons_sources PREPEND "${TACONEZ_COMMONS_DIR}/")
 
   target_sources(test-sound-player PRIVATE ${sources} ${commons_sources})
 endif()

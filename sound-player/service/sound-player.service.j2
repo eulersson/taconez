@@ -1,12 +1,12 @@
 [Unit]
-Description=Anesowa Sound Player
+Description=Taconez Sound Player
 BindsTo=docker.service
 After=docker.service
 
 [Service]
 Type=exec
 Restart=always
-Environment=ANESOWA_VERSION={{ project_version }}
+Environment=TACONEZ_VERSION={{ project_version }}
 Environment=PULSEAUDIO_COOKIE=/var/run/pulse/.config/pulse/cookie
 Environment=PLAYBACK_DISTRIBUTOR_HOST={{ playback_distributor_host }}
 ExecStart={{ services_root_remote }}/sound-player/exec-start.sh

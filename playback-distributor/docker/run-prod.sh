@@ -4,7 +4,7 @@
 #
 # This script will be launched by the Raspberry Pi systemd service's ExecStart:
 #
-# - playback-distributor/service/anesowa-playback-distributor.service
+# - playback-distributor/service/taconez-playback-distributor.service
 # - playback-distributor/service/exec-start.sh
 #
 # You can also launch it from the local machine instead too for debugging purposes.
@@ -15,13 +15,13 @@
 #
 
 # NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# shared across the various containers and images (e.g. taconez_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 # If launched by the systemd service these two variables will be set.
-ANESOWA_CONTAINER_NAME=${ANESOWA_CONTAINER_NAME:-anesowa-playback-distributor}
-ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
+TACONEZ_CONTAINER_NAME=${TACONEZ_CONTAINER_NAME:-taconez-playback-distributor}
+TACONEZ_VERSION=${TACONEZ_VERSION:-prod}
 
 if [ "$(uname)" == "Linux" ]; then
   extra_flags="--add-host=host.docker.internal:host-gateway"
@@ -33,12 +33,12 @@ set -x # Print commands as they run.
 
 docker run \
   --tty \
-  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
-  --name $ANESOWA_CONTAINER_NAME \
+  --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
+  --volume $TACONEZ_ROOT/recordings:/app/recordings:ro \
+  --name $TACONEZ_CONTAINER_NAME \
   --publish 5555:5555 \
   --publish 5556:5556 \
   $extra_flags \
-  anesowa/playback-distributor:$ANESOWA_VERSION
+  taconez/playback-distributor:$TACONEZ_VERSION
 
 set +x

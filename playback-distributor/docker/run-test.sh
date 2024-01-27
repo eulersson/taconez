@@ -27,5 +27,5 @@ docker run \
   --tty \
   --interactive \
   -e RUN_DEPENDENCY_TESTS=$RUN_DEPENDENCY_TESTS \
-  anesowa/playback-distributor:test
+  taconez/playback-distributor:test
 set +x

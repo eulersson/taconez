@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <anesowa/commons/duration.h>
-#include <anesowa/commons/message.h>
-#include <anesowa/commons/socket.h>
+#include <taconez/commons/duration.h>
+#include <taconez/commons/message.h>
+#include <taconez/commons/socket.h>
 
 int process_loop(void *pull_socket, void *pub_socket) {
   char *message_in_str = s_recv(pull_socket);

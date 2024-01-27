@@ -10,9 +10,9 @@
 #
 
 # NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# shared across the various containers and images (e.g. taconez_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 ENTRYPOINT="$1"
 entrypoint=""
@@ -26,13 +26,13 @@ docker run \
   --rm \
   --tty \
   --interactive \
-  --volume $ANESOWA_ROOT/playback-distributor/src:/app/playback-distributor/src \
-  --volume $ANESOWA_ROOT/playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/playback-distributor/tests:/app/playback-distributor/tests \
-  --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
+  --volume $TACONEZ_ROOT/playback-distributor/src:/app/playback-distributor/src \
+  --volume $TACONEZ_ROOT/playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt \
+  --volume $TACONEZ_ROOT/playback-distributor/tests:/app/playback-distributor/tests \
+  --volume $TACONEZ_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
+  --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
+  --volume $TACONEZ_ROOT/recordings:/app/recordings:ro \
   $entrypoint \
-  anesowa/playback-distributor:dev
+  taconez/playback-distributor:dev
 
 set +x

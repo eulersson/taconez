@@ -9,7 +9,7 @@ set -x
 
 ENTRYPOINT="$1"
 
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
 extra_flags=""
@@ -30,11 +30,11 @@ docker run --rm --tty --interactive \
   --env SKIP_DETECTION_NOTIFICATION=False \
   --env SKIP_RECORDING=False \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --volume $ANESOWA_ROOT/sound-detector:/app/sound-detector \
-  --volume $ANESOWA_ROOT/prerolls:/app/prerolls \
-  --volume $ANESOWA_ROOT/recordings:/app/recordings \
+  --volume $TACONEZ_ROOT/sound-detector:/app/sound-detector \
+  --volume $TACONEZ_ROOT/prerolls:/app/prerolls \
+  --volume $TACONEZ_ROOT/recordings:/app/recordings \
   $extra_flags \
   $entrypoint \
-  anesowa/sound-detector:dev
+  taconez/sound-detector:dev
 
 set +x

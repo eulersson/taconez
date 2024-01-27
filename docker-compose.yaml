@@ -68,7 +68,7 @@ services:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
       target: development
-    image: anesowa/sound-player:dev
+    image: taconez/sound-player:dev
     # TODO: Run with non-root user
     user: root
     environment:
@@ -94,8 +94,8 @@ services:
     image: influxdb:2.7.4-alpine
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: anesowa
+      DOCKER_INFLUXDB_INIT_USERNAME: taconez
       DOCKER_INFLUXDB_INIT_PASSWORD: ufftQDZNDESRALXi5NbS
-      DOCKER_INFLUXDB_INIT_ORG: anesowa
-      DOCKER_INFLUXDB_INIT_BUCKET: anesowa
+      DOCKER_INFLUXDB_INIT_ORG: taconez
+      DOCKER_INFLUXDB_INIT_BUCKET: taconez
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token

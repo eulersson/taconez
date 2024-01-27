@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
-  "name": "Anesowa Playback Distributor",
+  "name": "Taconez Playback Distributor",
   "dockerComposeFile": [
     "../../docker-compose.yaml",
     "../../docker-compose.vs-code.yaml"
@@ -17,8 +17,8 @@
         "cmake.sourceDirectory": "${workspaceFolder}/playback-distributor",
         "cmake.buildDirectory": "${workspaceFolder}/playback-distributor/build",
         "cmake.configureArgs": [
-          "-DANESOWA_BUILD_TESTS:BOOL=TRUE",
-          "-DANESOWA_BUILD_COMMON_TESTS:BOOL=TRUE",
+          "-DTACONEZ_BUILD_TESTS:BOOL=TRUE",
+          "-DTACONEZ_BUILD_COMMON_TESTS:BOOL=TRUE",
         ],
         // TODO: Building Ninja. If you do, you get this error:
         //

@@ -6,8 +6,8 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
   loop:
     - "{{ project_root_remote }}/sound-detector"
@@ -16,10 +16,10 @@
 - name: Create directory where recordings will go in case it doesn't exist
   become: true
   file:
-    path: "/mnt/nfs/anesowa"
+    path: "/mnt/nfs/taconez"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
 
 - name: Synchronize Sound Detector project files
@@ -48,20 +48,20 @@
   template:
     src:
       "{{ project_root_local }}/sound-detector/service/sound-detector.service.j2"
-    dest: /etc/systemd/system/anesowa-sound-detector.service
+    dest: /etc/systemd/system/taconez-sound-detector.service
   tags: [services]
 
 
 - name: Ensure Sound Detector service is stopped
   become: true
   systemd:
-    name: anesowa-sound-detector.service
+    name: taconez-sound-detector.service
     state: stopped
 
 - name: Ensure no Sound Detector containers exist
   become: true
   docker_container:
-    name: anesowa-sound-detector
+    name: taconez-sound-detector
     state: absent
 
 - name: Build Sound Detector image
@@ -75,7 +75,7 @@
         DEBUG: 0
         INSTALL_DEV_DEPS: 0
         USE_TFLITE: 1
-    name: anesowa/sound-detector
+    name: taconez/sound-detector
     tag: "{{ project_version }}"
     source: build
   tags: [build-image]
@@ -93,5 +93,5 @@
     daemon_reload: true
     enabled: true
     state: restarted
-    name: anesowa-sound-detector.service
+    name: taconez-sound-detector.service
   tags: [services]

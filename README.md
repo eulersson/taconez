@@ -1,7 +1,9 @@
-# anesowa: (A)nnoying (Ne)ighbour (So)nic (Wa)rfare
+# taconez
 
-AI IoT Raspberry Pi powered solution to detect, analyse and react against discomforting
-high heel sounds by projecting them back to their source.
+Sound warfare against your upper neighbour's high heel walks.
+ 
+AI IoT Raspberry Pi powered solution to detect, analyse, plot and react against
+discomforting sounds, by bouncing them back to their source.
 
 ## Motivation
 
@@ -44,8 +46,8 @@ This project is composed of various pieces:
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/anesowa.drawio.dark.svg">
-    <img alt="Architecture Diagram" src="./docs/images/anesowa.drawio.light.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/taconez.drawio.dark.svg">
+    <img alt="Architecture Diagram" src="./docs/images/taconez.drawio.light.svg">
   </picture>
 </p>
 

@@ -6,8 +6,8 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
   loop:
     - "{{ project_root_remote }}/lib"

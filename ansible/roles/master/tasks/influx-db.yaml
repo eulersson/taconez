@@ -6,8 +6,8 @@
   file:
     path: "{{ services_root_remote }}/influx-db"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
 
 - name: Install Influx DB service scripts (ExecStart, ExecStop)

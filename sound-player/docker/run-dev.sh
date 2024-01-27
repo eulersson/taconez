@@ -10,9 +10,9 @@
 #
 
 # NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# shared across the various containers and images (e.g. taconez_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
 
 ENTRYPOINT="$1"
 entrypoint=""
@@ -36,15 +36,15 @@ docker run \
   --interactive \
   --env PULSE_SERVER=host.docker.internal \
   --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
-  --volume $ANESOWA_ROOT/sound-player/src:/app/sound-player/src \
-  --volume $ANESOWA_ROOT/sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/sound-player/tests:/app/sound-player/tests \
-  --volume $ANESOWA_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
-  --volume $ANESOWA_ROOT/prerolls:/app/prerolls:ro \
-  --volume $ANESOWA_ROOT/recordings:/app/recordings:ro \
+  --volume $TACONEZ_ROOT/sound-player/src:/app/sound-player/src \
+  --volume $TACONEZ_ROOT/sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt \
+  --volume $TACONEZ_ROOT/sound-player/tests:/app/sound-player/tests \
+  --volume $TACONEZ_ROOT/lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt \
+  --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
+  --volume $TACONEZ_ROOT/recordings:/app/recordings:ro \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   $extra_flags \
   $entrypoint \
-  anesowa/sound-player:dev
+  taconez/sound-player:dev
 
 set +x

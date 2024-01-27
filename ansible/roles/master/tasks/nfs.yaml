@@ -11,10 +11,10 @@
 - name: Create app folder to turn into an NFS share
   become: true
   file:
-    path: "/mnt/nfs/anesowa"
+    path: "/mnt/nfs/taconez"
     state: directory
-    owner: anesowa
-    group: anesowa
+    owner: taconez
+    group: taconez
     mode: 0755
 
 # TODO: Do not allow anonymous access?

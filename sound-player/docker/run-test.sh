@@ -29,5 +29,5 @@ docker run \
   --tty \
   --interactive \
   -e RUN_DEPENDENCY_TESTS=$RUN_DEPENDENCY_TESTS \
-  anesowa/sound-player:test
+  taconez/sound-player:test
 set +x

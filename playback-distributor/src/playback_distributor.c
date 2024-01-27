@@ -5,8 +5,8 @@
 #include <cjson/cJSON.h>
 #include <zmq.h>
 
-#include <anesowa/commons/message.h>
-#include <anesowa/commons/socket.h>
+#include <taconez/commons/message.h>
+#include <taconez/commons/socket.h>
 
 #include "process_loop.h"
 

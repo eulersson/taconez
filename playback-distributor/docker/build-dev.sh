@@ -12,9 +12,9 @@
 #
 
 # NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# shared across the various containers and images (e.g. taconez_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/playback-distributor.*||')
 
 set -x # Print commands as they run.
 
@@ -22,9 +22,9 @@ docker build \
   --build-arg "DEBUG=1" \
   --build-arg "DEPENDENCIES_COMPILE_FROM_SOURCE=1" \
   --target development \
-  --tag anesowa/playback-distributor:dev \
-  --file $ANESOWA_ROOT/playback-distributor/Dockerfile \
+  --tag taconez/playback-distributor:dev \
+  --file $TACONEZ_ROOT/playback-distributor/Dockerfile \
   $(echo $@) \
-  $ANESOWA_ROOT
+  $TACONEZ_ROOT
 
 set +x

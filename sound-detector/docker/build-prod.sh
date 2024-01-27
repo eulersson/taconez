@@ -4,13 +4,13 @@
 #
 # Intended for local container development mainly.
 
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
-ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/sound-detector.*||')
+TACONEZ_VERSION=${TACONEZ_VERSION:-prod}
 
 docker build \
   --build-arg="DEBUG=0" \
   --build-arg="INSTALL_DEV_DEPS=0" \
   --build-arg="USE_TFLITE=1" \
-  --tag anesowa/sound-detector:$ANESOWA_VERSION \
-  --file $ANESOWA_ROOT/sound-detector/Dockerfile \
-  $ANESOWA_ROOT
+  --tag taconez/sound-detector:$TACONEZ_VERSION \
+  --file $TACONEZ_ROOT/sound-detector/Dockerfile \
+  $TACONEZ_ROOT

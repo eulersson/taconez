@@ -24,10 +24,10 @@ if [[ "$(docker ps -aq --filter name=$INFLUX_DB_CONTAINER_NAME)" = "" ]]; then
     --volume $INFLUX_DB_DATA_PATH:/var/lib/influxdb2 \
     --volume $INFLUX_DB_CONFIG_PATH:/etc/influxdb2 \
     --env DOCKER_INFLUXDB_INIT_MODE=setup \
-    --env DOCKER_INFLUXDB_INIT_USERNAME=anesowa \
+    --env DOCKER_INFLUXDB_INIT_USERNAME=taconez \
     --env DOCKER_INFLUXDB_INIT_PASSWORD=$INFLUX_DB_PASSWORD \
-    --env DOCKER_INFLUXDB_INIT_ORG=anesowa \
-    --env DOCKER_INFLUXDB_INIT_BUCKET=anesowa \
+    --env DOCKER_INFLUXDB_INIT_ORG=taconez \
+    --env DOCKER_INFLUXDB_INIT_BUCKET=taconez \
     --env DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=$INFLUX_DB_TOKEN \
     --name $INFLUX_DB_CONTAINER_NAME \
     $INFLUX_DB_SERVER_DOCKER_IMAGE

@@ -5,7 +5,7 @@ After=docker.service
 
 [Service]
 Type=exec
-Environment=ANESOWA_PROJECT_ROOT={{ project_root_remote }}
+Environment=TACONEZ_PROJECT_ROOT={{ project_root_remote }}
 Environment=INFLUX_DB_SERVER_DOCKER_IMAGE={{ influx_db_server_docker_image }}
 Environment=INFLUX_DB_TOKEN={{ influx_db_token }}
 ExecStart={{ services_root_remote }}/influx-db/exec-start.sh

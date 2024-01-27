@@ -8,20 +8,20 @@
 #
 
 # NOTE: Ideally should be run from project root so that docker can copy over files
-# shared across the various containers and images (e.g. anesowa_root/lib/c/common). If
+# shared across the various containers and images (e.g. taconez_root/lib/c/common). If
 # not run from root we protect the script by finding the root as follows.
-ANESOWA_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
-ANESOWA_VERSION=${ANESOWA_VERSION:-prod}
+TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/sound-player.*||')
+TACONEZ_VERSION=${TACONEZ_VERSION:-prod}
 
 set -x # Print commands as they run.
 
 docker build \
   --build-arg "DEBUG=0" \
   --build-arg "DEPENDENCIES_COMPILE_FROM_SOURCE=1" \
-  --tag anesowa/sound-player:$ANESOWA_VERSION \
-  --file $ANESOWA_ROOT/sound-player/Dockerfile \
+  --tag taconez/sound-player:$TACONEZ_VERSION \
+  --file $TACONEZ_ROOT/sound-player/Dockerfile \
   --target production \
   $(echo $@) \
-  $ANESOWA_ROOT
+  $TACONEZ_ROOT
 
 set +x

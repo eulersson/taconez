@@ -14,9 +14,9 @@ void tearDown(void) {}
  * Then it returns the duration of the audio in seconds
  */
 void test_duration(void) { 
-    // This test can get run by executables built by anesowa/lib/c/commons/CMakelists.txt
-    // or by anesowa/playback-distributor/CMakelists.txt or by
-    // anesowa/sound-player/CMakelists.txt, depending on the case the sample to find
+    // This test can get run by executables built by taconez/lib/c/commons/CMakelists.txt
+    // or by taconez/playback-distributor/CMakelists.txt or by
+    // taconez/sound-player/CMakelists.txt, depending on the case the sample to find
     // might be in a different relative path.
     char *sample_path1 = "../../../prerolls/sample.wav";
     char *sample_path2 = "../../../../prerolls/sample.wav";
@@ -34,7 +34,7 @@ void test_duration(void) {
         return;
     }
     
-    // Intended to be run from anesowa/playback-distributor or anesowa/sound-player.
+    // Intended to be run from taconez/playback-distributor or taconez/sound-player.
     float duration = get_duration(sample_path);
     printf("Duration: %f\n", duration);
     TEST_ASSERT_EQUAL(30.00, duration);
