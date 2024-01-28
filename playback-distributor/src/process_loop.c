@@ -28,6 +28,7 @@ int process_loop(void *pull_socket, void *pub_socket) {
            msg_in.when, msg_in.sound_file_path, msg_in.abs_sound_file_path);
 
     // TODO: Instead of hardcoding the prerolls, we should read them from the folder.
+    // https://github.com/eulersson/taconez/issues/33
     char* prerolls[2];
     prerolls[0] = "posa-t-sabatilles.wav";
     prerolls[1] = "vale-ja-amb-els-tacons.wav";

@@ -49,6 +49,7 @@ int main(void) {
   }
 
   printf("[player] Bye!\n");
+  // TODO: Fix the hanging of zmq_close https://github.com/eulersson/taconez/issues/94
   zmq_close(sub_socket);
   zmq_ctx_destroy(context);
   return 0;

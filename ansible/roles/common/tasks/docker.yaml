@@ -63,7 +63,7 @@
         state: latest
         update_cache: true
 
-    # TODO: Is the Docker SDK needed?
+    # TODO: Is the Docker SDK needed? https://github.com/eulersson/taconez/issues/91
     - name: Install Python Docker SDK in our virtual environment
       pip:
         name: docker

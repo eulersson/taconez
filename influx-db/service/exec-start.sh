@@ -8,7 +8,7 @@
 # - Section: Custom Initialization Scripts (https://hub.docker.com/_/influxdb)
 #
 
-# TODO: Use secret somehow.
+# TODO: Use secret somehow https://github.com/eulersson/taconez/issues/32
 INFLUX_DB_PASSWORD=${INFLUX_DB_PASSWORD:-ufftQDZNDESRALXi5NbS}
 INFLUX_DB_DATA_PATH=${INFLUX_DB_DATA_PATH:-/influx-db/data}
 INFLUX_DB_CONFIG_PATH=${INFLUX_DB_CONFIG_PATH:-/influx-db/config}

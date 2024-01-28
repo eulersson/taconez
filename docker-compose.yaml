@@ -17,7 +17,7 @@ services:
         DEBUG: 1
         INSTALL_DEV_DEPS: 1
         USE_TFLITE: 1
-    # TODO: Run with non-root user
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     environment:
       - INFLUX_DB_HOST=influx-db-server
@@ -45,7 +45,7 @@ services:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
       target: development
-    # TODO: Run with non-root user
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:
       - ./playback-distributor/Dockerfile:/app/playback-distributor/Dockerfile
@@ -69,7 +69,7 @@ services:
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
       target: development
     image: taconez/sound-player:dev
-    # TODO: Run with non-root user
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     environment:
       - PULSE_SERVER=host.docker.internal

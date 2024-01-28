@@ -144,7 +144,7 @@ def model_predict(model, waveform: NDArray) -> NDArray:
     return scores
 
 
-# TODO: Resolve the model type better. At the moment "Any" is used.
+# TODO: Resolve the model type better. At the moment "Any" is used https://github.com/eulersson/taconez/issues/95
 def load_model_and_labels() -> Tuple[Any, List[str]]:
     """Loads the model to run classify audio and class names for those predictions.
 
@@ -394,7 +394,7 @@ def detect_specific_sounds(
         logging.info(f"Batch predictions: {predictions}")
         logging.info(f"Batch highest scores: {specific_sound_highest_scores}")
 
-    # TODO: Implement this value and then calibrate it.
+    # TODO: Implement this value and then calibrate it https://github.com/eulersson/taconez/issues/30
     detected = len(predictions)
 
     if not detected:

@@ -30,7 +30,7 @@ int main(void) {
 
   printf("[distributor] Bye!\n");
 
-  // TODO: Why doesn't it exit cleanly? It hangs here...
+  // TODO: Fix the hanging of zmq_close https://github.com/eulersson/taconez/issues/94
   zmq_close(pull_socket);
   zmq_ctx_destroy(context);
   return 0;

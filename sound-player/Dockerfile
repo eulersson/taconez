@@ -189,7 +189,6 @@ RUN \
 ENV RUN_DEPENDENCY_TESTS=0
 ENV RUN_PROJECT_TESTS=1
 
-# TODO: Collect results together so one test suite does not stop subsequent ones.
 ENTRYPOINT \
   if [ $RUN_DEPENDENCY_TESTS = 1 ]; then \
     echo "::: RUNNING DEPENDENCY TESTS: cJSON :::" \

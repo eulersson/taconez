@@ -20,7 +20,9 @@
           "-DTACONEZ_BUILD_TESTS:BOOL=TRUE",
           "-DTACONEZ_BUILD_COMMON_TESTS:BOOL=TRUE",
         ],
-        // TODO: Building Ninja. If you do, you get this error:
+        // TODO: Building Ninja https://github.com/eulersson/taconez/issues/90
+        //
+        // If you do, you get this error:
         //
         //   [build] ninja: file is missing and not created by any action: 'zmq/lib/libzmq.so
         //

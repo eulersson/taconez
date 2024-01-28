@@ -32,8 +32,6 @@ tensorflow-cpu = [
     { version = "~2.13.0", platform = "linux", markers = "platform_machine!='arm64' and platform_machine!='aarch64'" },
     { version = "~2.13.0", platform = "darwin", markers = "platform_machine!='arm64' and platform_machine!='aarch64'" }
 ]
-# TODO: Once packaged and ready to run in TensorFlow Lite, on Raspberry Pi (linux arm64)
-# do not install tensorflow-cpu-aws and install only tflite-runtime instead.
 tensorflow-cpu-aws = { version = "~2.13.0", platform = "linux", markers = "platform_machine=='arm64' or platform_machine=='aarch64'" }
 tensorflow-io = "~0.34.0"
 tensorflow-hub = "~0.15.0"
