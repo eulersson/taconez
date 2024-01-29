@@ -44,8 +44,8 @@ struct DistributorMessage parse_distributor_message(char *message)
   printf("[parse_distributor_message] Preroll file path: %s\n", preroll_file_path);
 
   // Make sure to free this later (it happens in `process_loop.c`).
-  char *abs_preroll_file_path = malloc(strlen("/app/recordings/") + strlen(preroll_file_path) + 1);
-  strcpy(abs_preroll_file_path, "/app/recordings/");
+  char *abs_preroll_file_path = malloc(strlen("/app/prerolls/") + strlen(preroll_file_path) + 1);
+  strcpy(abs_preroll_file_path, "/app/prerolls/");
   strcat(abs_preroll_file_path, preroll_file_path);
   printf("[parse_distributor_message] Absolute prefix file path: %s\n", abs_preroll_file_path);
 
