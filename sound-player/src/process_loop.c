@@ -16,11 +16,11 @@ int process_loop(void *sub_socket) {
 
   int finished = strcmp(message, "exit") == 0;
   if (finished) {
-    printf("[distributor] Received orders to shut down (message: %s)\n",
+    printf("[player] Received orders to shut down (message: %s)\n",
            message);
   } else {
     struct DistributorMessage pm = parse_distributor_message(message);
-    printf("[distributor] When: %ld | "
+    printf("[player] When: %ld | "
            "Sound file: %s (absolute path %s) | "
            "Preroll file: %s (absolute path %s) | "
            "Sound duration: %f |"
@@ -38,26 +38,24 @@ int process_loop(void *sub_socket) {
 
     // Make sure it's not too late to play the sound.
     long time_delta = difftime(now, pm.when);
-    printf("[distributor] Time delta: %ld\n", time_delta);
+    printf("[player] Time delta: %ld\n", time_delta);
     // TODO: Make the 10 seconds a configuration parameter https://github.com/eulersson/taconez/issues/97
     if (time_delta < 10) {
-      printf("[distributor] In time to play the sound. Honouring the play of %s.\n", pm.abs_sound_file_path);
+      printf("[player] In time to play the sound. Honouring the play of %s.\n", pm.abs_sound_file_path);
 
-      // TODO: Play pre-roll before the sound... After the preroll is finished it should
+      // Play the pre-roll before the sound... After the preroll is finished it should
       // play the following sound afterwards.
-      //
-      // https://github.com/eulersson/taconez/issues/33
-      //
-      // // play_sound(pm.abs_preroll_file_path);
+      printf("[player] PLAY START preroll %s.\n", pm.abs_preroll_file_path);
+      play_sound(pm.abs_preroll_file_path);
+      printf("[player] PLAY END preroll %s.\n", pm.abs_preroll_file_path);
 
-      // TODO: Synchronize it so the sound is played after the preroll.
-      //
-      //   https://github.com/eulersson/taconez/issues/33
-      //
+      // Synchronize it so the sound is played after the preroll.
+      printf("[player] PLAY START sound %s.\n", pm.abs_sound_file_path);
       play_sound(pm.abs_sound_file_path);
+      printf("[player] PLAY END sound %s.\n", pm.abs_sound_file_path);
     } else {
       printf(
-        "[distributor] It's too late to play the sound (%ld seconds ago). Skipping.\n",
+        "[player] It's too late to play the sound (%ld seconds ago). Skipping.\n",
         time_delta
       );
     }

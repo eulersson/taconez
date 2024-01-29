@@ -29,9 +29,10 @@ int process_loop(void *pull_socket, void *pub_socket) {
 
     // TODO: Instead of hardcoding the prerolls, we should read them from the folder.
     // https://github.com/eulersson/taconez/issues/33
-    char* prerolls[2];
-    prerolls[0] = "posa-t-sabatilles.wav";
-    prerolls[1] = "vale-ja-amb-els-tacons.wav";
+    char* prerolls[3];
+    prerolls[0] = "preroll_1.wav";
+    prerolls[1] = "preroll_2.wav";
+    prerolls[2] = "preroll_3.wav";
 
     int chosen_preroll_index = rand() % 2;
     char* preroll_file_path = prerolls[chosen_preroll_index];

@@ -7,6 +7,6 @@ s.connect("tcp://playback-distributor:5555")
 s.send_json(
     {
         "when": int(time.time()),
-        "sound_file_path": "2024/1/20/2024-01-20T15:11:15.914063_finger_snapping.wav",
+        "sound_file_path": "2024/1/27/2024-01-27T10:19:36.373235_alarm.wav",
     }
 )
