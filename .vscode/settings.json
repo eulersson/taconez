@@ -1,5 +1,10 @@
 {
     "cmake.configureOnOpen": false,
     "cmake.automaticReconfigure": false,
-    "cmake.configureOnEdit": false
+    "cmake.configureOnEdit": false,
+    "files.associations": {
+        "system_error": "c",
+        "fcntl.h": "c",
+        "play.h": "c"
+    }
 }
