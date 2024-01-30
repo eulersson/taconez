@@ -40,6 +40,8 @@ set(
   PLAYBACK_DISTRIBUTOR_SOURCE_FILES
   src/process_loop.h
   src/process_loop.c
+  src/preroll.h
+  src/preroll.c
   src/playback_distributor.c
 )
 add_executable(playback-distributor ${PLAYBACK_DISTRIBUTOR_SOURCE_FILES})
@@ -57,17 +59,16 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/cjson/lib DESTINATION ${CMAKE_INSTALL_PREF
 # We don't simply link taconez_commons to the test target because we might want to mock
 # some of its functions, that means we have to exclude the mocked code from the sources.
 if(TACONEZ_BUILD_TESTS)
-  # Create the tests.
-  create_test(test-playback-distributor tests/test_playback_distributor.c)
-  target_include_directories(
-    test-playback-distributor
-    PRIVATE
+  set(
+    PROJECT_TESTS
+    test_playback_distributor
+    test_preroll_select
+  )
+
+  set(PROJECT_TESTS_INCLUDE_DIRS
     ${TACONEZ_COMMONS_DIR}/include
     ${TACONEZ_COMMONS_DIR}/include/taconez/commons
   )
-
-  target_include_directories(test-playback-distributor PRIVATE src)
-  target_link_libraries(test-playback-distributor PRIVATE cjson_lib)
 
   # Add sources removing mocked code to avoid "duplicate symbol" linking errors.
   file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.c)
@@ -87,5 +88,15 @@ if(TACONEZ_BUILD_TESTS)
   )
   list(TRANSFORM commons_sources PREPEND "${TACONEZ_COMMONS_DIR}/")
 
-  target_sources(test-playback-distributor PRIVATE ${sources} ${commons_sources})
+  foreach(test_name ${PROJECT_TESTS})
+    create_test(${test_name} tests/${test_name}.c)
+    target_include_directories(
+      ${test_name}
+      PRIVATE
+      ${PROJECT_TESTS_INCLUDE_DIRS}
+    )
+    target_include_directories(${test_name} PRIVATE src)
+    target_link_libraries(${test_name} PRIVATE cjson_lib)
+    target_sources(${test_name} PRIVATE ${sources} ${commons_sources})
+  endforeach()
 endif()

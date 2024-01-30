@@ -77,6 +77,6 @@ char* write_distributor_message(struct DistributorMessage *message) {
   cJSON_AddNumberToObject(json, "sound_duration", message->sound_duration);
   cJSON_AddNumberToObject(json, "preroll_duration", message->preroll_duration);
 
-  char *json_string = cJSON_Print(json);
+  char *json_string = cJSON_PrintUnformatted(json);
   return json_string;
 }

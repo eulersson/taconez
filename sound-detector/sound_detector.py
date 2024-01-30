@@ -1,8 +1,4 @@
-"""Detects, records and informs upon detecting specific sounds.
-
-https://github.com/eulersson/taconez/tree/main/sound-detector
-
-"""
+"""Detects, records and informs upon detecting specific sounds."""
 
 import logging
 import os
