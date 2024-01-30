@@ -70,6 +70,8 @@
             }
           ]
         },
+        // TODO: Have a CTest gdb configuration that works for Debugging Tests!
+        // https://github.com/eulersson/taconez/issues/100
       ]
     }
   }

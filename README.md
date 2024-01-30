@@ -12,6 +12,10 @@ took it as a personal attack, rejecting all kind of mediation. Since I received 
 I decided to use the mirror strategy to see if she realizes how unpleasant it becomes:
 to bounce back her sounds.
 
+## Progress
+
+To see the progress development check out its [GitHub Project](https://github.com/users/eulersson/projects/6).
+
 ## Quickstart
 
 This obviously has to be deployed to Raspberry Pis, automated provisioning and eployment
