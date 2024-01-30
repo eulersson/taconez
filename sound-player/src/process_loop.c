@@ -1,3 +1,17 @@
+// Copyright 2024 Ramon Blanquer Ruiz
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,15 +24,22 @@
 #include "play.h"
 #include "time_utils.h"
 
-int process_loop(void *sub_socket) {
+/**
+ * Receive a message from the distributor, parse it, and play the sound.
+ */
+int process_loop(void *sub_socket)
+{
   char *message = s_recv(sub_socket);
   printf("[player] Received: %s\n", message);
 
   int finished = strcmp(message, "exit") == 0;
-  if (finished) {
+  if (finished)
+  {
     printf("[player] Received orders to shut down (message: %s)\n",
            message);
-  } else {
+  }
+  else
+  {
     struct DistributorMessage pm = parse_distributor_message(message);
     printf("[player] When: %ld | "
            "Sound file: %s (absolute path %s) | "
@@ -40,7 +61,8 @@ int process_loop(void *sub_socket) {
     long time_delta = difftime(now, pm.when);
     printf("[player] Time delta: %ld\n", time_delta);
     // TODO: Make the 10 seconds a configuration parameter https://github.com/eulersson/taconez/issues/97
-    if (time_delta < 10) {
+    if (time_delta < 10)
+    {
       printf("[player] In time to play the sound. Honouring the play of %s.\n", pm.abs_sound_file_path);
 
       // Play the pre-roll before the sound... After the preroll is finished it should
@@ -53,11 +75,12 @@ int process_loop(void *sub_socket) {
       printf("[player] PLAY START sound %s.\n", pm.abs_sound_file_path);
       play_sound(pm.abs_sound_file_path);
       printf("[player] PLAY END sound %s.\n", pm.abs_sound_file_path);
-    } else {
+    }
+    else
+    {
       printf(
-        "[player] It's too late to play the sound (%ld seconds ago). Skipping.\n",
-        time_delta
-      );
+          "[player] It's too late to play the sound (%ld seconds ago). Skipping.\n",
+          time_delta);
     }
 
     // Free the dynamically allocated string (see message.c).
