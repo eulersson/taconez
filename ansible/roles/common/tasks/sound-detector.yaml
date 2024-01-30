@@ -29,7 +29,6 @@
     delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/sound-detector/.rsync-exclude"
-  tags: [sync-project, sync-sound-detector]
 
 - name: Install Sound Detector service scripts (ExecStart, ExecStop)
   template:
@@ -41,16 +40,14 @@
       dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
     - src: "{{ project_root_local }}/sound-detector/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
-  tags: [services]
+  tags: [service, service-sound-detector]
 
 - name: Install Sound Detector service
   become: true
   template:
-    src:
-      "{{ project_root_local }}/sound-detector/service/sound-detector.service.j2"
+    src: "{{ project_root_local }}/sound-detector/service/sound-detector.service.j2"
     dest: /etc/systemd/system/taconez-sound-detector.service
-  tags: [services]
-
+  tags: [service, service-sound-detector]
 
 - name: Ensure Sound Detector service is stopped
   become: true
@@ -78,14 +75,12 @@
     name: taconez/sound-detector
     tag: "{{ project_version }}"
     source: build
-  tags: [build-image]
 
 - name: Clean dangling images
   become: true
   docker_prune:
     images: true
     images_filters: dangling=true
-  tags: [build-image]
 
 - name: Restart Sound Detector service
   become: true
@@ -94,4 +89,4 @@
     enabled: true
     state: restarted
     name: taconez-sound-detector.service
-  tags: [services]
+  tags: [service, service-sound-detector]

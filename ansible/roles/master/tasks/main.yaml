@@ -3,13 +3,11 @@
 
 - name: Install and configure InfluxDB
   import_tasks: influx-db.yaml
-  tags:
-    - influx-db
+  tags: [influx-db]
 
 - name: Install NFS and configure a share
   import_tasks: nfs.yaml
-  tags:
-    - nfs
+  tags: [nfs-server]
 
 - name: Building Playback Distributor module
   import_tasks: playback-distributor.yaml
@@ -17,5 +15,4 @@
 
 - name: Prepare Journal Web App
   import_tasks: journal.yaml
-  tags:
-    - journal
+  tags: [journal]

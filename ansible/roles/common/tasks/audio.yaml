@@ -5,7 +5,6 @@
   stat:
     path: /usr/bin/pulseaudio
   register: pulseaudio_result
-  tags: [pulseaudio-install]
 
 - name: Install PulseAudio
   become: true
@@ -14,14 +13,12 @@
     name: pulseaudio
     state: latest
     update_cache: true
-  tags: [pulseaudio-install]
 
 #
 # - Running PulseAudio as System-Wide Daemon
 #   https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SystemWide/
 #
 - name: Configure PulseAudio to run system-wide instead of per-user
-  tags: [pulseaudio-system-wide]
   block:
     # Many distributions use systemd to start per-user instances of PulseAudio. When
     # using the system mode, the PulseAudio user services need to be disabled in systemd:
@@ -104,7 +101,7 @@
       register: pulseaudio_version
       changed_when: false
       check_mode: no
-    
+
     - name: If PulseAudio version is 14.2 or lower, check if the line is already present
       become: true
       command: grep -qxF '.include /etc/pulse/system.pa.d' /etc/pulse/system.pa

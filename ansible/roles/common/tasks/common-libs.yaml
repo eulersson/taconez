@@ -19,7 +19,6 @@
     delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
-  tags: [sync-project, sync-common-lib]
 
 - name: Synchronize other files that are shared across modules
   synchronize:
@@ -29,4 +28,3 @@
   loop:
     - .asoundrc
     - .dockerignore
-  tags: [sync-project, sync-common-files]

@@ -1,6 +1,6 @@
 - hosts: master
   roles:
     - role: common
-      tags: [ common ]
+      tags: [common]
     - role: master
-      tags: [ master ]
+      tags: [master]

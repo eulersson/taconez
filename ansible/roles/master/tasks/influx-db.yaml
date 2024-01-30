@@ -20,7 +20,7 @@
       dest: "{{ services_root_remote }}/influx-db/exec-start.sh"
     - src: "{{ project_root_local }}/influx-db/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/influx-db/exec-stop.sh"
-  tags: [services]
+  tags: [service, service-influx-db]
 
 - name: Install Influx DB service
   become: true
@@ -28,7 +28,7 @@
     src:
       "{{ project_root_local }}/influx-db/service/influx-db.service.j2"
     dest: /etc/systemd/system/influx-db.service
-  tags: [services]
+  tags: [service, service-influx-db]
 
 - name: Pull Influx DB Docker image used by the service
   become: true
@@ -55,4 +55,4 @@
     enabled: true
     state: restarted
     name: influx-db.service
-  tags: [services]
+  tags: [service, service-influx-db]

@@ -3,4 +3,4 @@
 
 - name: Configure NFS
   import_tasks: nfs.yaml
-  tags: [nfs]
+  tags: [nfs-client]

@@ -20,11 +20,6 @@
     delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/sound-player/.rsync-exclude"
-  tags:
-    - sync-project
-    - sync-sound-player
-    - update
-    - sound-player-update
 
 - name: Install Sound Player service scripts (ExecStart, ExecStop)
   template:
@@ -36,26 +31,28 @@
       dest: "{{ services_root_remote }}/sound-player/exec-start.sh"
     - src: "{{ project_root_local }}/sound-player/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/sound-player/exec-stop.sh"
-  tags: [services]
+  tags: [service, service-sound-player]
 
 - name: Install Sound Player service
   become: true
   template:
     src: "{{ project_root_local}}/sound-player/service/sound-player.service.j2"
     dest: /etc/systemd/system/taconez-sound-player.service
-  tags: [services]
+  tags: [service, service-sound-player]
 
 - name: Ensure Sound Player service is stopped
   become: true
   systemd:
     name: taconez-sound-player.service
     state: stopped
+  tags: [service, service-sound-player]
 
 - name: Ensure no Sound Player containers exist
   become: true
   docker_container:
     name: taconez-sound-player
     state: absent
+  tags: [service, service-sound-player]
 
 - name: Build Sound Player image
   become: true
@@ -70,17 +67,12 @@
     name: taconez/sound-player
     tag: "{{ project_version }}"
     source: build
-  tags:
-    - build-image
-    - update
-    - sound-player-update
 
 - name: Clean dangling images
   become: true
   docker_prune:
     images: true
     images_filters: dangling=true
-  tags: [build-image]
 
 - name: Restart Sound Player service
   become: true
@@ -89,7 +81,4 @@
     enabled: true
     state: restarted
     name: taconez-sound-player.service
-  tags:
-    - services
-    - update
-    - sound-player-update
+  tags: [service, service-sound-player]

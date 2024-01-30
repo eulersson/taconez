@@ -20,11 +20,6 @@
     delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
-  tags:
-    - sync-project
-    - sync-playback-distributor
-    - update
-    - playback-distributor-update
 
 - name: Install Playback Distributor service scripts (ExecStart, ExecStop)
   template:
@@ -36,7 +31,7 @@
       dest: "{{ services_root_remote }}/playback-distributor/exec-start.sh"
     - src: "{{ project_root_local }}/playback-distributor/service/exec-stop.sh"
       dest: "{{ services_root_remote }}/playback-distributor/exec-stop.sh"
-  tags: [services]
+  tags: [service, service-playback-distributor]
 
 - name: Install Playback Distributor service
   become: true
@@ -45,7 +40,7 @@
       "{{ project_root_local
       }}/playback-distributor/service/playback-distributor.service.j2"
     dest: /etc/systemd/system/taconez-playback-distributor.service
-  tags: [services]
+  tags: [service, service-playback-distributor]
 
 - name: Ensure Playback Distributor service is stopped
   become: true
@@ -72,17 +67,12 @@
     name: taconez/playback-distributor
     tag: "{{ project_version }}"
     source: build
-  tags:
-    - build-image
-    - update
-    - playback-distributor-update
 
 - name: Clean dangling images
   become: true
   docker_prune:
     images: true
     images_filters: dangling=true
-  tags: [build-image]
 
 - name: Restart Playback Distributor service
   become: true
@@ -91,7 +81,4 @@
     enabled: true
     state: restarted
     name: taconez-playback-distributor.service
-  tags: 
-    - services
-    - update
-    - playback-distributor-update
+  tags: [service, service-playback-distributor]
