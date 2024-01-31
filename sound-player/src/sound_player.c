@@ -50,6 +50,7 @@ int main(void)
 
   zmq_connect(sub_socket, playback_distributor_address);
 
+  // Subscribe to all messages.
   zmq_setsockopt(sub_socket, ZMQ_SUBSCRIBE, "", 0);
 
   printf("[player] Ready!\n");

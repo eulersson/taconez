@@ -112,7 +112,9 @@ AUDIO_INFERENCE_BATCH_SIZE = 5
 p = pyaudio.PyAudio()
 
 # Last time a sound was played backed over the speakers.
-last_play: int | None = None
+last_play_at: int | None = None
+last_play_sound_duration: float | None = None
+last_play_preroll_duration: float | None = None
 
 # Duration in seconds of the last preroll that was selected.
 preroll_durations: Dict[str, float] = {}
@@ -358,16 +360,23 @@ def detect_specific_sounds(
     # Check if sound had been playing last few seconds to avoid analyzing sound that was
     # recorded while a speaker was playing a recorded sound and hence avoid feedback
     # speaker-microphone.
-    if last_play:
-        seconds_since_last_play = int(time.time()) - last_play
+    global last_play_at, last_play_sound_duration, last_play_preroll_duration
+    if last_play_at:
+        seconds_since_last_play = int(time.time()) - last_play_at
         is_sound_playing = seconds_since_last_play < (
-            AUDIO_INFERENCE_BATCH_SIZE * AUDIO_INFERENCE_SECONDS + last_preroll_duration
+            last_play_sound_duration + last_play_preroll_duration
         )
         if is_sound_playing:
             logging.info(
-                "Skipping sound processing because sound has been played during "
-                "recording and might cause feedback."
+                "[last_play_*] Skipping sound processing because sound was being played "
+                "during recording and might cause feedback."
             )
+            return
+        else:
+            logging.info("[last_play_*] Resetting values.")
+            last_play_at = None
+            last_play_sound_duration = None
+            last_play_preroll_duration = None
 
     # Run inference on the model to see what sound hsa been detected.
     predictions: List[Tuple[str, float]] = []
@@ -451,9 +460,10 @@ def pull_sound_play_events(socket: zmq.Socket):
         logging.info(msg)
 
         if isinstance(msg, dict) and msg.get("when"):
-            global last_play
-            last_play = msg["when"]
-
+            global last_play_at, last_play_sound_duration, last_play_preroll_duration
+            last_play_at = msg["when"]
+            last_play_sound_duration = msg["sound_duration"]
+            last_play_preroll_duration = msg["preroll_duration"]
 
 def parse_preroll_durations():
     for preroll_file_name in os.listdir(PREROLLS_DIR):
@@ -479,17 +489,21 @@ if __name__ == "__main__":
         )
         push_socket = context.socket(zmq.PUSH)
         push_socket.connect(ZMQ_DISTRIBUTOR_PUSH_ADDR)
-        logging.info("Connected ZMQ PUSH socket.")
+        logging.info(f"Connected ZMQ PUSH socket ({ZMQ_DISTRIBUTOR_PUSH_ADDR}).")
 
-        # sub_socket = context.socket(zmq.SUB)
-        # sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
-        # logging.info("Connected ZMQ SUB socket.")
+        sub_socket = context.socket(zmq.SUB)
+        sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
 
-        # # Listen to "sound playing" messages as a separate thread.
-        # thread = threading.Thread(
-        #     target=pull_sound_play_events, args=(sub_socket,), daemon=True
-        # )
-        # thread.start()
+        # Subscribe to all messages
+        sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+
+        logging.info(f"Connected ZMQ SUB socket ({ZMQ_DISTRIBUTOR_SUB_ADDR}).")
+
+        # Listen to "sound playing" messages as a separate thread.
+        thread = threading.Thread(
+            target=pull_sound_play_events, args=(sub_socket,), daemon=True
+        )
+        thread.start()
 
     model, labels = load_model_and_labels()
 
