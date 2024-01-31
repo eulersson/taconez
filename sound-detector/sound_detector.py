@@ -427,7 +427,6 @@ def detect_specific_sounds(
     # - Switch to use either normal or retrained network
     #   https://github.com/eulersson/taconez/issues/80
     #
-
     detected = len(predictions)
 
     if not detected:
