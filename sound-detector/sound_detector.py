@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Detects, records and informs upon detecting specific sounds.
-"""
+"""Detects, records and informs upon detecting specific sounds."""
 
 import logging
 import os
@@ -336,14 +334,32 @@ def record_audio() -> Tuple[List[NDArray], bytes]:
     return waveforms, waveform_binary
 
 
+def has_been_recording_while_sound_was_playing() -> bool:
+    """Check if sound had been playing last few seconds to avoid analyzing sound that
+    was recorded while a speaker was playing a recorded sound and hence avoid feedback
+    speaker-microphone.
+    """
+    global last_play_at, last_play_sound_duration, last_play_preroll_duration
+    if last_play_at:
+        seconds_since_last_play = int(time.time()) - last_play_at
+        is_sound_playing = seconds_since_last_play < (
+            last_play_sound_duration + last_play_preroll_duration
+        )
+        if not is_sound_playing:
+            logging.info("[last_play_*] Resetting values.")
+            last_play_at = None
+            last_play_sound_duration = None
+            last_play_preroll_duration = None
+        return is_sound_playing
+
+
 def detect_specific_sounds(
     model,
     labels: List[str],
     detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,
 ) -> None:
-    """
-    Continuously records audio segments form the microphone and passes it to the model
+    """Continuously records audio segments form the microphone and passes it to the model
     to see if the prediction catches the specific sound.
 
     If a detection happens the analyzed audio file is written down to an NFS-shared
@@ -357,26 +373,12 @@ def detect_specific_sounds(
     """
     waveforms, waveform_binary = record_audio()
 
-    # Check if sound had been playing last few seconds to avoid analyzing sound that was
-    # recorded while a speaker was playing a recorded sound and hence avoid feedback
-    # speaker-microphone.
-    global last_play_at, last_play_sound_duration, last_play_preroll_duration
-    if last_play_at:
-        seconds_since_last_play = int(time.time()) - last_play_at
-        is_sound_playing = seconds_since_last_play < (
-            last_play_sound_duration + last_play_preroll_duration
+    if has_been_recording_while_sound_was_playing():
+        logging.info(
+            "[last_play_*] Skipping sound processing because sound was being played "
+            "during recording and might cause feedback."
         )
-        if is_sound_playing:
-            logging.info(
-                "[last_play_*] Skipping sound processing because sound was being played "
-                "during recording and might cause feedback."
-            )
-            return
-        else:
-            logging.info("[last_play_*] Resetting values.")
-            last_play_at = None
-            last_play_sound_duration = None
-            last_play_preroll_duration = None
+        return
 
     # Run inference on the model to see what sound hsa been detected.
     predictions: List[Tuple[str, float]] = []
@@ -464,6 +466,7 @@ def pull_sound_play_events(socket: zmq.Socket):
             last_play_at = msg["when"]
             last_play_sound_duration = msg["sound_duration"]
             last_play_preroll_duration = msg["preroll_duration"]
+
 
 def parse_preroll_durations():
     for preroll_file_name in os.listdir(PREROLLS_DIR):
