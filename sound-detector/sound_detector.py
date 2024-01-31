@@ -417,7 +417,17 @@ def detect_specific_sounds(
         logging.info(f"Batch predictions: {predictions}")
         logging.info(f"Batch highest scores: {specific_sound_highest_scores}")
 
-    # TODO: Implement this value and then calibrate it https://github.com/eulersson/taconez/issues/30
+    # TODO: Right now we will consider detection whenever we detect sounds that are not
+    # in the IGNORE_SOUNDS list. It will be good to collect detections we can train
+    # a retrained network with.
+    #
+    # - Produce a jupyter notebook showing how to do transfer learning
+    #   https://github.com/eulersson/taconez/issues/59
+    #
+    # - Switch to use either normal or retrained network
+    #   https://github.com/eulersson/taconez/issues/80
+    #
+
     detected = len(predictions)
 
     if not detected:
