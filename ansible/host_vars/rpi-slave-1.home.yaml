@@ -9,6 +9,9 @@ rpi_model: 3B+
 # Debian distribution the Raspberry Pi OS is based on.
 debian_distro_name: bullseye
 
+# Whether the Raspberry Pi has speakers or not.
+has_speakers: true
+
 # All the speakers (sinks) for that Raspberry Pi.
 pulse_audio_sinks:
   - alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo

@@ -33,8 +33,8 @@ set -x # Print commands as they run.
 
 docker run \
   --tty \
+  --volume /mnt/nfs/taconez:/app/recordings:ro \
   --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
-  --volume $TACONEZ_ROOT/recordings:/app/recordings:ro \
   --name $TACONEZ_CONTAINER_NAME \
   --publish 5555:5555 \
   --publish 5556:5556 \

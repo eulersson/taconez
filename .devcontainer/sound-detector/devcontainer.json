@@ -32,7 +32,7 @@
         {
           // Do not run unless you are within the container.
           "name": "Debug Sound Detector",
-          "type": "python",
+          "type": "debugpy",
           "request": "launch",
           "cwd": "${workspaceFolder}/sound-detector",
           "program": "${workspaceFolder}/sound-detector/sound_detector.py",

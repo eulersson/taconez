@@ -9,9 +9,10 @@ rpi_model: 4B
 # Debian distribution the Raspberry Pi OS is based on.
 debian_distro_name: bookworm
 
-# All the speakers (sinks) for that Raspberry Pi.
+# Whether the Raspberry Pi has speakers or not.
 has_speakers: false
 
+# All the speakers (sinks) for that Raspberry Pi.
 pulse_audio_sinks:
   - alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120040808090721-01.analog-stereo
 

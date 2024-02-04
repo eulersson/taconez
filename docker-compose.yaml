@@ -44,7 +44,7 @@ services:
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
-      target: development
+      target: production
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:

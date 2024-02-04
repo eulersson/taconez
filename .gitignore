@@ -16,7 +16,6 @@ build/
 
 */tests/Testing
 
-prerolls/*.wav
 recordings/**/*.wav
 
 influx-db/data/

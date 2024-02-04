@@ -67,6 +67,7 @@
     name: taconez/playback-distributor
     tag: "{{ project_version }}"
     source: build
+  when: force_docker_image_rebuild
 
 - name: Clean dangling images
   become: true
