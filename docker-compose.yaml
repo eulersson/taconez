@@ -89,6 +89,24 @@ services:
       - /app/lib/c/commons/build
     depends_on:
       - playback-distributor
+  
+  # --- Journal ------------------------------------------------------------------------
+  journal:
+    build:
+      context: .
+      dockerfile: ./journal/Dockerfile
+      target: development
+    image: taconez/journal:dev
+    volumes:
+      - ./journal/app:/app/journal/app
+      # Binding an anonymous volume to the container's node_modules effectively excludes
+      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      #
+      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
+      #
+      - /app/journal/node_modules
+    depends_on:
+      - influx-db-server
 
   # --- InfluxDB Server ----------------------------------------------------------------
   influx-db-server:
@@ -100,3 +118,5 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: taconez
       DOCKER_INFLUXDB_INIT_BUCKET: taconez
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token
+    ports:
+      - "8086:8086"

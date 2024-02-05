@@ -30,3 +30,12 @@ services:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
+  
+  journal:
+    entrypoint: sleep infinity
+    build:
+      target: development
+    volumes:
+      - ./.git:/app/.git
+      - ./.devcontainer:/app/.devcontainer
+      - ./.vscode:/app/.vscode

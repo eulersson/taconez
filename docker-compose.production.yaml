@@ -19,3 +19,7 @@ services:
       target: production
       args:
         DEBUG: 0
+
+  journal:
+    build:
+      target: production
