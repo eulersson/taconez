@@ -7,7 +7,7 @@ services:
       args:
         - SKIP_BUILD=1
     volumes:
-      - ./.git:/app/git
+      - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
 
@@ -17,7 +17,7 @@ services:
       args:
         - SKIP_BUILD=1
     volumes:
-      - ./.git:/app/git
+      - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
 
@@ -27,6 +27,6 @@ services:
       args:
         - SKIP_BUILD=1
     volumes:
-      - ./.git:/app/git
+      - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode

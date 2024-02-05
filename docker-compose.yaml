@@ -27,11 +27,10 @@ services:
       - SKIP_DETECTION_NOTIFICATION=False
       - SKIP_RECORDING=False
     volumes:
-      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./sound-detector:/app/sound-detector
       - ./prerolls:/app/prerolls
       - ./recordings:/app/recordings
-    tty: true
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      - ./sound-detector:/app/sound-detector
     depends_on:
       - influx-db-server
       - playback-distributor
@@ -48,16 +47,17 @@ services:
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:
-      - ./playback-distributor/Dockerfile:/app/playback-distributor/Dockerfile
-      - ./playback-distributor/src:/app/playback-distributor/src
-      - ./playback-distributor/CMakeLists.txt:/app/playback-distributor/CMakeLists.txt
-      - ./playback-distributor/tests:/app/playback-distributor/tests
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
-      - ./lib/c/commons/include:/app/lib/c/commons/include
-      - ./lib/c/commons/src:/app/lib/c/commons/src
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
-    tty: true
+      - ./playback-distributor:/app/playback-distributor
+      - ./lib/c/commons:/app/lib/c/commons
+      # Binding an anonymous volume to the container's node_modules effectively excludes
+      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      #
+      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
+      #
+      - /app/playback-distributor/build
+      - /app/lib/c/commons/build
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
@@ -75,17 +75,18 @@ services:
       - PULSE_SERVER=host.docker.internal
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
-      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./sound-player/Dockerfile:/app/sound-player/Dockerfile
-      - ./sound-player/src:/app/sound-player/src
-      - ./sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt
-      - ./sound-player/tests:/app/sound-player/tests
-      - ./lib/c/commons/CMakeLists.txt:/app/lib/c/commons/CMakeLists.txt
-      - ./lib/c/commons/include:/app/lib/c/commons/include
-      - ./lib/c/commons/src:/app/lib/c/commons/src
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
-    tty: true
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      - ./sound-player:/app/sound-player
+      - ./lib/c/commons:/app/lib/c/commons
+      # Binding an anonymous volume to the container's node_modules effectively excludes
+      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      #
+      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
+      #
+      - /app/sound-player/build
+      - /app/lib/c/commons/build
     depends_on:
       - playback-distributor
 
