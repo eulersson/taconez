@@ -4,7 +4,6 @@ services:
   sound-detector:
     entrypoint: sleep infinity
     build:
-      target: development
       args:
         - SKIP_BUILD=1
     volumes:
