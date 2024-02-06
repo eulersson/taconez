@@ -30,7 +30,6 @@ services:
       - ./prerolls:/app/prerolls
       - ./recordings:/app/recordings
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./sound-detector:/app/sound-detector
     depends_on:
       - influx-db-server
       - playback-distributor
@@ -40,34 +39,25 @@ services:
     build:
       context: .
       dockerfile: ./playback-distributor/Dockerfile
+      target: development
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
-      target: production
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
-      - ./playback-distributor:/app/playback-distributor
-      - ./lib/c/commons:/app/lib/c/commons
-      # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
-      #
-      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
-      #
-      - /app/playback-distributor/build
-      - /app/lib/c/commons/build
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
     build:
       context: .
       dockerfile: ./sound-player/Dockerfile
+      target: development
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
-      target: development
     image: taconez/sound-player:dev
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
@@ -78,17 +68,7 @@ services:
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./sound-player:/app/sound-player
       - ./lib/c/commons:/app/lib/c/commons
-      # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
-      #
-      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
-      #
-      - /app/sound-player/build
-      - /app/lib/c/commons/build
-    depends_on:
-      - playback-distributor
   
   # --- Journal ------------------------------------------------------------------------
   journal:

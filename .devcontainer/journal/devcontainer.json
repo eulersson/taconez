@@ -4,7 +4,7 @@
   "name": "Taconez Journal",
   "dockerComposeFile": [
     "../../docker-compose.yaml",
-    "../../docker-compose.vs-code.yaml"
+    "../../docker-compose.development.yaml"
   ],
   "service": "journal",
   "workspaceFolder": "/app",

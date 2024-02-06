@@ -4,7 +4,7 @@
   "name": "Taconez Playback Distributor",
   "dockerComposeFile": [
     "../../docker-compose.yaml",
-    "../../docker-compose.vs-code.yaml"
+    "../../docker-compose.development.yaml"
   ],
   "service": "playback-distributor",
   "workspaceFolder": "/app",

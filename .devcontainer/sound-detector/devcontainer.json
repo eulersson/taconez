@@ -4,7 +4,7 @@
   "name": "Taconez Sound Detector",
   "dockerComposeFile": [
     "../../docker-compose.yaml",
-    "../../docker-compose.vs-code.yaml"
+    "../../docker-compose.development.yaml"
   ],
   "service": "sound-detector",
   "workspaceFolder": "/app",

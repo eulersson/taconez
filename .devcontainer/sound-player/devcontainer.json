@@ -4,7 +4,7 @@
   "name": "Taconez Sound Player",
   "dockerComposeFile": [
     "../../docker-compose.yaml",
-    "../../docker-compose.vs-code.yaml"
+    "../../docker-compose.development.yaml"
   ],
   "service": "sound-player",
   "workspaceFolder": "/app",
