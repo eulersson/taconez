@@ -34,14 +34,21 @@ PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
 set -x # Print commands as they run.
 
+# Host network, dbus and avahi-daemon are needed for mDNS resolution.
+# 
+#   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+#
 docker run \
+  --name $TACONEZ_CONTAINER_NAME \
   --tty \
   --env PULSE_SERVER=host.docker.internal \
   --env PLAYBACK_DISTRIBUTOR_HOST=$PLAYBACK_DISTRIBUTOR_HOST \
   --volume /mnt/nfs/taconez:/app/recordings:ro \
   --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
-  --name $TACONEZ_CONTAINER_NAME \
+  --network host \
+  --volume /var/run/dbus:/var/run/dbus \
+  --volume /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket \
   $extra_flags \
   taconez/sound-player:$TACONEZ_VERSION
 

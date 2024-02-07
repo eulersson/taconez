@@ -31,11 +31,17 @@ fi
 
 set -x # Print commands as they run.
 
+# dbus and avahi-daemon are needed for mDNS resolution.
+# 
+#   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+#
 docker run \
+  --name $TACONEZ_CONTAINER_NAME \
   --tty \
   --volume /mnt/nfs/taconez:/app/recordings:ro \
   --volume $TACONEZ_ROOT/prerolls:/app/prerolls:ro \
-  --name $TACONEZ_CONTAINER_NAME \
+  --volume /var/run/dbus:/var/run/dbus \
+  --volume /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket \
   --publish 5555:5555 \
   --publish 5556:5556 \
   $extra_flags \

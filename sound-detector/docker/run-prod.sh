@@ -35,6 +35,10 @@ fi
 # Useful for seeing the actual command that's run on the service logs.
 set -x
 
+# dbus and avahi-daemon are needed for mDNS resolution.
+# 
+#   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+#
 docker run --tty \
   --env INFLUX_DB_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
@@ -43,6 +47,8 @@ docker run --tty \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
   --volume $recordings_source_dir:/app/recordings \
   --name $TACONEZ_CONTAINER_NAME \
+  --volume /var/run/dbus:/var/run/dbus \
+  --volume /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket \
   $extra_flags \
   taconez/sound-detector:$TACONEZ_VERSION
 

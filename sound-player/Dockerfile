@@ -27,7 +27,7 @@ ARG DEBUG=0
 #
 # NOTE: g++ is needed for CMake to run the compiler tests to identify the system.
 #
-ARG BUILD_DEPENDENCIES="\
+ARG BUILD_TIME_DEPENDENCIES="\
   cmake \
   g++ \
   gcc \
@@ -70,7 +70,8 @@ FROM debian:12.4-slim as base
 #    https://therdnotes.com/sharing-arg-in-multi-stage-dockerfile
 #
 ARG DEBUG
-ARG BUILD_DEPENDENCIES
+ARG BUILD_TIME_DEPENDENCIES
+ARG RUN_TIME_DEPENDENCIES
 ARG DEBUG_DEPENDENCIES
 ARG DEPENDENCIES_COMPILE_FROM_SOURCE
 ARG COMPILABLE_DEPENDENCIES
@@ -82,7 +83,7 @@ WORKDIR /app/sound-player
 # Install dependencies.
 RUN apt-get update && apt-get install -y \
   libpulse-dev \
-  $BUILD_DEPENDENCIES \
+  $BUILD_TIME_DEPENDENCIES \
   $RUN_TIME_DEPENDENCIES \
   $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES ) \
   $( [ $DEPENDENCIES_COMPILE_FROM_SOURCE = 0 ] && echo $COMPILABLE_DEPENDENCIES )
@@ -159,7 +160,7 @@ RUN \
 #
 RUN \
   if [ $DEBUG == 0 ]; then \
-    echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apt-get purge -y; \
+    echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apt-get purge -y; \
   fi
 
 ENTRYPOINT [ "/usr/bin/sound-player" ]
