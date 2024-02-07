@@ -17,6 +17,7 @@ services:
         DEBUG: 1
         INSTALL_DEV_DEPS: 1
         USE_TFLITE: 1
+    image: taconez/sound-detector:dev
     tty: true
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
@@ -52,6 +53,7 @@ services:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
     tty: true
+    image: taconez/playback-distributor:dev
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:
@@ -74,6 +76,7 @@ services:
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
+    image: taconez/sound-player:dev
     tty: true
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
@@ -93,24 +96,24 @@ services:
       - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
   
   # --- Journal ------------------------------------------------------------------------
-  # journal:
-  #   build:
-  #     context: .
-  #     dockerfile: ./journal/Dockerfile
-  #     target: development
-  #   image: taconez/journal:dev
-  #   volumes:
-  #     # To be able to resolve the Raspberry Pi's local hostnames from the container, since
-  #     # they are resolved through mDNS.
-  #     # 
-  #     #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
-  #     #
-  #     - /var/run/dbus:/var/run/dbus
-  #     - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - influx-db-server
+  journal:
+    build:
+      context: .
+      dockerfile: ./journal/Dockerfile
+      target: development
+    image: taconez/journal:dev
+    volumes:
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influx-db-server
 
   # --- InfluxDB Server ----------------------------------------------------------------
   influx-db-server:

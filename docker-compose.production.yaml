@@ -7,19 +7,23 @@ services:
         DEBUG: 0
         INSTALL_DEV_DEPS: 0
         USE_TFLITE: 1
+    image: taconez/sound-detector:prod
 
   playback-distributor:
     build:
       target: production
       args:
         DEBUG: 0
+    image: taconez/playback-distributor:prod
 
   sound-player:
     build:
       target: production
       args:
         DEBUG: 0
+    image: taconez/sound-player:prod
 
-  # journal:
-  #   build:
-  #     target: production
+  journal:
+    build:
+      target: production
+    image: taconez/journal:prod
