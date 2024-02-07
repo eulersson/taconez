@@ -17,6 +17,7 @@ services:
         DEBUG: 1
         INSTALL_DEV_DEPS: 1
         USE_TFLITE: 1
+    tty: true
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     environment:
@@ -30,6 +31,13 @@ services:
       - ./prerolls:/app/prerolls
       - ./recordings:/app/recordings
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
     depends_on:
       - influx-db-server
       - playback-distributor
@@ -43,11 +51,19 @@ services:
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
+    tty: true
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     volumes:
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
 
   # --- Sound Player -------------------------------------------------------------------
   sound-player:
@@ -58,7 +74,7 @@ services:
       args:
         DEBUG: 1
         DEPENDENCIES_COMPILE_FROM_SOURCE: 1
-    image: taconez/sound-player:dev
+    tty: true
     # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
     user: root
     environment:
@@ -68,31 +84,38 @@ services:
       - ./prerolls:/app/prerolls:ro
       - ./recordings:/app/recordings:ro
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
-      - ./lib/c/commons:/app/lib/c/commons
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
   
   # --- Journal ------------------------------------------------------------------------
-  journal:
-    build:
-      context: .
-      dockerfile: ./journal/Dockerfile
-      target: development
-    image: taconez/journal:dev
-    volumes:
-      - ./journal:/app/journal
-      # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
-      #
-      #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
-      #
-      - /app/journal/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      - influx-db-server
+  # journal:
+  #   build:
+  #     context: .
+  #     dockerfile: ./journal/Dockerfile
+  #     target: development
+  #   image: taconez/journal:dev
+  #   volumes:
+  #     # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+  #     # they are resolved through mDNS.
+  #     # 
+  #     #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+  #     #
+  #     - /var/run/dbus:/var/run/dbus
+  #     - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - influx-db-server
 
   # --- InfluxDB Server ----------------------------------------------------------------
   influx-db-server:
     image: influxdb:2.7.4-alpine
+    tty: true
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: taconez

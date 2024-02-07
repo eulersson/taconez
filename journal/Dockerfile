@@ -1,18 +1,15 @@
 # Adapted from: https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
-FROM node:20.11.0-alpine3.19 AS base
+FROM node:21.6.1-bookworm-slim AS base
 
 # Global variables (across all stages).
 ENV NEXT_TELEMETRY_DISABLED 1
 
 WORKDIR /app/journal
 
-RUN apk add --no-cache git
+RUN apt-get update && apt-get install -y git
 
 # Install dependencies only when needed
 FROM base AS deps
-
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
 
 # Install dependencies based on the preferred package manager
 COPY journal/package.json journal/yarn.lock ./

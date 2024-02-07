@@ -8,4 +8,4 @@ project_root_local: "{{ playbook_dir | dirname }}"
 project_root_remote: /app/taconez
 services_root_remote: /app/taconez-services
 python_virtualenv: /app/venv
-force_docker_image_rebuild: false
+force_docker_image_rebuild: true

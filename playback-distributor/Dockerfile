@@ -35,6 +35,10 @@ ARG BUILD_DEPENDENCIES="\
   ruby \
   "
 
+ARG RUN_TIME_DEPENDENCIES="\
+  avahi-utils \
+  "
+
 # Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\
   gdb \
@@ -47,8 +51,8 @@ ARG DEBUG_DEPENDENCIES="\
 # Choose between installing dependencies or having them built from source with CMake.
 ARG DEPENDENCIES_COMPILE_FROM_SOURCE=1
 ARG COMPILABLE_DEPENDENCIES="\
-  cjson-dev \
-  zeromq-dev \
+  libcjson-dev \
+  libzmq3-dev \
   "
 
 # For Visual Studio Dev Containers. That way we don't have to wait to compile since the
@@ -57,7 +61,8 @@ ARG COMPILABLE_DEPENDENCIES="\
 # docker scripts in `playback-distributor/docker/run-{dev|pro}`.
 ARG SKIP_BUILD=0
 
-FROM alpine:3.19.0 as base
+# FROM alpine:3.19.0 as base
+FROM debian:12.4-slim as base
 
 # Use args from the global scope.
 #
@@ -78,8 +83,9 @@ EXPOSE 5555
 EXPOSE 5556
 
 # Install dependencies.
-RUN apk --no-cache --update add \
+RUN apt-get update && apt-get install -y \
   $BUILD_DEPENDENCIES \
+  $RUN_TIME_DEPENDENCIES \
   $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES ) \
   $( [ $DEPENDENCIES_COMPILE_FROM_SOURCE = 0 ] && echo $COMPILABLE_DEPENDENCIES )
 
@@ -100,7 +106,9 @@ ARG SKIP_BUILD
 
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug --fresh; \
+    cmake -S . -B build --fresh \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DCMAKE_BUILD_TYPE=Debug; \
   fi
 
 # NOTE: The `--config Debug` is ignored because we use Unix Makefiles, so if you want to
@@ -125,7 +133,9 @@ ARG SKIP_BUILD
 
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release; \
+    cmake -S . -B build \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DCMAKE_BUILD_TYPE=Release; \
   fi
 
 # Build the project, install it to the system and remove the source code to keep the
@@ -144,17 +154,17 @@ RUN \
 
 # Cleanup build-time dependencies.
 #
-# NOTE: In order to delete packages we cannot pass it like `apk del make=4.4.1-r1` but as
-#   `apk del make` instead. The regex uses =[^ =]* to match an equals sign followed by
-#   any characters that are not a space or equals sign. It replaces this matched pattern
-#   with an empty string, effectively extracting only the package names. Thanks ChatGPT!
+# NOTE: In order to delete packages we cannot pass it like `apt-get purge make=4.4.1-r1`
+#   but as `apt-get purge make` instead. The regex uses =[^ =]* to match an equals sign
+#   followed by any characters that are not a space or equals sign. It replaces this
+#   matched pattern with an empty string, effectively extracting only the package names.
 #
 RUN \
   if [ $DEBUG == 0 ]; then \
-    echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apk del; \
+    echo $BUILD_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apt-get purge -y; \
   fi
 
-ENTRYPOINT [ "/usr/local/bin/playback-distributor" ]
+ENTRYPOINT [ "/usr/bin/playback-distributor" ]
 
 
 # --- docker run ... --target test -----------------------------------------------------
@@ -177,6 +187,7 @@ COPY playback-distributor/tests ./tests
 RUN \
   if [ $SKIP_BUILD = 0 ]; then \
       cmake -S . -B build \
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr \
         -DCMAKE_BUILD_TYPE:STRING=Debug \
         -DTACONEZ_BUILD_TESTS:BOOL=TRUE \
         -DTACONEZ_BUILD_COMMON_TESTS:BOOL=TRUE; \

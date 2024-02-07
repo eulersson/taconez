@@ -20,6 +20,6 @@ services:
       args:
         DEBUG: 0
 
-  journal:
-    build:
-      target: production
+  # journal:
+  #   build:
+  #     target: production

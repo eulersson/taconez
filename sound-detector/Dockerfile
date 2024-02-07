@@ -38,6 +38,7 @@ ARG BUILD_TIME_DEPENDENCIES="\
   "
 
 ARG RUN_TIME_DEPENDENCIES="\
+  avahi-utils \
   portaudio19-dev \
   libasound2-plugins \
   "
