@@ -278,8 +278,8 @@ def write_db_entry(slugified_class_name, relative_sound_path):
     write_api = client.write_api(write_options=SYNCHRONOUS)
     p = (
         influxdb_client.Point("detections")
-        .tag("sound", slugified_class_name)
-        .field("soundfile", relative_sound_path)
+        .field("sound", slugified_class_name)
+        .field("audio_file_path", relative_sound_path)
     )
     write_api.write(bucket="taconez", org="taconez", record=p)
 
@@ -341,7 +341,7 @@ def has_been_recording_while_sound_was_playing() -> bool:
     """
     global last_play_at, last_play_sound_duration, last_play_preroll_duration
     if last_play_at:
-        seconds_since_last_play = int(time.time()) - last_play_at
+        seconds_since_last_play = round(time.time()) - last_play_at
         is_sound_playing = seconds_since_last_play < (
             last_play_sound_duration + last_play_preroll_duration
         )
@@ -460,7 +460,7 @@ def detect_specific_sounds(
             zmq_socket.send_json(
                 {
                     "sound_file_path": relative_sound_path,
-                    "when": time.time(),
+                    "when": round(time.time()),
                 }
             )
 

@@ -12,7 +12,7 @@ const nextConfig = {
   //
   //   https://nextjs.org/docs/app/api-reference/next-config-js/output
   //
-  output: "standalone"
+  // output: "standalone"
 };
 
 export default nextConfig;

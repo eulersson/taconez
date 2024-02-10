@@ -1,10 +1,12 @@
-import { SoundPlot } from "@/components/sound-plot";
+import { SoundPlot } from "@/components";
+import { fetchSoundOccurrences } from "@/lib";
 
-export default function Home() {
+export default async function Home() {
+  const initialData = await fetchSoundOccurrences();
   return (
     <>
       <p>Taconez:</p>
-      <SoundPlot></SoundPlot>
+      <SoundPlot initialData={initialData}></SoundPlot>
     </>
   );
 }

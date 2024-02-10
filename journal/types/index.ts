@@ -11,8 +11,7 @@ export type TaconezInfluxRow = {
 };
 
 export type SoundOccurrence = {
-  start: Date,
-  end: Date,
+  when: Date,
   sound: string,
-  file_path: string
+  audio_file_path: string
 }

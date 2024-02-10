@@ -42,7 +42,6 @@ ARG RUN_TIME_DEPENDENCIES="\
 # Extra dependencies only installed when the DEBUG build argument is passed.
 ARG DEBUG_DEPENDENCIES="\
   gdb \
-  git \
   iputils-ping \
   pulseaudio-utils \
   alsa-utils \
@@ -85,6 +84,7 @@ EXPOSE 5556
 
 # Install dependencies.
 RUN apt-get update && apt-get install -y \
+  git \
   $BUILD_TIME_DEPENDENCIES \
   $RUN_TIME_DEPENDENCIES \
   $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES ) \
@@ -163,6 +163,8 @@ RUN \
 RUN \
   if [ $DEBUG == 0 ]; then \
     echo $BUILD_TIME_DEPENDENCIES | sed -e 's/=[^ =]*//g' | xargs apt-get purge -y; \
+    apt-get purge -y git \
+    apt-get autoremove -y --purge; \
   fi
 
 ENTRYPOINT [ "/usr/bin/playback-distributor" ]

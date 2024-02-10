@@ -15,6 +15,7 @@
       "extensions": [
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
+        "foxundermoon.shell-format",
       ]
     }
   },
