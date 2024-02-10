@@ -62,6 +62,7 @@ ARG DEBUG_DEPENDENCIES="\
 # - portaudio19-dev: Needed by PyAudio.
 #
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  git \
   $BUILD_TIME_DEPENDENCIES \
   $RUN_TIME_DEPENDENCIES \
   $( [ $DEBUG = 1 ] && echo $DEBUG_DEPENDENCIES )
@@ -101,6 +102,7 @@ RUN eval poetry install --no-interaction \
   $( [ $INSTALL_DEV_DEPS = 0 ] && echo --without dev ) \
   $( [ $USE_TFLITE = 0 ] && echo --with tensorflow-dev ) \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
+  && apt-get purge -y git \
   && apt-get autoremove -y --purge
 
 COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./

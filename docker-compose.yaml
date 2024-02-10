@@ -102,6 +102,9 @@ services:
       dockerfile: ./journal/Dockerfile
       target: development
     image: taconez/journal:dev
+    environment:
+      - INFLUX_DB_HOST=influx-db-server
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
       # To be able to resolve the Raspberry Pi's local hostnames from the container, since
       # they are resolved through mDNS.

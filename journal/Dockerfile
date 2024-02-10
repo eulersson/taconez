@@ -1,5 +1,6 @@
 # Adapted from: https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
-FROM node:21.6.1-bookworm-slim AS base
+
+FROM node:20.11.0-bookworm-slim AS base
 
 # Global variables (across all stages).
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -12,7 +13,7 @@ RUN apt-get update && apt-get install -y git
 FROM base AS deps
 
 # Install dependencies based on the preferred package manager
-COPY journal/package.json journal/yarn.lock ./
+COPY journal/package/json journal/yarn.lock ./
 RUN yarn --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -44,6 +45,8 @@ COPY --from=builder /app/journal/public ./public
 # Set the correct permission for prerender cache
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
+
+RUN apt apt-get purge -y git && apt-get autoremove --purge -y;
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

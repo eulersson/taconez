@@ -1,0 +1,20 @@
+FROM node:20.11.0-bookworm-slim
+
+ARG BUILD_TIME_DEPENDENCIES="\
+  cmake \
+  g++ \
+  make \
+  python3 \
+  "
+
+ENV NEXT_TELEMETRY_DISABLED 1
+
+WORKDIR /app/journal
+
+RUN apt-get update && apt-get install -y git ${BUILD_TIME_DEPENDENCIES}
+
+# Install dependencies based on the preferred package manager
+COPY journal/package.json journal/yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+COPY ./journal/ .
