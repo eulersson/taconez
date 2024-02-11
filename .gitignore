@@ -22,3 +22,5 @@ influx-db/data/
 influx-db/config/
 
 yamnet-classification.tflite
+
+node_modules/
