@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+      target: development
+    ports:
+      - 9976:9976
+    volumes:
+      - ./server/go.mod:/src/go.mod
+      - ./server/go.sum:/src/go.sum
+      - ./server/server/main.go:/src/server/main.go
+      - ./taconez_grpc.proto:/src/taconez_grpc.proto
+  client:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile
+      target: development
+    ports:
+      - 3000:3000
+    volumes:
+      - ./taconez_grpc.proto:/app/taconez_grpc.proto
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      # https://www.reddit.com/r/nextjs/comments/1638ec6/comment/jy1h8ys/
+      - WATCHPACK_POLLING=true
+      - GRPC_SERVER_HOST_NAME=server
+    depends_on:
+      - server
