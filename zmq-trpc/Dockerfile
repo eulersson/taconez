@@ -12,7 +12,7 @@ COPY . .
 
 FROM base as server
 
-EXPOSE 9999
+EXPOSE 9976
 
 CMD npm run dev:server
 
