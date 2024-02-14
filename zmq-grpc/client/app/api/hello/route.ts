@@ -19,11 +19,10 @@ export function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name") || "world";
-  return new Promise((resolve, reject) => {
+  return new Promise<Response>((resolve, reject) => {
     client.sayHello({ name }, (err, response) => {
       if (err) {
         console.error(err);
-        reject(err);
         resolve(
           Response.json(
             { error: "Request has failed, check server logs!" },
