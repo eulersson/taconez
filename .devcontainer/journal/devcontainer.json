@@ -31,7 +31,7 @@
           "type": "node-terminal",
           "request": "launch",
           "cwd": "${workspaceFolder}/journal",
-          "command": "yarn run dev",
+          "command": "npm run dev",
           "serverReadyAction": {
             "webRoot": "${workspaceFolder}/journal",
             "pattern": "- Local:.+(https?://.+)",

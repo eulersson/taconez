@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y git
 FROM base AS deps
 
 # Install dependencies based on the preferred package manager
-COPY journal/package/json journal/yarn.lock ./
-RUN yarn --frozen-lockfile
+COPY journal/package.json journal/package-lock.json ./
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -28,12 +28,12 @@ COPY ./journal/ .
 # (the one that is later in the file in terms of line number).
 FROM builder AS development
 
-ENTRYPOINT yarn run dev
+ENTRYPOINT npm run dev
 
 # Production image, copy all the files and run next
 FROM base AS production
 
-RUN yarn run build
+RUN npm run build
 
 ENV NODE_ENV production
 
