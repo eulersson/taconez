@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import { SoundBubble } from "@/components";
+import { SoundBubble } from "@/components/sound-bubble";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { SoundOccurrence } from "@/types";
 
-export function SoundPlot({
-  initialData,
-}: {
-  initialData: SoundOccurrence[];
-}) {
+export function SoundPlot({ initialData }: { initialData: SoundOccurrence[] }) {
   const [data, setData] = useState(initialData);
 
   // Every 10 seconds, fetch new data.
@@ -24,17 +21,26 @@ export function SoundPlot({
         `/api/fetch-sound-occurrences?${searchParams}`
       );
       const newData = await response.json();
-      setData((data) => [...newData, ...data]);
+      if (newData.length > 0) {
+        setData((data) => [...newData, ...data]);
+      }
     }, 10000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <>
-      <p>Number of items: {data.length} </p>
+      <div className="fixed flex justify-center top-3 inset-x-0">
+        <ThemeSwitch />
+      </div>
+      <p>Number of detections: {data.length} </p>
+      <ul className="space-y-1">
         {data.map((sound, i) => (
-          <SoundBubble key={i} sound={sound} />
+          <li key={i}>
+            <SoundBubble sound={sound} />
+          </li>
         ))}
+      </ul>
     </>
   );
 }

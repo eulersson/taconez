@@ -1,4 +1,4 @@
-import { fetchSoundOccurrences } from "@/lib";
+import { fetchSoundOccurrences } from "@/lib/influx-data";
 import { unstable_noStore as noStore } from "next/cache";
 
 export async function GET(request: Request) {
