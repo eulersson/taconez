@@ -33,7 +33,7 @@ export async function fetchSoundOccurrences({
     const soundOccurrence: SoundOccurrence = {
       when: new Date(o._time),
       sound: o.sound,
-      audio_file_path: o._value,
+      audio_file_path: o.audio_file_path,
     };
     result.push(soundOccurrence);
   }
