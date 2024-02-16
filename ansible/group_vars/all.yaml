@@ -9,3 +9,8 @@ project_root_remote: /app/taconez
 services_root_remote: /app/taconez-services
 python_virtualenv: /app/venv
 force_docker_image_rebuild: true
+
+# The "monitor" mode is useful for gathering sound data and see what categories are
+# detected. The "detection" mode is useful when you want to react against a specific
+# category of sound.
+only_monitor_no_detect: true

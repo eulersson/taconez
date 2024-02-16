@@ -39,20 +39,27 @@ env = Env()
 env.read_env()
 
 DEBUG = env.bool("DEBUG")
+
+LOGGING_LEVEL = env("LOGGING_LEVEL", "INFO")
+
 logging.basicConfig(
     format="[%(funcName)s:%(lineno)s] %(message)s",
-    level=logging.DEBUG if DEBUG else logging.INFO,
+    level=LOGGING_LEVEL
 )
 
 SKIP_DETECTION_NOTIFICATION = env.bool("SKIP_DETECTION_NOTIFICATION", False)
 
 INFLUX_DB_HOST = env("INFLUX_DB_HOST")  # Raises error if not set.
+logging.info(f"INFLUX_DB_HOST: {INFLUX_DB_HOST}")
+
 INFLUX_DB_ADDR = f"http://{INFLUX_DB_HOST}:8086"
 INFLUX_DB_TOKEN = env("INFLUX_DB_TOKEN", None)
 
 # Endpoint where the distributor PULL socket is bound and therefore the endpoint we must
 # connect to. The distributor runs as a container connecting port 5555 to the host.
 PLAYBACK_DISTRIBUTOR_HOST = env("PLAYBACK_DISTRIBUTOR_HOST")
+logging.info(f"PLAYBACK_DISTRIBUTOR_HOST: {PLAYBACK_DISTRIBUTOR_HOST}")
+
 ZMQ_DISTRIBUTOR_PUSH_ADDR = f"tcp://{PLAYBACK_DISTRIBUTOR_HOST}:5555"
 
 # Endpoint where the distributor PUSH socket is bound and therefore the endpoint we must
@@ -64,6 +71,18 @@ DETECTED_RECORDINGS_DIR = "/app/recordings"
 
 # Folder where prerolls to be played before the sound detection live.
 PREROLLS_DIR = "/app/prerolls"
+
+# The "monitor" mode is useful for gathering sound data and see what categories are
+# detected (unless it is in the `IGNORE_SOUNDS`). The "detection" mode is useful when
+# you want to react against a specific category of sound.
+# ONLY_MONITOR_NO_DETECT = env.bool("ONLY_MONITOR_NO_DETECT", False)
+ONLY_MONITOR_NO_DETECT = True
+logging.info(f"ONLY_MONITOR_NO_DETECT: {ONLY_MONITOR_NO_DETECT}")
+
+DETECTION_THRESHOLD = env.float("DETECTION_THRESHOLD", 0.3)
+DETECT_SOUND = env("DETECT_SOUND")
+DETECT_SOUNDS = [DETECT_SOUND]
+logging.info(f"DETECT_SOUND: {DETECT_SOUND}")
 
 IGNORE_SOUNDS = []
 with open("./.ignore-sounds", "r") as f:
@@ -353,10 +372,9 @@ def has_been_recording_while_sound_was_playing() -> bool:
         return is_sound_playing
 
 
-def detect_specific_sounds(
+def run_inference(
     model,
     labels: List[str],
-    detect_sounds: List[str] = ["Clip-clop"],
     zmq_socket: Optional[zmq.Socket] = None,
 ) -> None:
     """Continuously records audio segments form the microphone and passes it to the model
@@ -365,10 +383,12 @@ def detect_specific_sounds(
     If a detection happens the analyzed audio file is written down to an NFS-shared
     folder and the subsequent parts of the pipeline are notified.
 
+    However if the `ONLY_MONITOR_NO_DETECT` is set, then it only logs the detected
+    sounds that are not in the `IGNORE_SOUNDS` list.
+
     Args:
         model: Model to use for detection.
         labels: Class names of the categories the model can recognize.
-        detect_sounds: Detection will happen if on high score for those categories.
         zmq_socket: Used to notify the distributor a sound has been detected.
     """
     waveforms, waveform_binary = record_audio()
@@ -382,11 +402,11 @@ def detect_specific_sounds(
 
     # Run inference on the model to see what sound hsa been detected.
     predictions: List[Tuple[str, float]] = []
-    specific_sound_highest_scores = dict((n, 0.0) for n in detect_sounds)
+    specific_sound_highest_scores = dict((n, 0.0) for n in DETECT_SOUNDS)
 
     top_class_name = None
     for i, waveform in enumerate(waveforms):
-        log_prefix = f"[{i}/{len(waveforms)}]"
+        log_prefix = f"[{i + 1}/{len(waveforms)}]"
 
         scores = model_predict(model, waveform)
         class_scores = np.mean(scores, axis=0)
@@ -396,11 +416,13 @@ def detect_specific_sounds(
 
         if top_class_name not in IGNORE_SOUNDS:
             predictions.append((top_class_name, top_score))
-            logging.info(
-                f"{log_prefix} Main sound: {top_class_name} (score {top_score})"
-            )
 
-        for sound_to_detect in detect_sounds:
+            if ONLY_MONITOR_NO_DETECT:
+                logging.debug(
+                    f"{log_prefix} Main sound: {top_class_name} (score {top_score})"
+                )
+
+        for sound_to_detect in DETECT_SOUNDS:
             sound_index = labels.index(sound_to_detect)
             sound_score = class_scores[sound_index]
 
@@ -409,13 +431,15 @@ def detect_specific_sounds(
             )
 
             if sound_score > 0:
-                logging.info(
-                    f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
-                )
+                if ONLY_MONITOR_NO_DETECT:
+                    logging.debug(
+                        f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
+                    )
 
     if len(predictions):
-        logging.info(f"Batch predictions: {predictions}")
-        logging.info(f"Batch highest scores: {specific_sound_highest_scores}")
+        if ONLY_MONITOR_NO_DETECT:
+            logging.debug(f"Batch predictions: {predictions}")
+            logging.debug(f"Batch highest scores: {specific_sound_highest_scores}")
 
     # TODO: Right now we will consider detection whenever we detect sounds that are not
     # in the IGNORE_SOUNDS list. It will be good to collect detections we can train
@@ -427,31 +451,42 @@ def detect_specific_sounds(
     # - Switch to use either normal or retrained network
     #   https://github.com/eulersson/taconez/issues/80
     #
-    detected = len(predictions)
+    if ONLY_MONITOR_NO_DETECT:
+        detected = len(predictions)
+    else:
+        detected = any(
+            [
+                category in DETECT_SOUNDS and score > DETECTION_THRESHOLD
+                for category, score in predictions
+            ]
+        )
 
     if not detected:
         return
 
-    slugified_top_class_name = ""
+    resolved_class_name = ""
     if top_class_name not in IGNORE_SOUNDS:
-        slugified_top_class_name = top_class_name
+        resolved_class_name = top_class_name
+        resolved_score = top_score
     else:
         for prediction_name, prediction_value in sorted(
             predictions, key=lambda x: x[1]
         ):
             if prediction_name not in IGNORE_SOUNDS:
-                slugified_top_class_name = prediction_name
+                resolved_class_name = prediction_name
+                resolved_score = prediction_value
                 break
 
-    slugified_top_class_name = slugify(slugified_top_class_name, separator="_")
+    now = datetime.now().isoformat()
+    logging.info(f"DETECTION {now} {resolved_class_name} {resolved_score}")
+    slugified_resolved_class_name = slugify(resolved_class_name, separator="_")
 
-    logging.info(f"DETECTION {top_class_name}")
     if not SKIP_RECORDING:
-        file_path = write_audio(waveform_binary, suffix=slugified_top_class_name)
+        file_path = write_audio(waveform_binary, suffix=slugified_resolved_class_name)
         relative_sound_path = os.path.relpath(file_path, DETECTED_RECORDINGS_DIR)
 
         if INFLUX_DB_TOKEN:
-            write_db_entry(slugified_top_class_name, relative_sound_path)
+            write_db_entry(slugified_resolved_class_name, relative_sound_path)
         else:
             logging.info("Not writing database entry.")
 
@@ -521,4 +556,4 @@ if __name__ == "__main__":
 
     # Run the detection loop.
     while True:
-        detect_specific_sounds(model, labels, zmq_socket=push_socket)
+        run_inference(model, labels, zmq_socket=push_socket)

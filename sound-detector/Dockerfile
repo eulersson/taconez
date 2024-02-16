@@ -101,9 +101,10 @@ ENV USE_TFLITE=$USE_TFLITE
 RUN eval poetry install --no-interaction \
   $( [ $INSTALL_DEV_DEPS = 0 ] && echo --without dev ) \
   $( [ $USE_TFLITE = 0 ] && echo --with tensorflow-dev ) \
+  $( [ $DEBUG = 0 ] && apt-get purge -y git ) \
   && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
-  && apt-get purge -y git \
   && apt-get autoremove -y --purge
+
 
 COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./
 
@@ -111,5 +112,13 @@ ENV SKIP_RECORDING=0
 ENV SKIP_DETECTION_NOTIFICATION=0
 ENV INFLUX_DB_HOST=host.docker.internal
 ENV PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal
+
+# The "monitor" mode is useful for gathering sound data and see what categories are
+# detected. The "detection" mode is useful when you want to react against a specific
+# category of sound.
+ENV ONLY_MONITOR_NO_DETECT=0
+ENV DETECT_SOUND=Clip-clop
+ENV DETECT_SOUND_THRESHOLD=0.3
+ENV LOGGING_LEVEL=INFO
 
 ENTRYPOINT [ "python", "sound_detector.py" ]

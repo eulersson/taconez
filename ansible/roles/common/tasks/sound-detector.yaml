@@ -72,6 +72,7 @@
         DEBUG: 0
         INSTALL_DEV_DEPS: 0
         USE_TFLITE: 1
+        ONLY_MONITOR_NO_DETECT: "{{ only_monitor_no_detect }}"
     name: taconez/sound-detector
     tag: "{{ project_version }}"
     source: build
