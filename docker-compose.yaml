@@ -106,6 +106,7 @@ services:
       - INFLUX_DB_HOST=influx-db-server
       - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
     volumes:
+      - ./recordings:/app/recordings:ro
       # To be able to resolve the Raspberry Pi's local hostnames from the container, since
       # they are resolved through mDNS.
       # 
