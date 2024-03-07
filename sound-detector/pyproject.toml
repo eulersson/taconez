@@ -34,7 +34,7 @@ tensorflow-cpu = [
 ]
 tensorflow-cpu-aws = { version = "~2.13.0", platform = "linux", markers = "platform_machine=='arm64' or platform_machine=='aarch64'" }
 tensorflow-io = "~0.34.0"
-tensorflow-hub = "~0.15.0"
+tensorflow-hub = "0.16.1"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "^3.8.1"
