@@ -26,6 +26,10 @@ WORKDIR /app/sound-detector
 ARG DEBUG=0
 ENV DEBUG=$DEBUG
 
+ARG USE_RETRAINED_MODEL=1
+ENV USE_RETRAINED_MODEL=$USE_RETRAINED_MODEL
+ENV RETRAINED_MODEL_PATH=/app/sound-detector/retrained_model
+
 # Slim won't have `gcc` which is needed by building some Python depenencies.
 #
 #   https://github.com/docker-library/python/issues/60#issuecomment-134322383
@@ -117,7 +121,7 @@ ENV PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal
 # detected. The "detection" mode is useful when you want to react against a specific
 # category of sound.
 ENV ONLY_MONITOR_NO_DETECT=0
-ENV DETECT_SOUND=Clip-clop
+ENV DETECT_SOUNDS=Clip-clop
 ENV DETECT_SOUND_THRESHOLD=0.3
 ENV LOGGING_LEVEL=INFO
 

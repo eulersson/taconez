@@ -31,6 +31,7 @@ services:
     volumes:
       - ./prerolls:/app/prerolls
       - ./recordings:/app/recordings
+      - ./dataset:/app/dataset
       - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
       # To be able to resolve the Raspberry Pi's local hostnames from the container, since
       # they are resolved through mDNS.
