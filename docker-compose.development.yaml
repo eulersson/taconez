@@ -6,6 +6,7 @@ services:
     build:
       args:
         - SKIP_BUILD=1
+        - USE_TFLITE=0
     volumes:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer

@@ -25,7 +25,7 @@ if __name__ == "__main__":
         config.print_config()
 
     if args.command == "inference":
-        inference.run()
+        inference.run_loop()
 
     elif args.command == "retrain":
         retrain.run()
@@ -33,3 +33,7 @@ if __name__ == "__main__":
     else:
         parser.print_help()
         exit(1)
+
+
+
+

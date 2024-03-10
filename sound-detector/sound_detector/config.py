@@ -1,3 +1,7 @@
+"""
+Configuration management from environment variables.
+"""
+
 import os
 import logging
 
@@ -9,10 +13,11 @@ env.read_env()
 
 
 class _Config:
-    """
-    Holds settings used across the application. It's a singleton, so it's instantiated
-    only once and the same instance is used across the application. Do not use this
-    class but instead import the `config` instance from this module.
+    """Holds settings used across the application.
+
+    It's a singleton, so it's instantiated only once and the same instance is used
+    across the application. Do not use this class but instead import the `config`
+    instance from this module.
 
     Example:
 
@@ -43,11 +48,6 @@ class _Config:
         # Use TFLite or the full TensorFlow model. TFLite is faster and uses less memory.
         # It's used for inference only.
         self.use_tflite = env.bool("USE_TFLITE", True)
-
-        # The "monitor" mode is useful for gathering sound data and see what categories
-        # are detected (unless it is in the `IGNORE_SOUNDS`). The "detection" mode is
-        # useful when you want to react against a specific category of sound.
-        self.only_monitor_no_detect = env.bool("ONLY_MONITOR_NO_DETECT", False)
 
         # Where to save the recordings (and prerolls)
         self.detected_recordings_dir = "/app/recordings"
@@ -91,10 +91,21 @@ class _Config:
             self.retrained_model_path = env.str("RETRAINED_MODEL_PATH", required=True)
 
         if not self.use_retrained_model:
-            self.multiclass_detection_threshold = env.float("DETECTION_THRESHOLD", 0.3)
-            self.multiclass_detect_sounds = env.list("DETECT_SOUNDS", [])
+
+            # The "monitor" mode is useful for gathering sound data and see what
+            # categories are detected (unless it is in the `IGNORE_SOUNDS`). The
+            # "detection" mode is useful when you want to react against a specific
+            # category of sound.
+            self.multiclass_only_monitor_no_detect = env.bool(
+                "MULTICLASS_ONLY_MONITOR_NO_DETECT", False
+            )
+
+            self.multiclass_detection_threshold = env.float(
+                "MULTICLASS_DETECTION_THRESHOLD", 0.3
+            )
+            self.multiclass_detect_sounds = env.list("MULTICLASS_DETECT_SOUNDS", [])
             self.multiclass_ignore_sounds = []
-            with open("./.ignore-sounds", "r") as f:
+            with open("./.multiclass-ignore-sounds", "r") as f:
                 self.multiclass_ignore_sounds = f.read().splitlines()
 
         self.audio_format = pyaudio.paInt16

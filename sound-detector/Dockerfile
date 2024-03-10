@@ -110,7 +110,7 @@ RUN eval poetry install --no-interaction \
   && apt-get autoremove -y --purge
 
 
-COPY sound-detector/.ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./
+COPY sound-detector/.multiclass-ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./
 
 ENV SKIP_RECORDING=0
 ENV SKIP_DETECTION_NOTIFICATION=0
@@ -120,9 +120,9 @@ ENV PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal
 # The "monitor" mode is useful for gathering sound data and see what categories are
 # detected. The "detection" mode is useful when you want to react against a specific
 # category of sound.
-ENV ONLY_MONITOR_NO_DETECT=0
-ENV DETECT_SOUNDS=Clip-clop
-ENV DETECT_SOUND_THRESHOLD=0.3
+ENV MULTICLASS_ONLY_MONITOR_NO_DETECT=0
+ENV MULTICLASS_DETECT_SOUNDS=Clip-clop
+ENV MULTICLASS_DETECT_SOUND_THRESHOLD=0.3
 ENV LOGGING_LEVEL=INFO
 
 ENTRYPOINT [ "python", "sound_detector.py" ]
