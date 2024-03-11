@@ -86,6 +86,9 @@ class YAMNetModel:
 
         logging.info("Initializing YAMNet using TensorFlow Lite.")
 
+        if not os.path.exists(self.tflite_model_path):
+            self._download_tflite_model()
+
         labels_file = zipfile.ZipFile(self.tflite_model_path).open(
             "yamnet_label_list.txt"
         )
@@ -120,7 +123,7 @@ class YAMNetModel:
         """
         # TODO: There might be a better way to download the model from Kaggle (former TensorFlow Hub).
         model_tarball_path = os.path.join(
-            os.path.dirname(__file__), "downloads", "yamnet-classification.tar.gz"
+            os.path.dirname(__file__), "downloads", "yamnet", "yamnet-classification.tar.gz"
         )
 
         if not os.path.exists(model_tarball_path):
@@ -131,7 +134,7 @@ class YAMNetModel:
 
         if not os.path.exists(self.tflite_model_path):
             file = tarfile.open(model_tarball_path)
-            file.extractall(".")
+            file.extractall(os.path.dirname(self.tflite_model_path))
             file.close()
 
     def _initialize_full_model(self):

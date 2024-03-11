@@ -12,11 +12,24 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest="command")
 
-    parser_inference = subparsers.add_parser("inference")
+    parser_inference = subparsers.add_parser(
+        "inference",
+        help=(
+            "Run the inference loop. Records 10s shots runs predictions and notifies "
+            "the playback distributor to bounce back the sounds. This is the main "
+            "entry point of the app."
+        )
+    )
 
     # TODO: Include specific arguments for inference `parser_inference.add_argument('--flag', ...)`
 
-    parser_retrain = subparsers.add_parser("retrain")
+    parser_retrain = subparsers.add_parser(
+        "retrain",
+        help=(
+            "Regenerate a retrained model based on YAMNet that specialized only on "
+            "high-heel sounds."
+        )
+    )
 
     # TODO: Include specific arguments for retrain `parser_retrain.add_argument('--flag', ...)`
 
