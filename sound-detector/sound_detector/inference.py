@@ -22,19 +22,22 @@ from sound_detector.audio import record_audio, write_audio
 from sound_detector.config import config
 from sound_detector.db import write_db_entry
 from sound_detector.events import PlayEventsManager
+from sound_detector.models.retrained import RetrainedModel
 from sound_detector.models.yamnet import YAMNetModel
 
 
 def run_loop():
+    play_events_manager = None
+    push_socket = None
+
     if config.skip_detection_notification:
         logging.info("Upon detections the distributor won't be notified.")
-        playEventsManager = None
     else:
         logging.info("Upon detections the distributor will be notified.")
 
         context = zmq.Context()
 
-        playEventsManager = PlayEventsManager(context)
+        play_events_manager = PlayEventsManager(context)
 
         # Connect to the distributor that will be notified upon detection:
         push_addr = config.zmq_distributor_push_addr
@@ -45,15 +48,15 @@ def run_loop():
         logging.info(f"Connected ZMQ PUSH socket ({push_addr}).")
 
     if config.use_retrained_model:
-        if config.use_tflite:
-
-        else:
+        model = RetrainedModel()
     else:
-        if config.use_tflite:
-        else:
+        model = YAMNetModel()
+
+    model.initialize()
 
     while True:
-        run(playEventsManager)
+        run(model, play_events_manager=play_events_manager, zmq_push_socket=push_socket)
+
 
 def run(
     model: Any,
@@ -91,20 +94,25 @@ def run(
         result = run_retrained_inference(model)
         detected_sound_name = "high-heel"
     else:
-        result, slugified_resolved_class_name = run_yamnet_inference(model)
-        detected_sound_name = slugified_resolved_class_name
+        result = run_yamnet_inference(model)
+        if result:
+            slugified_resolved_class_name = result
+            detected_sound_name = slugified_resolved_class_name
 
-    if not config.skip_recording:
+    if result and not config.skip_recording:
+        # Save the file to the NFS share.
         file_path = write_audio(waveform_binary, suffix=slugified_resolved_class_name)
         relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
 
         if config.influx_db_token:
+            # Write the detection to the database.
             write_db_entry(detected_sound_name, relative_sound_path)
         else:
             logging.info("Not writing database entry.")
 
         if not config.skip_detection_notification and zmq_push_socket:
             logging.info("Notifying distributor about detected sound")
+            # Playback the sound to all slaves.
             zmq_push_socket.send_json(
                 {
                     "sound_file_path": relative_sound_path,
@@ -125,10 +133,16 @@ def run_retrained_inference(retrained_model, waveforms: List[NDArray]):
             stripes that we will iteratively run inference on and reduce the results.
 
     Returns:
-        The probability of the sound being a high-heel sound as a float, unbounded. If
-        negative then it is not a high-heel sound.
+        True if the sound is detected, False otherwise.
     """
-    pass
+    for waveform in waveforms:
+        prediction = retrained_model.predict(waveform)
+
+        # At the first occurrence we can return True and stop the inference.
+        if prediction == True:
+            return True
+
+    return False
 
 
 def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
@@ -227,4 +241,4 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
     logging.info(f"DETECTION {now} {resolved_class_name} {resolved_score}")
     slugified_resolved_class_name = slugify(resolved_class_name, separator="_")
 
-    return resolved_score, slugified_resolved_class_name
+    return slugified_resolved_class_name

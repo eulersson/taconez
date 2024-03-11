@@ -27,7 +27,15 @@ class YAMNetModel:
 
     def __init__(self):
         self.initialized = False
-    
+
+    def initialize(self):
+        if config.use_tflite:
+            self._initialize_tflite_model()
+        else:
+            self._initialize_full_model()
+
+        self.initialized = True
+
     def predict(self, waveform: NDArray) -> NDArray:
         """
         Guesses the sound category given some audio.
@@ -70,14 +78,6 @@ class YAMNetModel:
             scores, embeddings, spectrogram = self.model(waveform)
 
         return scores
-
-    def initialize(self):
-        if config.use_tflite:
-            self._initialize_tflite_model()
-        else:
-            self._initialize_full_model()
-
-        self.initialized = True
 
     def _initialize_tflite_model(self):
         """

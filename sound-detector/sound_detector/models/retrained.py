@@ -64,6 +64,8 @@ class RetrainedModel:
             output = self.model(waveform)[0]
             logging.info(f"Output (high-heel) (saved_model): {output}")
 
+        # The probability of the sound being a high-heel sound as a float, unbounded. If
+        # negative then it is not a high-heel sound.
         top_score = output["scores"][0]
         logging.info(f"Top score (high-heel): {top_score}")
 
