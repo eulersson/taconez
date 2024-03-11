@@ -90,8 +90,11 @@ class _Config:
         if self.use_retrained_model:
             self.retrained_model_path = env.str("RETRAINED_MODEL_PATH", required=True)
 
-        if not self.use_retrained_model:
-
+        if self.use_retrained_model:
+            self.retrained_model_output_threshold = env.float(
+                "RETRAINED_MODEL_OUTPUT_THRESHOLD", required=True
+            )
+        else:
             # The "monitor" mode is useful for gathering sound data and see what
             # categories are detected (unless it is in the `IGNORE_SOUNDS`). The
             # "detection" mode is useful when you want to react against a specific

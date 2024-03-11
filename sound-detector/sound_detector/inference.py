@@ -8,7 +8,7 @@ import time
 
 from datetime import datetime
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import zmq
 
@@ -21,8 +21,96 @@ from slugify import slugify
 from sound_detector.audio import record_audio, write_audio
 from sound_detector.config import config
 from sound_detector.db import write_db_entry
-from sound_detector.events import PlayEvents
-from sound_detector.yamnet_model import YAMNetModel
+from sound_detector.events import PlayEventsManager
+from sound_detector.models.yamnet import YAMNetModel
+
+
+def run_loop():
+    if config.skip_detection_notification:
+        logging.info("Upon detections the distributor won't be notified.")
+        playEventsManager = None
+    else:
+        logging.info("Upon detections the distributor will be notified.")
+
+        context = zmq.Context()
+
+        playEventsManager = PlayEventsManager(context)
+
+        # Connect to the distributor that will be notified upon detection:
+        push_addr = config.zmq_distributor_push_addr
+        push_socket = context.socket(zmq.PUSH)
+
+        logging.info(f"Connecting to sound distribution broker at {push_addr}.")
+        push_socket.connect(push_addr)
+        logging.info(f"Connected ZMQ PUSH socket ({push_addr}).")
+
+    if config.use_retrained_model:
+        if config.use_tflite:
+
+        else:
+    else:
+        if config.use_tflite:
+        else:
+
+    while True:
+        run(playEventsManager)
+
+def run(
+    model: Any,
+    play_events_manager: Optional[PlayEventsManager] = None,
+    zmq_push_socket: Optional[zmq.Socket] = None,
+):
+    """Records audio segments form the microphone and passes it to the model to see if
+    the prediction catches the specific sound.
+
+    If a detection happens the analyzed audio file is written down to an NFS-shared
+    folder and the subsequent parts of the pipeline are notified.
+
+    Args:
+        model: Model to use for detection. It can be either an instance of our wrapper
+            `YAMNetModel`, a `tflite.Interpreter` object or a trackable object (the
+            returned value of `tf.saved_model.load`).
+        labels: Class names of the categories the model can recognize.
+        zmq_socket: Used to notify the distributor a sound has been detected.
+    """
+    logging.info("Running inference...")
+
+    waveforms, waveform_binary = record_audio()
+
+    if (
+        play_events_manager
+        and play_events_manager.has_been_recording_while_sound_was_playing()
+    ):
+        logging.info(
+            "[last_play_*] Skipping sound processing because sound was being played "
+            "during recording and might cause feedback."
+        )
+        return
+
+    if config.use_retrained_model:
+        result = run_retrained_inference(model)
+        detected_sound_name = "high-heel"
+    else:
+        result, slugified_resolved_class_name = run_yamnet_inference(model)
+        detected_sound_name = slugified_resolved_class_name
+
+    if not config.skip_recording:
+        file_path = write_audio(waveform_binary, suffix=slugified_resolved_class_name)
+        relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
+
+        if config.influx_db_token:
+            write_db_entry(detected_sound_name, relative_sound_path)
+        else:
+            logging.info("Not writing database entry.")
+
+        if not config.skip_detection_notification and zmq_push_socket:
+            logging.info("Notifying distributor about detected sound")
+            zmq_push_socket.send_json(
+                {
+                    "sound_file_path": relative_sound_path,
+                    "when": round(time.time()),
+                }
+            )
 
 
 def run_retrained_inference(retrained_model, waveforms: List[NDArray]):
@@ -140,89 +228,3 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
     slugified_resolved_class_name = slugify(resolved_class_name, separator="_")
 
     return resolved_score, slugified_resolved_class_name
-
-def run_loop():
-    playEvents = PlayEvents()
-    # TODO: Work on the main loop.
-    # push_socket = None
-    # if SKIP_DETECTION_NOTIFICATION:
-    #     logging.info("Upon detections the distributor won't be notified.")
-    # else:
-    #     # Connect to the distributor that will be notified upon detection:
-    #     context = zmq.Context()
-    #     logging.info(
-    #         f"Connecting to sound distribution broker at {ZMQ_DISTRIBUTOR_PUSH_ADDR}."
-    #     )
-    #     push_socket = context.socket(zmq.PUSH)
-    #     push_socket.connect(ZMQ_DISTRIBUTOR_PUSH_ADDR)
-    #     logging.info(f"Connected ZMQ PUSH socket ({ZMQ_DISTRIBUTOR_PUSH_ADDR}).")
-
-    #     sub_socket = context.socket(zmq.SUB)
-    #     sub_socket.connect(ZMQ_DISTRIBUTOR_SUB_ADDR)
-
-    #     # Subscribe to all messages
-    #     sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-
-    #     logging.info(f"Connected ZMQ SUB socket ({ZMQ_DISTRIBUTOR_SUB_ADDR}).")
-
-    #     # Listen to "sound playing" messages as a separate thread.
-    #     thread = threading.Thread(
-    #         target=pull_sound_play_events, args=(sub_socket,), daemon=True
-    #     )
-    #     thread.start()
-
-    # model, labels = load_model_and_labels()
-
-    # # Run the detection loop.
-    # while True:
-    #     run_inference(model, labels, zmq_socket=push_socket)
-
-def run(
-    model: YAMNetModel | tflite.Interpreter, zmq_socket: Optional[zmq.Socket] = None
-):
-    """Records audio segments form the microphone and passes it to the model to see if
-    the prediction catches the specific sound.
-
-    If a detection happens the analyzed audio file is written down to an NFS-shared
-    folder and the subsequent parts of the pipeline are notified.
-
-    Args:
-        model: Model to use for detection.
-        labels: Class names of the categories the model can recognize.
-        zmq_socket: Used to notify the distributor a sound has been detected.
-    """
-    logging.info("Running inference...")
-
-    waveforms, waveform_binary = record_audio()
-
-    if has_been_recording_while_sound_was_playing():
-        logging.info(
-            "[last_play_*] Skipping sound processing because sound was being played "
-            "during recording and might cause feedback."
-        )
-        return
-
-    if config.use_retrained_model:
-        result = run_retrained_inference(model)
-        detected_sound_name = "high-heel"
-    else:
-        result, slugified_resolved_class_name = run_yamnet_inference(model)
-        detected_sound_name = slugified_resolved_class_name
-
-    if not config.skip_recording:
-        file_path = write_audio(waveform_binary, suffix=slugified_resolved_class_name)
-        relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
-
-        if config.influx_db_token:
-            write_db_entry(detected_sound_name, relative_sound_path)
-        else:
-            logging.info("Not writing database entry.")
-
-        if not config.skip_detection_notification and zmq_socket:
-            logging.info("Notifying distributor about detected sound")
-            zmq_socket.send_json(
-                {
-                    "sound_file_path": relative_sound_path,
-                    "when": round(time.time()),
-                }
-            )

@@ -28,6 +28,8 @@ ENV DEBUG=$DEBUG
 
 ARG USE_RETRAINED_MODEL=1
 ENV USE_RETRAINED_MODEL=$USE_RETRAINED_MODEL
+ARG REMOVE_DATASET_AFTER_TRAINING=1
+ENV REMOVE_DATASET_AFTER_TRAINING=$REMOVE_DATASET_AFTER_TRAINING
 ENV RETRAINED_MODEL_PATH=/app/sound-detector/retrained_model
 
 # Slim won't have `gcc` which is needed by building some Python depenencies.
@@ -110,7 +112,16 @@ RUN eval poetry install --no-interaction \
   && apt-get autoremove -y --purge
 
 
-COPY sound-detector/.multiclass-ignore-sounds sound-detector/sound_detector.py  sound-detector/tests ./
+COPY sound-detector/.multiclass-ignore-sounds sound-detector/sound_detector sound-detector/tests dataset ./
+
+# If USE_RETRAINED_MODEL is set, run the retraining command.
+RUN \
+  if [ $USE_RETRAINED_MODEL = 1 ]; then\
+    python main.py retrain; \
+    if [ $REMOVE_DATASET_AFTER_TRAINING = 1 ]; then\
+      rm -rf dataset; \
+    fi \
+  fi
 
 ENV SKIP_RECORDING=0
 ENV SKIP_DETECTION_NOTIFICATION=0
@@ -124,5 +135,7 @@ ENV MULTICLASS_ONLY_MONITOR_NO_DETECT=0
 ENV MULTICLASS_DETECT_SOUNDS=Clip-clop
 ENV MULTICLASS_DETECT_SOUND_THRESHOLD=0.3
 ENV LOGGING_LEVEL=INFO
+
+ENV RETRAINED_MODEL_OUTPUT_THRESHOLD=0
 
 ENTRYPOINT [ "python", "sound_detector.py" ]

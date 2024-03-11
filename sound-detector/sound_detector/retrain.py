@@ -4,9 +4,11 @@ Creates a new model from an existing one (YAMNet) and retrains it to detect high
 
 import logging
 
+from sound_detector.models.retrained import RetrainedModel
+
 def run():
-    """
-    Extract the embeddings from YAMNet model and use it as inputs to a model we create.
-    Then train the new model with our labeled sound data under `sound-detector/dataset`.
-    """
     logging.info("Running retrain...")
+    
+    retrained_model = RetrainedModel()
+    retrained_model.build_and_retrain()
+    retrained_model.initialize()

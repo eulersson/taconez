@@ -1,0 +1,2 @@
+class TaconezException(Exception):
+    pass

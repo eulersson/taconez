@@ -1,4 +1,5 @@
 import time
+import threading
 
 from typing import Dict
 
@@ -6,17 +7,34 @@ import zmq
 
 import logging
 
+from sound_detector.config import config
+from sound_detector.exceptions import TaconezException
 
-class PlayEvents:
+
+class PlayEventsManager:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
-            cls._instance = super(PlayEvents, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(PlayEventsManager, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self, socket: zmq.Socket):
-        self.socket = socket
+    def __init__(self, context: zmq.Context):
+        if config.skip_detection_notification:
+            raise TaconezException(
+                "This class should not be used when `skip_detection_notification` is set to True."
+            )
+
+        sub_addr = config.zmq_distributor_sub_addr
+        self.sub_socket = context.socket(zmq.SUB)
+
+        logging.info(f"Connecting to sound distribution broker at {sub_addr}.")
+        self.sub_socket.connect(sub_addr)
+        logging.info(f"Connected ZMQ SUB socket ({sub_addr}).")
+
+        # Subscribe to all messages
+        self.sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+
 
         # Last time a sound was played backed over the speakers.
         self.last_play_at: int | None = None
@@ -25,6 +43,13 @@ class PlayEvents:
 
         # Duration in seconds of the last preroll that was selected.
         self.preroll_durations: Dict[str, float] = {}
+
+        self.thread = threading.Thread(
+            target=self.periodically_pull_sound_play_events, daemon=True
+        )
+
+    def start(self):
+        self.thread.start()
 
     def has_been_recording_while_sound_was_playing(self) -> bool:
         """Check if sound had been playing last few seconds to avoid analyzing sound that
@@ -43,9 +68,9 @@ class PlayEvents:
                 self.last_play_preroll_duration = None
             return is_sound_playing
 
-    def pull_sound_play_events(self):
+    def periodically_pull_sound_play_events(self):
         while True:
-            msg = self.socket.recv_json()
+            msg = self.sub_socket.recv_json()
             logging.info(msg)
 
             if isinstance(msg, dict) and msg.get("when"):

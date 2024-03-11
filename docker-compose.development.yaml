@@ -7,6 +7,8 @@ services:
       args:
         - SKIP_BUILD=1
         - USE_TFLITE=0
+        - USE_RETRAINED_MODEL=1
+        - REMOVE_DATASET_AFTER_TRAINING=1
     volumes:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
