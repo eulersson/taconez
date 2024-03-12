@@ -41,7 +41,7 @@ class _Config:
         # Verbosity of the logging and its configuration.
         self.logging_level = env.str("LOGGING_LEVEL", "INFO")
         logging.basicConfig(
-            format="[%(filename)s:%(funcName)s:%(lineno)s] %(message)s",
+            format="[%(filename)s:%(funcName)s:%(lineno)s] %(levelname)s %(message)s",
             level=self.logging_level,
         )
 
