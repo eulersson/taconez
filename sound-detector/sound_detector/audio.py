@@ -11,8 +11,6 @@ from typing import List, Optional, Tuple
 import pyaudio
 
 import numpy as np
-import tensorflow as tf
-import tensorflow_io as tfio
 
 from numpy.typing import NDArray
 
@@ -21,7 +19,7 @@ from sound_detector.config import config
 import logging
 
 
-def record_audio(p: pyaudio.PyAudio) -> Tuple[List[NDArray], bytes]:
+def record_audio(pyaudio_instance: pyaudio.PyAudio) -> Tuple[List[NDArray], bytes]:
     """Records audio from microphone returning an array of frames.
 
     The underlying neural network model is YAMNet and it has the following input
@@ -35,7 +33,7 @@ def record_audio(p: pyaudio.PyAudio) -> Tuple[List[NDArray], bytes]:
         values of which ranging [-1.0, 1.0] and the whole stripe binary audio as
         bytes.
     """
-    stream = p.open(
+    stream = pyaudio_instance.open(
         format=config.audio_format,
         channels=config.audio_channels,
         rate=config.audio_rate,
@@ -71,7 +69,9 @@ def record_audio(p: pyaudio.PyAudio) -> Tuple[List[NDArray], bytes]:
     return waveforms, waveform_binary
 
 
-def write_audio(p: pyaudio.PyAudio, frames: bytes, suffix: Optional[str] = "") -> str:
+def write_audio(
+    pyaudio_instance: pyaudio.PyAudio, frames: bytes, suffix: Optional[str] = ""
+) -> str:
     """Writes audio frames as bytes to a file.
 
     Args:
@@ -110,7 +110,7 @@ def write_audio(p: pyaudio.PyAudio, frames: bytes, suffix: Optional[str] = "") -
 
     wave_file = wave.open(absolute_file_path, "wb")
     wave_file.setnchannels(config.audio_channels)
-    wave_file.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    wave_file.setsampwidth(pyaudio_instance.get_sample_size(pyaudio.paInt16))
     wave_file.setframerate(config.audio_rate)
     wave_file.writeframes(frames)
     wave_file.close()
@@ -118,15 +118,3 @@ def write_audio(p: pyaudio.PyAudio, frames: bytes, suffix: Optional[str] = "") -
     logging.info(f"Saved sound to {absolute_file_path}.")
 
     return absolute_file_path
-
-@tf.function
-def load_wav_16k_mono(filename):
-    """
-    Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio.
-    """
-    file_contents = tf.io.read_file(filename)
-    wav, sample_rate = tf.audio.decode_wav(file_contents, desired_channels=1)
-    wav = tf.squeeze(wav, axis=-1)
-    sample_rate = tf.cast(sample_rate, dtype=tf.int64)
-    wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
-    return wav

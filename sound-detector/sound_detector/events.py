@@ -14,7 +14,7 @@ from sound_detector.exceptions import TaconezException
 class PlayEventsManager:
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, context: zmq.Context, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = super(PlayEventsManager, cls).__new__(cls, *args, **kwargs)
         return cls._instance

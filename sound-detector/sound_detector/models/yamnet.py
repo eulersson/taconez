@@ -36,7 +36,7 @@ class YAMNetModel:
 
         self.initialized = True
 
-    def predict(self, waveform: NDArray) -> NDArray:
+    def predict(self, waveform: NDArray, return_embeddings=False) -> NDArray:
         """
         Guesses the sound category given some audio.
 
@@ -53,6 +53,12 @@ class YAMNetModel:
               -1.0 and 1.0. If not 0.975 seconds, it will be sliced by the model and
               various frames will be analyzed and predicted.
 
+        Keyword Args:
+            return_embeddings (bool): Returns the embedings instead of the scores.
+                Useful for retraining purposes where you want to use the internal state
+                of the neural network to use as inputs to another model. Only works when
+                using the full model and not TFLite.
+
         Returns:
             The scores for all the classes as an array of shape (M, N). It's a
             two-dimensional list where the first dimension (M) corresponds to time slices
@@ -63,6 +69,11 @@ class YAMNetModel:
                 "You must call `.initialize()` first before using the model."
             )
         if config.use_tflite:
+            if return_embeddings:
+                raise TaconezException(
+                    "The 'return_embeddings' option is not supported when using TFLite."
+                )
+
             interpreter = self.model
 
             input_details = interpreter.get_input_details()
@@ -76,6 +87,9 @@ class YAMNetModel:
             scores = interpreter.get_tensor(scores_output_index)
         else:
             scores, embeddings, spectrogram = self.model(waveform)
+
+            if return_embeddings:
+                return embeddings
 
         return scores
 

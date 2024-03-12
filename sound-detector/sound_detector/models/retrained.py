@@ -10,7 +10,6 @@ import tensorflow as tf
 
 from numpy.typing import NDArray
 
-from sound_detector.audio import load_wav_16k_mono
 from sound_detector.config import config
 from sound_detector.exceptions import TaconezException
 from sound_detector.models.yamnet import YAMNetModel
@@ -54,25 +53,25 @@ class RetrainedModel:
         logging.info("Retrained model initialized successfully and ready to use.")
         self.initialized = True
 
-    def predict(self, waveform: NDArray) -> bool:
+    def predict(self, waveform: NDArray) -> float:
+        """Given a waveform, run inference on the retrained model and return the
+        prediction as an unnormalized score.
+        """
         if config.use_tflite:
             interpreter = self.model
             signature = interpreter.get_signature_runner()
             output = signature(audio=waveform)
-            logging.info(f"Output (high-heel) (tflite): {output}")
+            top_score = output["classifier"][0]
+
+            logging.debug(f"Top score (high-heel) (tflite): {top_score}")
+            prediction = top_score
         else:
             output = self.model(waveform)[0]
-            logging.info(f"Output (high-heel) (saved_model): {output}")
 
-        # The probability of the sound being a high-heel sound as a float, unbounded. If
-        # negative then it is not a high-heel sound.
-        top_score = output["scores"][0]
-        logging.info(f"Top score (high-heel): {top_score}")
+            logging.debug(f"Output (high-heel) (saved_model): {output}")
+            prediction = output
 
-        is_high_heel = top_score > self.retrained_model_output_threshold
-        logging.info(f"Is high-heel: {is_high_heel}")
-
-        return is_high_heel
+        return prediction
 
     def build_and_retrain(self):
         """
@@ -122,9 +121,7 @@ class RetrainedModel:
         self.save_model(retrained_model)
 
     def save_model(self, retrained_model):
-        """
-        Saves a 'saved_model' and a 'tflite' model for the retrained model.
-        """
+        """Saves a 'saved_model' and a 'tflite' model for the retrained model."""
         # Delete any model files that might exist before saving new ones.
         if os.path.exists(self.saved_model_path):
             shutil.rmtree(self.saved_model_path)
@@ -146,10 +143,11 @@ class RetrainedModel:
         input_segment = tf.keras.layers.Input(shape=(), dtype=tf.float32, name="audio")
 
         import tensorflow_hub as tfhub
+
         embedding_extraction_layer = tfhub.KerasLayer(
             YAMNetModel.model_handle, trainable=False, name="yamnet"
         )
-        
+
         _, embeddings_output, _ = embedding_extraction_layer(input_segment)
         serving_outputs = retrained_model(embeddings_output)
         serving_outputs = ReduceMeanLayer(axis=0, name="classifier")(serving_outputs)
@@ -161,13 +159,32 @@ class RetrainedModel:
         tflite_model = converter.convert()
 
         # Save the model.
-        with open(self.tflite_model_path, 'wb') as f:
+        with open(self.tflite_model_path, "wb") as f:
             f.write(tflite_model)
 
-
     def prepare_datasets(self):
-        pos_dir = os.path.join(os.path.dirname(__file__), "dataset", "positive")
-        neg_dir = os.path.join(os.path.dirname(__file__), "dataset", "negative")
+        import tensorflow as tf
+        import tensorflow_io as tfio
+ 
+        # TensorFlow imports will only work if not using USE_TFLITE, and since this
+        # method `prepare_datasets` will always be run under USE_TFLITE=1 that's why
+        # why we import these here instead of at the top of the `sound_detector/audio.py`
+        # module.
+        @tf.function
+        def load_wav_16k_mono(filename):
+            """Load a WAV file, convert it to a float tensor, resample to 16 kHz
+            single-channel audio.
+            """
+            file_contents = tf.io.read_file(filename)
+            wav, sample_rate = tf.audio.decode_wav(file_contents, desired_channels=1)
+            wav = tf.squeeze(wav, axis=-1)
+            sample_rate = tf.cast(sample_rate, dtype=tf.int64)
+            wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
+            return wav
+
+        app_root = os.path.join(os.path.dirname(__file__), "..", "..")
+        pos_dir = os.path.join(app_root, "dataset", "positive")
+        neg_dir = os.path.join(app_root, "dataset", "negative")
 
         pos = tf.data.Dataset.list_files(pos_dir + os.path.sep + "*.wav").map(
             load_wav_16k_mono
@@ -189,9 +206,10 @@ class RetrainedModel:
         logging.info(f"Prepared a dataset of length {main_ds_len}")
 
         yamnet_model = YAMNetModel()
+        yamnet_model.initialize()
 
         def extract_embedding(wav_data, label):
-            scores, embeddings, spectogram = yamnet_model(wav_data)
+            embeddings = yamnet_model.predict(wav_data, return_embeddings=True)
             num_embeddings = tf.shape(embeddings)[0]
             return (embeddings, tf.repeat(label, num_embeddings))
 
@@ -203,13 +221,15 @@ class RetrainedModel:
         num_train = int(main_ds_len * 0.8)
         num_test = int(main_ds_len * 0.1)
         num_val = main_ds_len - num_train - num_test
-        
-        logging.info(f"Dataset sizes: train ({num_train}), test ({num_test}), val ({num_val})")
-        
+
+        logging.info(
+            f"Dataset sizes: train ({num_train}), test ({num_test}), val ({num_val})"
+        )
+
         train_ds = cached_ds.take(num_train)
         test_ds = cached_ds.skip(num_train).take(num_test)
         val_ds = cached_ds.skip(num_train + num_test).take(num_val)
-        
+
         train_ds = train_ds.cache().shuffle(1000).batch(16).prefetch(tf.data.AUTOTUNE)
         val_ds = val_ds.cache().batch(16).prefetch(tf.data.AUTOTUNE)
         test_ds = test_ds.cache().batch(16).prefetch(tf.data.AUTOTUNE)

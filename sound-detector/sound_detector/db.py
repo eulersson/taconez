@@ -9,7 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from sound_detector.config import config
 
 
-def write_db_entry(detected_sound_name, relative_sound_path):
+def write_db_entry(detected_sound_slug: str, relative_sound_path: str):
     """Writes the sound occurrence to the Influx DB store.
 
     Args:
@@ -24,7 +24,7 @@ def write_db_entry(detected_sound_name, relative_sound_path):
     write_api = client.write_api(write_options=SYNCHRONOUS)
     p = (
         influxdb_client.Point("detections")
-        .field("sound", detected_sound_name)
+        .field("sound", detected_sound_slug)
         .field("audio_file_path", relative_sound_path)
     )
     write_api.write(bucket="taconez", org="taconez", record=p)

@@ -10,6 +10,7 @@ from datetime import datetime
 
 from typing import Any, List, Optional, Tuple
 
+import pyaudio
 import zmq
 
 import numpy as np
@@ -27,6 +28,9 @@ from sound_detector.models.yamnet import YAMNetModel
 
 
 def run_loop():
+    """Runs the main recording-inference-notification loop."""
+    pyaudio_instance = pyaudio.PyAudio()
+
     play_events_manager = None
     push_socket = None
 
@@ -55,11 +59,17 @@ def run_loop():
     model.initialize()
 
     while True:
-        run(model, play_events_manager=play_events_manager, zmq_push_socket=push_socket)
+        run(
+            model,
+            pyaudio_instance,
+            play_events_manager=play_events_manager,
+            zmq_push_socket=push_socket,
+        )
 
 
 def run(
     model: Any,
+    pyaudio_instance: pyaudio.PyAudio,
     play_events_manager: Optional[PlayEventsManager] = None,
     zmq_push_socket: Optional[zmq.Socket] = None,
 ):
@@ -76,9 +86,9 @@ def run(
         labels: Class names of the categories the model can recognize.
         zmq_socket: Used to notify the distributor a sound has been detected.
     """
-    logging.info("Running inference...")
+    logging.debug("Running inference...")
 
-    waveforms, waveform_binary = record_audio()
+    waveforms, waveform_binary = record_audio(pyaudio_instance)
 
     if (
         play_events_manager
@@ -91,22 +101,25 @@ def run(
         return
 
     if config.use_retrained_model:
-        result = run_retrained_inference(model)
-        detected_sound_name = "high-heel"
+        positive_detection, top_score = run_retrained_inference(model, waveforms)
+        top_class_slug = "high_heel"
     else:
-        result = run_yamnet_inference(model)
-        if result:
-            slugified_resolved_class_name = result
-            detected_sound_name = slugified_resolved_class_name
+        positive_detection, top_score, top_class_slug = run_yamnet_inference(
+            model, waveforms
+        )
 
-    if result and not config.skip_recording:
+    if positive_detection and not config.skip_recording:
         # Save the file to the NFS share.
-        file_path = write_audio(waveform_binary, suffix=slugified_resolved_class_name)
+        file_path = write_audio(
+            pyaudio_instance,
+            waveform_binary,
+            suffix=f"{top_class_slug}_{top_score:.3f}",
+        )
         relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
 
         if config.influx_db_token:
             # Write the detection to the database.
-            write_db_entry(detected_sound_name, relative_sound_path)
+            write_db_entry(top_class_slug, relative_sound_path)
         else:
             logging.info("Not writing database entry.")
 
@@ -121,9 +134,17 @@ def run(
             )
 
 
-def run_retrained_inference(retrained_model, waveforms: List[NDArray]):
+def run_retrained_inference(
+    retrained_model, waveforms: List[NDArray]
+) -> Tuple[bool, float]:
     """Runs inference on the network that was retrained into a binary classifier to
     discriminate high-heel sounds.
+
+    We record batches of waveforms that are 10 seconds when added up together and we
+    feed them in shorter stripes to the model to see if we can detect the sound. Then we
+    process all the batched predictions. If at any moment an item of the batch exceeds
+    the `RETRAINED_MODEL_OUTPUT_THRESHOLD` we consider the sound detected and we don't
+    process furhter.
 
     Args:
         retrained_model: The retrained model to use for inference. If using TFLite it
@@ -133,19 +154,28 @@ def run_retrained_inference(retrained_model, waveforms: List[NDArray]):
             stripes that we will iteratively run inference on and reduce the results.
 
     Returns:
-        True if the sound is detected, False otherwise.
+        Whether the sound was detected or not and the highest score or the first score
+        that exceeds the detection threshold.
     """
+    predictions = []
     for waveform in waveforms:
         prediction = retrained_model.predict(waveform)
+        predictions.append(prediction)
 
-        # At the first occurrence we can return True and stop the inference.
-        if prediction == True:
-            return True
+        is_high_heel = prediction > config.retrained_model_output_threshold
+        if is_high_heel:
+            logging.info(
+                "High-heel sound detected: "
+                f"{prediction} > {config.retrained_model_output_threshold}"
+            )
+            return True, prediction
 
-    return False
+    return False, max(predictions)
 
 
-def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
+def run_yamnet_inference(
+    yamnet_model: YAMNetModel, waveforms: List[NDArray]
+) -> Tuple[bool, float, str]:
     """Runs inference on the YAMNet model to see if any of the sounds we are interested
     in are detected and if so the average score of the detection is returned.
 
@@ -156,6 +186,9 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
 
     However if the `ONLY_MONITOR_NO_DETECT` is set, then it only logs the detected
     sounds that are not in the `IGNORE_SOUNDS` list.
+
+    Returns:
+        A tuple containing the highest scoring class name and value.
     """
     # Run inference on the model to see what sound hsa been detected.
     predictions: List[Tuple[str, float]] = []
@@ -171,7 +204,7 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
         class_scores = np.mean(scores, axis=0)
         top_class_index = np.argmax(class_scores)
         top_score = class_scores[top_class_index]
-        top_class_name = yamnet_model.labels[top_class_index]
+        top_class_name = yamnet_model.class_names[top_class_index]
 
         if top_class_name not in config.multiclass_ignore_sounds:
             predictions.append((top_class_name, top_score))
@@ -198,7 +231,7 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
     if len(predictions):
         if config.multiclass_only_monitor_no_detect:
             logging.debug(f"Batch predictions: {predictions}")
-            logging.debug(f"Batch highest scores: {specific_sound_highest_scores}")
+            logging.debug(f"Specific sound highest scores: {specific_sound_highest_scores}")
 
     # TODO: Right now we will consider detection whenever we detect sounds that are not
     # in the IGNORE_SOUNDS list. It will be good to collect detections we can train
@@ -211,9 +244,9 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
     #   https://github.com/eulersson/taconez/issues/80
     #
     if config.multiclass_only_monitor_no_detect:
-        detected = len(predictions)
+        positive_detection = len(predictions) > 0
     else:
-        detected = any(
+        positive_detection = any(
             [
                 category in config.multiclass_detect_sounds
                 and score > config.multiclass_detection_threshold
@@ -221,10 +254,8 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
             ]
         )
 
-    if not detected:
-        return
-
-    resolved_class_name = ""
+    resolved_class_name = None
+    resolved_score = None
     if top_class_name not in config.multiclass_ignore_sounds:
         resolved_class_name = top_class_name
         resolved_score = top_score
@@ -237,8 +268,16 @@ def run_yamnet_inference(yamnet_model: YAMNetModel, waveforms: List[NDArray]):
                 resolved_score = prediction_value
                 break
 
-    now = datetime.now().isoformat()
-    logging.info(f"DETECTION {now} {resolved_class_name} {resolved_score}")
-    slugified_resolved_class_name = slugify(resolved_class_name, separator="_")
+    slugified_resolved_class_name = None
+    if resolved_class_name:
+        slugified_resolved_class_name = slugify(resolved_class_name, separator="-")
 
-    return slugified_resolved_class_name
+    now = datetime.now().isoformat()
+
+    logging.info(
+        f"DETECTION {now} "
+        f"positive_detection: {positive_detection}, "
+        f"[{resolved_class_name} {resolved_score}]"
+    )
+
+    return positive_detection, resolved_score, slugified_resolved_class_name
