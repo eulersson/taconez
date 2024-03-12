@@ -35,13 +35,24 @@
       "configurations": [
         {
           // Do not run unless you are within the container.
-          "name": "Debug Sound Detector",
+          "name": "Debug Sound Detector (inference)",
           "type": "debugpy",
           "request": "launch",
           "cwd": "${workspaceFolder}/sound-detector",
-          "program": "${workspaceFolder}/sound-detector/sound_detector.py",
-          "console": "integratedTerminal",
+          "program": "${workspaceFolder}/sound-detector/main.py",
+          "args": ["inference"],
+          "console": "integratedTerminal"
         },
+        {
+          // Do not run unless you are within the container.
+          "name": "Debug Sound Detector (retrain)",
+          "type": "debugpy",
+          "request": "launch",
+          "cwd": "${workspaceFolder}/sound-detector",
+          "program": "${workspaceFolder}/sound-detector/main.py",
+          "args": ["retrain"],
+          "console": "integratedTerminal",
+        }
       ]
     }
   }
