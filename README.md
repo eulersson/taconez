@@ -7,7 +7,7 @@
 </p>
 
 Sound warfare against your upper neighbour's high heel walks.
- 
+
 AI IoT Raspberry Pi powered solution to detect, analyse, plot and react against
 discomforting sounds, by bouncing them back to their source.
 
@@ -20,15 +20,16 @@ to bounce back her sounds.
 
 ## Progress
 
-To see the progress development check out its [GitHub Project](https://github.com/users/eulersson/projects/6).
+To see the progress and development check out its [GitHub Project](https://github.com/users/eulersson/projects/6).
 
 ## Quickstart
 
-This obviously has to be deployed to Raspberry Pis, automated provisioning and eployment
-is provided to do it and there's a [wiki page](../../wiki/1.-Provisioning-&-Deployment)
+This obviously has to be deployed to Raspberry Pis, automated provisioning and
+deployment exists and there's this [wiki page](../../wiki/1.-Provisioning-&-Deployment)
 is dedicated to it.
 
-But you can simulate the stack locally with Docker Compose!
+But you can simulate the stack locally with Docker Compose! On your host you will need
+Docker, Docker Compose and PulseAudio.
 
 ```bash
 # Clone the repository
@@ -37,16 +38,18 @@ git clone https://github.com/eulersson/taconez.wiki.git
 # Make sure all the submodules (third party dependencies) are installed:
 git submodule update --init --recursive
 
-# Configure your PulseAudio sound server
+# Run a pulse audio server on your host.
 brew install pulseaudio
 brew service start pulseaudio
-pactl load-module module-native-protocol-tcp
+
+# Configure your PulseAudio sound server
+pactl load-module module-native-protocol-tcp # allows processes to speak to audio server via TCP
 pactl list sinks short # see your sound output devices
 pactl set-default-sink <sink-name> # set your default output device
 pactl list sources short # see your sound input devices
 pactl set-default-source <sink-name> # set your default input device
 
-# Start listening for sounds and bouncing them back upon detection. 
+# Start listening for sounds and bouncing them back upon detection.
 docker-compose up
 ```
 
@@ -54,12 +57,12 @@ docker-compose up
 
 This project is composed of various pieces:
 
-| Module               | Purpose                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Sound Detector       | Discriminate and pick up specific sounds using AI.                                                                 |
-| Playback Distributor | Route the detected sound and bounce it back from multiple speakers on multiple locations.                          |
-| Sound Player         | Play any given sound when told by the distributor.                                                                 |
-| Journal Web App      | Visualize the sound occurrences. Useful to have an objective overview. If case gets to lawyers it might be useful. |
+| Module               | Purpose                                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sound Detector       | Discriminate and pick up specific sounds using AI.                                                                                                                     |
+| Playback Distributor | Route the detected sound and bounce it back from multiple speakers on multiple locations.                                                                              |
+| Sound Player         | Play any given sound when told by the distributor.                                                                                                                     |
+| Journal Web App      | Visualize the sound occurrences, monitor them and replay them back to your neighour. Useful to have an objective overview. If case gets to lawyers it might be useful. |
 
 ## Architecture
 
@@ -87,13 +90,6 @@ This is intended to be run in a group of Raspberry Pi
 
 ## Documentation
 
-Under each folder in this repository you will find more information about the particular
-piece.
-
-- [Sound Detector](sound-detector/README.md)
-- [Sound Player](sound-player/README.md)
-- [Playback Distributor](playback-distributor/README.md)
-
 If you are only interested in the provisioning and deployment of the architecture:
 
 | Document                                                                                        | Explains How To...                                                                                            |
@@ -111,10 +107,11 @@ running container sound on the host (be it a MacBook or a Raspberry Pi):
 
 Other documentation:
 
-| Document                                                     | Explains How To...                                                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| [Stack Recipes](../../wiki/5.-Stack-Recipes)                 | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible. |
-| [AI: Transfer Learning](../../wiki/6.-AI:-Transfer-Learning) | Repurpose an already trained classification neural network to classify specific sounds.                 |
+| Document                                                     | Explains How To...                                                                                                                              |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Stack Recipes](../../wiki/5.-Stack-Recipes)                 | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible.                                         |
+| [AI: Transfer Learning](../../wiki/6.-AI:-Transfer-Learning) | Repurpose an already trained classification neural network to classify specific sounds.                                                         |
+| [Modes of Operation](../../wiki/7.-Modes-of-Operation)       | The different ways you can run the sound detection (observing mode, detection mode, multiclass YAMNet, binary classifier retrained network...). |
 
 ## Coding Standards
 
