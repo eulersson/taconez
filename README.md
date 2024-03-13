@@ -1,5 +1,11 @@
 # taconez
 
+<p align="center">
+  <picture>
+    <img alt="Taconez Logo" src="./resources/logo/taconez-logo-full.svg">
+  </picture>
+</p>
+
 Sound warfare against your upper neighbour's high heel walks.
  
 AI IoT Raspberry Pi powered solution to detect, analyse, plot and react against
