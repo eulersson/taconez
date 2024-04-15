@@ -99,8 +99,8 @@ class _Config:
             # categories are detected (unless it is in the `IGNORE_SOUNDS`). The
             # "detection" mode is useful when you want to react against a specific
             # category of sound.
-            self.multiclass_only_monitor_no_detect = env.bool(
-                "MULTICLASS_ONLY_MONITOR_NO_DETECT", False
+            self.multiclass_stealth_mode = env.bool(
+                "MULTICLASS_STEALTH_MODE", False
             )
 
             self.multiclass_detection_threshold = env.float(

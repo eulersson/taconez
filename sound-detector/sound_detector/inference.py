@@ -184,8 +184,8 @@ def run_yamnet_inference(
         waveforms: The audio waveforms to run inference on. We usually record in 10
             stripes that we will iteratively run inference on and reduce the results.
 
-    However if the `ONLY_MONITOR_NO_DETECT` is set, then it only logs the detected
-    sounds that are not in the `IGNORE_SOUNDS` list.
+    However if the `STEALTH_MODE` is set, then it only logs the detected sounds that are
+    not in the `IGNORE_SOUNDS` list.
 
     Returns:
         A tuple containing the highest scoring class name and value.
@@ -209,7 +209,7 @@ def run_yamnet_inference(
         if top_class_name not in config.multiclass_ignore_sounds:
             predictions.append((top_class_name, top_score))
 
-            if config.multiclass_only_monitor_no_detect:
+            if config.multiclass_stealth_mode:
                 logging.debug(
                     f"{log_prefix} Main sound: {top_class_name} (score {top_score})"
                 )
@@ -223,13 +223,13 @@ def run_yamnet_inference(
             )
 
             if sound_score > 0:
-                if config.multiclass_only_monitor_no_detect:
+                if config.multiclass_stealth_mode:
                     logging.debug(
                         f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
                     )
 
     if len(predictions):
-        if config.multiclass_only_monitor_no_detect:
+        if config.multiclass_stealth_mode:
             logging.debug(f"Batch predictions: {predictions}")
             logging.debug(f"Specific sound highest scores: {specific_sound_highest_scores}")
 
@@ -243,7 +243,7 @@ def run_yamnet_inference(
     # - Switch to use either normal or retrained network
     #   https://github.com/eulersson/taconez/issues/80
     #
-    if config.multiclass_only_monitor_no_detect:
+    if config.multiclass_stealth_mode:
         positive_detection = len(predictions) > 0
     else:
         positive_detection = any(

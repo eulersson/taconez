@@ -53,6 +53,8 @@ pactl set-default-source <sink-name> # set your default input device
 docker-compose up
 ```
 
+Then you can follow the wiki's [Development Workflow](https://github.com/eulersson/taconez/wiki/4.-Development-Workflow).
+
 ## Description
 
 This project is composed of various pieces:
@@ -107,11 +109,11 @@ running container sound on the host (be it a MacBook or a Raspberry Pi):
 
 Other documentation:
 
-| Document                                                     | Explains How To...                                                                                                                              |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Stack Recipes](../../wiki/5.-Stack-Recipes)                 | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible.                                         |
-| [AI: Transfer Learning](../../wiki/6.-AI:-Transfer-Learning) | Repurpose an already trained classification neural network to classify specific sounds.                                                         |
-| [Modes of Operation](../../wiki/7.-Modes-of-Operation)       | The different ways you can run the sound detection (observing mode, detection mode, multiclass YAMNet, binary classifier retrained network...). |
+| Document                                                     | Explains How To...                                                                                                                                    |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Stack Recipes](../../wiki/5.-Stack-Recipes)                 | Run hello worlds, proof of concepts and basic examples with the stack tools: InfluxDB, NFS and Ansible.                                               |
+| [AI: Transfer Learning](../../wiki/6.-AI:-Transfer-Learning) | Repurpose an already trained classification neural network to classify specific sounds.                                                               |
+| [Modes of Operation](../../wiki/7.-Modes-of-Operation)       | The different ways you can run the sound detection (observing (stealth) mode, fight mode, multiclass YAMNet, binary classifier retrained network...). |
 
 ## Coding Standards
 
