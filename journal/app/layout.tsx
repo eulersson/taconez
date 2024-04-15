@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
-import { Providers } from "./providers";
+import { Montserrat } from "next/font/google";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const montserrat = Montserrat({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Taconez Journal",
@@ -19,10 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning>
-      <body className={`${inter.className} text-fore bg-back`}>
-        <Providers>
+      <body className={`${montserrat.className} text-fore bg-back`}>
           {children}
-        </Providers>
       </body>
     </html>
   );

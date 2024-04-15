@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { SoundBubble } from "@/components/sound-bubble";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { SoundOccurrence } from "@/types";
 
 export function SoundPlot({ initialData }: { initialData: SoundOccurrence[] }) {
@@ -30,9 +29,6 @@ export function SoundPlot({ initialData }: { initialData: SoundOccurrence[] }) {
 
   return (
     <>
-      <div className="fixed flex justify-center top-3 inset-x-0">
-        <ThemeSwitch />
-      </div>
       <p>Number of detections: {data.length} </p>
       <ul className="space-y-1">
         {data.map((sound, i) => (
