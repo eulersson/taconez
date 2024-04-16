@@ -136,6 +136,7 @@ ENV MULTICLASS_DETECT_SOUNDS=Clip-clop
 ENV MULTICLASS_DETECT_SOUND_THRESHOLD=0.3
 ENV LOGGING_LEVEL=INFO
 
-ENV RETRAINED_MODEL_OUTPUT_THRESHOLD=0
+# The threshold for the retrained model to consider a sound as detected.
+ENV RETRAINED_MODEL_OUTPUT_THRESHOLD=5.3
 
 ENTRYPOINT [ "python", "sound_detector.py" ]
