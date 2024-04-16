@@ -182,7 +182,7 @@ class RetrainedModel:
             wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
             return wav
 
-        app_root = os.path.join(os.path.dirname(__file__), "..", "..")
+        app_root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
         pos_dir = os.path.join(app_root, "dataset", "positive")
         neg_dir = os.path.join(app_root, "dataset", "negative")
 
