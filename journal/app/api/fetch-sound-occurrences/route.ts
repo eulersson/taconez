@@ -1,5 +1,6 @@
-import { fetchSoundOccurrences } from "@/lib/influx-data";
 import { unstable_noStore as noStore } from "next/cache";
+
+import { fetchSoundOccurrences } from "@/lib/influx-query";
 
 export async function GET(request: Request) {
   // Prevents caching the GET request.

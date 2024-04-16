@@ -1,39 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-import { SoundBubble } from "@/components/sound-bubble";
-import { SoundOccurrence } from "@/types";
+import { SoundPartition } from "@/components/sound-partition";
+import { TimeRangeSelector } from "@/components/time-range-selector";
+import { useAppContext } from "@/contexts/app-reducer";
+import { useQuerySounds } from "@/hooks/query-sounds";
+import { MOST_RECENT_SOUNDS_PARAMS } from "@/lib/influx-query";
+import { partitionSoundsArray } from "@/lib/utils";
+import { SoundOccurrence, TimeRange } from "@/types";
 
 export function SoundPlot({ initialData }: { initialData: SoundOccurrence[] }) {
-  const [data, setData] = useState(initialData);
+  const queryClient = useQueryClient();
+  const { isPending, isError, error, data, isFetching } = useQuerySounds(
+    MOST_RECENT_SOUNDS_PARAMS
+  );
 
   // Every 10 seconds, fetch new data.
   useEffect(() => {
     const interval = setInterval(async () => {
-      const searchParams = new URLSearchParams({
-        from: "-10s",
-        limit: "10",
-        page: "1",
+      queryClient.invalidateQueries({
+        queryKey: ["sounds", MOST_RECENT_SOUNDS_PARAMS],
       });
-      const response = await fetch(
-        `/api/fetch-sound-occurrences?${searchParams}`
-      );
-      const newData = await response.json();
-      if (newData.length > 0) {
-        setData((data) => [...newData, ...data]);
-      }
     }, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  const [state, dispatch] = useAppContext();
+
+  // Merge initial data with new data only if `data` is not `undefined`.
+  const sounds: SoundOccurrence[] =
+    data && data.length > 0 ? [...data, ...initialData] : initialData;
+
+  const soundPartitions: SoundOccurrence[][] = partitionSoundsArray(
+    sounds,
+    state.timeRange === TimeRange.Day ? "hourly" : "daily"
+  );
+
   return (
     <>
-      <p>Number of detections: {data.length} </p>
+      <TimeRangeSelector />
       <ul className="space-y-1">
-        {data.map((sound, i) => (
+        {soundPartitions.map((sounds, i) => (
           <li key={i}>
-            <SoundBubble sound={sound} />
+            <SoundPartition partitionId={i} sounds={sounds} />
           </li>
         ))}
       </ul>

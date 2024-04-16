@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --col-fore: #000000;
-  --col-back: #ffffff;
-}
-
 body {
   display: flex;
   justify-content: center;

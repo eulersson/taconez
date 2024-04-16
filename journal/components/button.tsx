@@ -1,5 +1,3 @@
-import { clsx } from "clsx";
-
 export function Button({
   className = "",
   children,
@@ -11,14 +9,12 @@ export function Button({
   invertTheme?: boolean;
   onClick: () => void;
 }) {
-  const colorClasses = invertTheme ? "text-back bg-fore" : "text-fore bg-back";
   return (
     <button
-      className={clsx(
-        "border-2 border-fore hover:text-back hover:bg-fore rounded px-1",
-        className,
-        colorClasses
-      )}
+      className={`
+        text-black bg-white border-2 border-black border-black rounded px-1 
+        hover:text-white hover:bg-black
+      `}
       onClick={onClick}
     >
       {children}

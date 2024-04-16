@@ -5,12 +5,21 @@ export type TaconezInfluxRow = {
   _stop: string,
   _time: string,
   _measurement: string,
+  sound: string,
   audio_file_path: string,
-  sound: string
+  score: number
 };
 
 export type SoundOccurrence = {
   when: Date,
-  sound: string,
+  id: string,
+  category: string,
+  score: number,
   audio_file_path: string
+}
+
+export enum TimeRange {
+  Day = "Day",
+  Week = "Week",
+  Month = "Month"
 }

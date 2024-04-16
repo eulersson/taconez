@@ -1,7 +1,13 @@
 import { InfluxDB } from "@influxdata/influxdb-client";
-import { unstable_noStore as noStore } from 'next/cache';
+import { unstable_noStore as noStore } from "next/cache";
 
 import { SoundOccurrence, TaconezInfluxRow } from "@/types";
+
+export const MOST_RECENT_SOUNDS_PARAMS = {
+  from: "-10s",
+  limit: 10,
+  page: 1,
+};
 
 export async function fetchSoundOccurrences({
   from = "-1mo",
@@ -32,8 +38,10 @@ export async function fetchSoundOccurrences({
     const o: TaconezInfluxRow = tableMeta.toObject(values) as TaconezInfluxRow;
     const soundOccurrence: SoundOccurrence = {
       when: new Date(o._time),
-      sound: o.sound,
+      id: o.audio_file_path,
+      category: o.sound,
       audio_file_path: o.audio_file_path,
+      score: o.score,
     };
     result.push(soundOccurrence);
   }

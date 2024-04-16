@@ -15,8 +15,13 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       colors: {
-        fore: "var(--col-fore)",
-        back: "var(--col-back)",
+        "tz-blue": {
+          'DEFAULT': "#0059A0",
+          'dark': "#001A2E",
+          'light': "#0059A0"
+        },
+        "tz-red": "#C1272D",
+        "tz-yellow": "#F6DD5A"
       }
     },
   },
