@@ -113,13 +113,13 @@ def run(
         file_path = write_audio(
             pyaudio_instance,
             waveform_binary,
-            suffix=f"{top_class_slug}_{top_score:.3f}",
+            suffix=f"{top_class_slug}_score-{top_score:.3f}",
         )
         relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
 
         if config.influx_db_token:
             # Write the detection to the database.
-            write_db_entry(top_class_slug, relative_sound_path)
+            write_db_entry(top_class_slug, top_score, relative_sound_path)
         else:
             logging.info("Not writing database entry.")
 
@@ -159,7 +159,8 @@ def run_retrained_inference(
     """
     predictions = []
     for waveform in waveforms:
-        prediction = retrained_model.predict(waveform)
+        prediction_tensor = retrained_model.predict(waveform)
+        prediction = prediction_tensor.numpy().item()
         predictions.append(prediction)
 
         is_high_heel = prediction > config.retrained_model_output_threshold

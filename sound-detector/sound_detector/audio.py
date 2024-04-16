@@ -91,7 +91,7 @@ def write_audio(
     now_dt = datetime.now()
 
     # E.g. '2023-12-10T17:05:52.578411_knock.wav'
-    file_name = f"{now_dt.isoformat()}{suffix}.wav"
+    file_name = f"{now_dt.isoformat().replace(':','-')}{suffix}.wav"
 
     # E.g. '2023/12/22'
     year_month_day_folder = os.path.join(
