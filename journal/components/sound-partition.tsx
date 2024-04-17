@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
 
 import { LehmerRandomNumberGenerator } from "@/lib/utils";
@@ -12,8 +13,7 @@ export const SoundPartition = memo(function SoundPartition({
 }) {
   const numSounds = sounds.length;
 
-  const generateRNG = () =>
-    new LehmerRandomNumberGenerator(partitionId + 1);
+  const generateRNG = () => new LehmerRandomNumberGenerator(partitionId + 1);
 
   const rngRef = useRef<LehmerRandomNumberGenerator>(generateRNG());
 
@@ -36,12 +36,14 @@ export const SoundPartition = memo(function SoundPartition({
     <div className="w-[200px] h-[200px] rounded-full bg-white">
       {/* TODO: Use framer motion to move them around. Storybook to present them. */}
       {Array.from({ length: Math.min(numSounds, 7) }).map((_, i) => (
-        <div
+        <motion.div
           key={i}
           className={
             `h-[70px] w-[70px] absolute rounded-full ${computedColors[i]} ` +
-            `top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/4 `}
-        ></div>
+            `top-[calc(50%-70px/4)] left-[calc(50%-70px/2)]`
+          }
+          initial={{ x: 0, y: 0 }}
+        ></motion.div>
       ))}
     </div>
   );
