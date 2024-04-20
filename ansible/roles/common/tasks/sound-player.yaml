@@ -10,16 +10,16 @@
     group: taconez
     mode: 0755
   loop:
-    - "{{ project_root_remote }}/sound-player"
-    - "{{ services_root_remote }}/sound-player"
+    - "{{ project_root_remote }}/modules/sound-player"
+    - "{{ services_root_remote }}/modules/sound-player"
 
 - name: Synchronize Sound Player project files
   synchronize:
-    src: "{{ project_root_local }}/sound-player/"
-    dest: "{{ project_root_remote }}/sound-player"
+    src: "{{ project_root_local }}/modules/sound-player/"
+    dest: "{{ project_root_remote }}/modules/sound-player"
     delete: true
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/sound-player/.rsync-exclude"
+      - "--exclude-from={{ project_root_local }}/modules/sound-player/.rsync-exclude"
 
 - name: Install Sound Player service scripts (ExecStart, ExecStop)
   template:
@@ -27,16 +27,16 @@
     dest: "{{ item.dest }}"
     mode: 0755
   loop:
-    - src: "{{ project_root_local }}/sound-player/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/sound-player/exec-start.sh"
-    - src: "{{ project_root_local }}/sound-player/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/sound-player/exec-stop.sh"
+    - src: "{{ project_root_local }}/modules/sound-player/service/exec-start.sh"
+      dest: "{{ services_root_remote }}/modules/sound-player/exec-start.sh"
+    - src: "{{ project_root_local }}/modules/sound-player/service/exec-stop.sh"
+      dest: "{{ services_root_remote }}/modules/sound-player/exec-stop.sh"
   tags: [service, service-sound-player]
 
 - name: Install Sound Player service
   become: true
   template:
-    src: "{{ project_root_local}}/sound-player/service/sound-player.service.j2"
+    src: "{{ project_root_local}}/modules/sound-player/service/sound-player.service.j2"
     dest: /etc/systemd/system/taconez-sound-player.service
   tags: [service, service-sound-player]
 
@@ -59,7 +59,7 @@
   docker_image:
     force_source: true
     build:
-      dockerfile: "{{ project_root_remote }}/sound-player/Dockerfile"
+      dockerfile: "{{ project_root_remote }}/modules/sound-player/Dockerfile"
       path: "{{ project_root_remote }}"
       target: production
       args:

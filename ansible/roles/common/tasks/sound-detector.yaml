@@ -24,11 +24,11 @@
 
 - name: Synchronize Sound Detector project files
   synchronize:
-    src: "{{ project_root_local }}/sound-detector/"
+    src: "{{ project_root_local }}/modules/sound-detector/"
     dest: "{{ project_root_remote }}/sound-detector"
     delete: true
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/sound-detector/.rsync-exclude"
+      - "--exclude-from={{ project_root_local }}/modules/sound-detector/.rsync-exclude"
 
 - name: Install Sound Detector service scripts (ExecStart, ExecStop)
   template:
@@ -36,16 +36,16 @@
     dest: "{{ item.dest }}"
     mode: 0755
   loop:
-    - src: "{{ project_root_local }}/sound-detector/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
-    - src: "{{ project_root_local }}/sound-detector/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
+    - src: "{{ project_root_local }}/modules/sound-detector/service/exec-start.sh"
+      dest: "{{ services_root_remote }}/modules/sound-detector/exec-start.sh"
+    - src: "{{ project_root_local }}/modules/sound-detector/service/exec-stop.sh"
+      dest: "{{ services_root_remote }}/modules/sound-detector/exec-stop.sh"
   tags: [service, service-sound-detector]
 
 - name: Install Sound Detector service
   become: true
   template:
-    src: "{{ project_root_local }}/sound-detector/service/sound-detector.service.j2"
+    src: "{{ project_root_local }}/modules/sound-detector/service/sound-detector.service.j2"
     dest: /etc/systemd/system/taconez-sound-detector.service
   tags: [service, service-sound-detector]
 
@@ -66,7 +66,7 @@
   docker_image:
     force_source: true
     build:
-      dockerfile: "{{ project_root_remote }}/sound-detector/Dockerfile"
+      dockerfile: "{{ project_root_remote }}/modules/sound-detector/Dockerfile"
       path: "{{ project_root_remote }}"
       args:
         DEBUG: 0

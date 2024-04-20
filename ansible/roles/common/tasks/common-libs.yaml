@@ -18,7 +18,7 @@
     dest: "{{ project_root_remote }}/"
     delete: true
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
+      - "--exclude-from={{ project_root_local }}/modules/playback-distributor/.rsync-exclude"
 
 - name: Synchronize other files that are shared across modules
   synchronize:

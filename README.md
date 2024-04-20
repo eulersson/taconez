@@ -90,6 +90,10 @@ This is intended to be run in a group of Raspberry Pi
 | Docker                  | Containerization.                                            | Protects against underlaying operating system components that might get updated and break the app.                                                                                                                                                                                                                                                                           |
 | Ansible                 | Provisioning and deployment.                                 | Automates some base configuration installation on new Raspberry Pi hosts, such as the sound setup.                                                                                                                                                                                                                                                                           |
 
+Technology: Raspberry Pi, Figma, Ansible, Docker, Docker Compose, InfluxDB, Next.js,
+React, Storybook, Jest, Tailwind CSS, Framer Motion, Python, TensorFlow, C, CMake,
+PulseAudio, Unity (C Testing Library), cJSON.
+
 ## Documentation
 
 If you are only interested in the provisioning and deployment of the architecture:

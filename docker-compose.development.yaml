@@ -2,7 +2,7 @@
 services:
 
   sound-detector:
-    entrypoint: sleep infinity
+    command: sleep infinity
     build:
       args:
         - SKIP_BUILD=1
@@ -13,7 +13,7 @@ services:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
-      - ./sound-detector:/app/sound-detector
+      - ./modules/sound-detector:/app/sound-detector
 
   playback-distributor:
     entrypoint: sleep infinity
@@ -25,13 +25,13 @@ services:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
-      # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      - ./modules/playback-distributor:/app/playback-distributor
+      - ./lib/c/commons:/app/lib/c/commons
+      # Binding an anonymous volume to the container's build folder effectively excludes
+      # the build folder from the bind mount
       #
       #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
       #
-      - ./playback-distributor:/app/playback-distributor
-      - ./lib/c/commons:/app/lib/c/commons
       - /app/playback-distributor/build
       - /app/lib/c/commons/build
 
@@ -45,13 +45,13 @@ services:
       - ./.git:/app/.git
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
-      # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      - ./modules/sound-player:/app/sound-player
+      - ./lib/c/commons:/app/lib/c/commons
+      # Binding an anonymous volume to the container's build folder effectively excludes
+      # the build folder from the bind mount
       #
       #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
       #
-      - ./sound-player:/app/sound-player
-      - ./lib/c/commons:/app/lib/c/commons
       - /app/sound-player/build
       - /app/lib/c/commons/build
   
@@ -64,9 +64,9 @@ services:
       - ./.devcontainer:/app/.devcontainer
       - ./.vscode:/app/.vscode
       # Binding an anonymous volume to the container's node_modules effectively excludes
-      # the node_modules folder from the bind mount `./journal/app:/app/journal/app`.
+      # the node_modules folder from the bind mount `./modules/journal/app:/app/journal/app`.
       #
       #   https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder
       #
-      - ./journal:/app/journal
+      - ./modules/journal:/app/journal
       - /app/journal/node_modules

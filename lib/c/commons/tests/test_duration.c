@@ -28,12 +28,13 @@ void tearDown(void) {}
  * Then it returns the duration of the audio in seconds
  */
 void test_duration(void) { 
-    // This test can get run by executables built by taconez/lib/c/commons/CMakelists.txt
-    // or by taconez/playback-distributor/CMakelists.txt or by
-    // taconez/sound-player/CMakelists.txt, depending on the case the sample to find
+    // This test can get run by executables built by `lib/c/commons/CMakelists.txt`
+    // or by `modules/playback-distributor/CMakelists.txt` or by
+    // `modules/sound-player/CMakelists.txt`, depending on the case the sample to find
     // might be in a different relative path.
     char *sample_path1 = "../../../prerolls/sample.wav";
     char *sample_path2 = "../../../../prerolls/sample.wav";
+    char *sample_path3 = "../../../../../prerolls/sample.wav";
     char *sample_path;
 
     if (access(sample_path1, F_OK) != -1) {
@@ -42,6 +43,9 @@ void test_duration(void) {
     } else if (access(sample_path2, F_OK) != -1) {
         // File exists
         sample_path = sample_path2;
+    } else if (access(sample_path3, F_OK) != -1) {
+        // File exists
+        sample_path = sample_path3;
     } else {
         // File doesn't exist
         printf("File does not exist\n");

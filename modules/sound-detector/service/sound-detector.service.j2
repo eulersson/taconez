@@ -1,0 +1,17 @@
+[Unit]
+Description=Taconez Sound Detector
+BindsTo=docker.service
+After=docker.service pulseaudio.service pulseaudio.socket influx-db.service
+
+[Service]
+Type=exec
+Restart=always
+Environment=TACONEZ_VERSION={{ project_version }}
+Environment=INFLUX_DB_TOKEN={{ influx_db_token }}
+Environment=PULSEAUDIO_COOKIE=/var/run/pulse/.config/pulse/cookie
+ExecStart={{ services_root_remote }}/modules/sound-detector/exec-start.sh
+ExecStop={{ services_root_remote }}/modules/sound-detector/exec-stop.sh
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

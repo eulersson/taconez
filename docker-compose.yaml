@@ -12,7 +12,7 @@ services:
   sound-detector:
     build:
       context: .
-      dockerfile: ./sound-detector/Dockerfile
+      dockerfile: ./modules/sound-detector/Dockerfile
       args:
         DEBUG: 1
         INSTALL_DEV_DEPS: 1
@@ -43,12 +43,13 @@ services:
     depends_on:
       - influx-db-server
       - playback-distributor
+    
 
   # --- Playback Distributor -----------------------------------------------------------
   playback-distributor:
     build:
       context: .
-      dockerfile: ./playback-distributor/Dockerfile
+      dockerfile: ./modules/playback-distributor/Dockerfile
       target: development
       args:
         DEBUG: 1
@@ -72,7 +73,7 @@ services:
   sound-player:
     build:
       context: .
-      dockerfile: ./sound-player/Dockerfile
+      dockerfile: ./modules/sound-player/Dockerfile
       target: development
       args:
         DEBUG: 1
@@ -100,7 +101,7 @@ services:
   journal:
     build:
       context: .
-      dockerfile: ./journal/Dockerfile
+      dockerfile: ./modules/journal/Dockerfile
       target: development
     image: taconez/journal:dev
     environment:

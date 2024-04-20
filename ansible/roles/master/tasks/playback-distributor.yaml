@@ -10,16 +10,16 @@
     group: taconez
     mode: 0755
   loop:
-    - "{{ project_root_remote }}/playback-distributor"
-    - "{{ services_root_remote }}/playback-distributor"
+    - "{{ project_root_remote }}/modules/playback-distributor"
+    - "{{ services_root_remote }}/modules/playback-distributor"
 
 - name: Synchronize Playback Distributor project files
   synchronize:
-    src: "{{ project_root_local }}/playback-distributor/"
-    dest: "{{ project_root_remote }}/playback-distributor"
+    src: "{{ project_root_local }}/modules/playback-distributor/"
+    dest: "{{ project_root_remote }}/modules/playback-distributor"
     delete: true
     rsync_opts:
-      - "--exclude-from={{ project_root_local }}/playback-distributor/.rsync-exclude"
+      - "--exclude-from={{ project_root_local }}/modules/playback-distributor/.rsync-exclude"
 
 - name: Install Playback Distributor service scripts (ExecStart, ExecStop)
   template:
@@ -27,10 +27,10 @@
     dest: "{{ item.dest }}"
     mode: 0755
   loop:
-    - src: "{{ project_root_local }}/playback-distributor/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/playback-distributor/exec-start.sh"
-    - src: "{{ project_root_local }}/playback-distributor/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/playback-distributor/exec-stop.sh"
+    - src: "{{ project_root_local }}/modules/playback-distributor/service/exec-start.sh"
+      dest: "{{ services_root_remote }}/modules/playback-distributor/exec-start.sh"
+    - src: "{{ project_root_local }}/modules/playback-distributor/service/exec-stop.sh"
+      dest: "{{ services_root_remote }}/modules/playback-distributor/exec-stop.sh"
   tags: [service, service-playback-distributor]
 
 - name: Install Playback Distributor service
@@ -38,7 +38,7 @@
   template:
     src:
       "{{ project_root_local
-      }}/playback-distributor/service/playback-distributor.service.j2"
+      }}/modules/playback-distributor/service/playback-distributor.service.j2"
     dest: /etc/systemd/system/taconez-playback-distributor.service
   tags: [service, service-playback-distributor]
 
@@ -59,7 +59,7 @@
   docker_image:
     force_source: true
     build:
-      dockerfile: "{{ project_root_remote }}/playback-distributor/Dockerfile"
+      dockerfile: "{{ project_root_remote }}/modules/playback-distributor/Dockerfile"
       path: "{{ project_root_remote }}"
       target: production
       args:
