@@ -41,7 +41,11 @@ def run_loop():
 
         context = zmq.Context()
 
+        logging.info("Preparing play events manager.")
         play_events_manager = PlayEventsManager(context)
+        logging.info("Starting play events manager thread.")
+        play_events_manager.start()
+        logging.info("Play events manager thread started.")
 
         # Connect to the distributor that will be notified upon detection:
         push_addr = config.zmq_distributor_push_addr

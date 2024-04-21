@@ -11,7 +11,7 @@
     mode: 0755
   loop:
     - "{{ project_root_remote }}/modules/playback-distributor"
-    - "{{ services_root_remote }}/modules/playback-distributor"
+    - "{{ services_root_remote }}/playback-distributor"
 
 - name: Synchronize Playback Distributor project files
   synchronize:
@@ -28,9 +28,9 @@
     mode: 0755
   loop:
     - src: "{{ project_root_local }}/modules/playback-distributor/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/modules/playback-distributor/exec-start.sh"
+      dest: "{{ services_root_remote }}/playback-distributor/exec-start.sh"
     - src: "{{ project_root_local }}/modules/playback-distributor/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/modules/playback-distributor/exec-stop.sh"
+      dest: "{{ services_root_remote }}/playback-distributor/exec-stop.sh"
   tags: [service, service-playback-distributor]
 
 - name: Install Playback Distributor service

@@ -29,7 +29,7 @@
     - .asoundrc
     - .dockerignore
 
-# Create /apps/taconez/prerolls if it does not exist
+# Create /apps/taconez/prerolls and dataset if they don't exist.
 - name: Create folder for the prerolls
   become: true
   file:
@@ -40,8 +40,9 @@
     mode: 0755
   loop:
     - "{{ project_root_remote }}/prerolls"
+    - "{{ project_root_remote }}/dataset"
   
-# Copy the prerolls to the remote server
+# Copy the prerolls to the remote server.
 - name: Copy prerolls to the remote server
   synchronize:
     src: "{{ project_root_local }}/prerolls"

@@ -15,6 +15,8 @@ TACONEZ_ROOT=$(echo $(realpath $0) | sed 's|/modules/sound-detector.*||')
 TACONEZ_CONTAINER_NAME=${TACONEZ_CONTAINER_NAME:-taconez-sound-detector}
 TACONEZ_VERSION=${TACONEZ_VERSION:-prod}
 INFLUX_DB_TOKEN=${INFLUX_DB_TOKEN:-no_token}
+DEBUG=${DEBUG:-0}
+LOGGING_LEVEL=${LOGGING_LEVEL:-INFO}
 
 # If you instsall PulseAudio system-wide it then would be /var/run/pulse/.config/pulse/cookie!
 # Don't worry this gets set in the service file.
@@ -42,6 +44,8 @@ set -x
 docker run --tty \
   --env INFLUX_DB_HOST=host.docker.internal \
   --env INFLUX_DB_TOKEN=$INFLUX_DB_TOKEN \
+  --env DEBUG=$DEBUG \
+  --env LOGGING_LEVEL=$LOGGING_LEVEL \
   --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
   --env PULSE_SERVER=host.docker.internal \
   --volume $PULSEAUDIO_COOKIE:/root/.config/pulse/cookie \
@@ -50,7 +54,6 @@ docker run --tty \
   --volume /var/run/dbus:/var/run/dbus \
   --volume /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket \
   $extra_flags \
-  taconez/sound-detector:$TACONEZ_VERSION \
-  inference
+  taconez/sound-detector:$TACONEZ_VERSION
 
 set +x

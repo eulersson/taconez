@@ -8,9 +8,11 @@ Type=exec
 Restart=always
 Environment=TACONEZ_VERSION={{ project_version }}
 Environment=INFLUX_DB_TOKEN={{ influx_db_token }}
+Environment=DEBUG={{ debug }}
+Environment=LOGGING_LEVEL={{ logging_level }}
 Environment=PULSEAUDIO_COOKIE=/var/run/pulse/.config/pulse/cookie
-ExecStart={{ services_root_remote }}/modules/sound-detector/exec-start.sh
-ExecStop={{ services_root_remote }}/modules/sound-detector/exec-stop.sh
+ExecStart={{ services_root_remote }}/sound-detector/exec-start.sh
+ExecStop={{ services_root_remote }}/sound-detector/exec-stop.sh
 TimeoutStartSec=900
 
 [Install]

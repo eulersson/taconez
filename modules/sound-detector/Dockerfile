@@ -114,9 +114,8 @@ ENV USE_TFLITE=$USE_TFLITE
 RUN eval poetry install --no-interaction \
   $( [ $INSTALL_DEV_DEPS = 0 ] && echo --without dev ) \
   $( [ $USE_TFLITE = 0 ] && echo --with tensorflow-dev ) \
-  $( [ $DEBUG = 0 ] && apt-get purge -y git ) \
-  && apt-get purge -y $BUILD_TIME_DEPENDENCIES \
-  && apt-get autoremove -y --purge
+  && if [ $DEBUG = 0 ]; then apt-get purge -y git; fi \
+  && apt-get purge -y $BUILD_TIME_DEPENDENCIES && apt-get autoremove -y --purge
 
 # TODO: So many COPY commands is not desirable since it will be producing intermediate
 # layers... If put under the same COPY command then the folders are not retained.

@@ -8,8 +8,8 @@ Type=exec
 Restart=always
 Environment=TACONEZ_VERSION={{ project_version }}
 Environment=PLAYBACK_DISTRIBUTOR_HOST={{ playback_distributor_host }}
-ExecStart={{ services_root_remote }}/modules/journal/exec-start.sh
-ExecStop={{ services_root_remote }}/modules/journal/exec-stop.sh
+ExecStart={{ services_root_remote }}/journal/exec-start.sh
+ExecStop={{ services_root_remote }}/journal/exec-stop.sh
 TimeoutStartSec=900
 
 [Install]

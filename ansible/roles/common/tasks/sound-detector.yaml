@@ -10,7 +10,7 @@
     group: taconez
     mode: 0755
   loop:
-    - "{{ project_root_remote }}/sound-detector"
+    - "{{ project_root_remote }}/modules/sound-detector"
     - "{{ services_root_remote }}/sound-detector"
 
 - name: Create directory where recordings will go in case it doesn't exist
@@ -25,7 +25,7 @@
 - name: Synchronize Sound Detector project files
   synchronize:
     src: "{{ project_root_local }}/modules/sound-detector/"
-    dest: "{{ project_root_remote }}/sound-detector"
+    dest: "{{ project_root_remote }}/modules/sound-detector"
     delete: true
     rsync_opts:
       - "--exclude-from={{ project_root_local }}/modules/sound-detector/.rsync-exclude"
@@ -37,9 +37,9 @@
     mode: 0755
   loop:
     - src: "{{ project_root_local }}/modules/sound-detector/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/modules/sound-detector/exec-start.sh"
+      dest: "{{ services_root_remote }}/sound-detector/exec-start.sh"
     - src: "{{ project_root_local }}/modules/sound-detector/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/modules/sound-detector/exec-stop.sh"
+      dest: "{{ services_root_remote }}/sound-detector/exec-stop.sh"
   tags: [service, service-sound-detector]
 
 - name: Install Sound Detector service
@@ -62,6 +62,7 @@
     state: absent
 
 - name: Build Sound Detector image
+  # sudo docker build -f /app/taconez/modules/sound-detector/Dockerfile --build-arg DEBUG=0 --build-arg INSTALL_DEV_DEPS=0 --build-arg USE_TFLITE=1 --build-arg STEALTH_MODE=0 .
   become: true
   docker_image:
     force_source: true
@@ -69,7 +70,7 @@
       dockerfile: "{{ project_root_remote }}/modules/sound-detector/Dockerfile"
       path: "{{ project_root_remote }}"
       args:
-        DEBUG: 0
+        DEBUG: "{{ debug }}"
         INSTALL_DEV_DEPS: 0
         USE_TFLITE: 1
         STEALTH_MODE: "{{ stealth_mode }}"

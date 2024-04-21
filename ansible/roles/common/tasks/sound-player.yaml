@@ -11,7 +11,7 @@
     mode: 0755
   loop:
     - "{{ project_root_remote }}/modules/sound-player"
-    - "{{ services_root_remote }}/modules/sound-player"
+    - "{{ services_root_remote }}/sound-player"
 
 - name: Synchronize Sound Player project files
   synchronize:
@@ -28,9 +28,9 @@
     mode: 0755
   loop:
     - src: "{{ project_root_local }}/modules/sound-player/service/exec-start.sh"
-      dest: "{{ services_root_remote }}/modules/sound-player/exec-start.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-start.sh"
     - src: "{{ project_root_local }}/modules/sound-player/service/exec-stop.sh"
-      dest: "{{ services_root_remote }}/modules/sound-player/exec-stop.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-stop.sh"
   tags: [service, service-sound-player]
 
 - name: Install Sound Player service
