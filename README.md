@@ -2,7 +2,7 @@
 
 <p align="center">
   <picture>
-    <img alt="Taconez Logo" src="./resources/logo/png/taconez-logo_full-blue.png">
+    <img alt="Taconez Logo" src="./design/logos/taconez/png/taconez-logo_full-blue.png">
   </picture>
 </p>
 
