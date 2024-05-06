@@ -1,3 +1,7 @@
+> [!WARNING]
+> The development of the project is on hold, so it's in a WIP state. If you want to
+> keep track of the process check its [GitHub Project](https://github.com/users/eulersson/projects/6/views/5).
+
 # taconez
 
 <p align="center">
