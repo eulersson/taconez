@@ -12,6 +12,12 @@ force_docker_image_rebuild: true
 debug: false
 logging_level: INFO
 
+# If you don't know what the token is, run this on the container running Influx DB:
+#
+#   docker exec influx-db-server influx auth list --user taconez | cut -f 3
+#
+influx_db_token: vsC0Q_nELv6zi1rjkRKjqVnqdwWoRemazl-zfyWiO1bpfK9ET3WdEL3rAPZVAD_9HtPC0ij7qP7uXgkbKkIiXA==
+
 # The "monitor" mode is useful for gathering sound data and see what categories are
 # detected. The "detection" mode is useful when you want to react against a specific
 # category of sound.

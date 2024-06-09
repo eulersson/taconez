@@ -1,2 +1,8 @@
-# Since this is the master itself, point to itself.
+---
+# Variables associated with slave nodes.
+
+machine_role: slave
+
+# Master node is the host for those services.
+influx_db_host: rpi-master.local
 playback_distributor_host: rpi-master.local

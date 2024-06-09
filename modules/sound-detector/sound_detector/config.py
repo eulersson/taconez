@@ -45,6 +45,12 @@ class _Config:
             level=self.logging_level,
         )
 
+        # Identifies the particular host that is running the inference.
+        self.machine_id = env.str("MACHINE_ID", "rpi")
+
+        # Whether it is a `master` or a `slave`.
+        self.machine_role = env.str("MACHINE_ROLE", "slave")
+
         # Use TFLite or the full TensorFlow model. TFLite is faster and uses less memory.
         # It's used for inference only.
         self.use_tflite = env.bool("USE_TFLITE", True)
@@ -88,6 +94,12 @@ class _Config:
         self.zmq_distributor_push_addr = f"tcp://{self.playback_distributor_host}:5555"
         self.zmq_distributor_sub_addr = f"tcp://{self.playback_distributor_host}:5556"
 
+        # The "monitor" mode is useful for gathering sound data and see what
+        # categories are detected (unless it is in the `IGNORE_SOUNDS`). The
+        # "detection" mode is useful when you want to react against a specific
+        # category of sound.
+        self.stealth_mode = env.bool("STEALTH_MODE", False)
+
         # Use the retrained model (we used transference learning to binary classify high
         # heel sounds) or use YAMNet as is to identify certain sound occurrences.
         self.use_retrained_model = env.bool("USE_RETRAINED_MODEL", True)
@@ -100,12 +112,6 @@ class _Config:
                 "RETRAINED_MODEL_OUTPUT_THRESHOLD", required=True
             )
         else:
-            # The "monitor" mode is useful for gathering sound data and see what
-            # categories are detected (unless it is in the `IGNORE_SOUNDS`). The
-            # "detection" mode is useful when you want to react against a specific
-            # category of sound.
-            self.multiclass_stealth_mode = env.bool("MULTICLASS_STEALTH_MODE", False)
-
             self.multiclass_detection_threshold = env.float(
                 "MULTICLASS_DETECTION_THRESHOLD", 0.3
             )

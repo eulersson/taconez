@@ -21,3 +21,4 @@
 - name: Build and run Sound Player module
   import_tasks: sound-player.yaml
   tags: [sound-player]
+  when: not stealth_mode

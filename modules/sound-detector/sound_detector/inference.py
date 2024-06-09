@@ -34,7 +34,7 @@ def run_loop():
     play_events_manager = None
     push_socket = None
 
-    if config.skip_detection_notification:
+    if config.stealth_mode or config.skip_detection_notification:
         logging.info("Upon detections the distributor won't be notified.")
     else:
         logging.info("Upon detections the distributor will be notified.")
@@ -117,7 +117,7 @@ def run(
         file_path = write_audio(
             pyaudio_instance,
             waveform_binary,
-            suffix=f"{top_class_slug}_score-{top_score:.3f}",
+            suffix=f"{config.machine_id}_{top_class_slug}-{top_score:.3f}",
         )
         relative_sound_path = os.path.relpath(file_path, config.detected_recordings_dir)
 
@@ -127,13 +127,18 @@ def run(
         else:
             logging.info("Not writing database entry.")
 
-        if not config.skip_detection_notification and zmq_push_socket:
+        if (
+            not config.stealth_mode
+            and not config.skip_detection_notification
+            and zmq_push_socket
+        ):
             logging.info("Notifying distributor about detected sound")
             # Playback the sound to all slaves.
             zmq_push_socket.send_json(
                 {
                     "sound_file_path": relative_sound_path,
                     "when": round(time.time()),
+                    "detected_by": config.machine_id,
                 }
             )
 
@@ -217,7 +222,7 @@ def run_yamnet_inference(
         if top_class_name not in config.multiclass_ignore_sounds:
             predictions.append((top_class_name, top_score))
 
-            if config.multiclass_stealth_mode:
+            if config.stealth_mode:
                 logging.debug(
                     f"{log_prefix} Main sound: {top_class_name} (score {top_score})"
                 )
@@ -231,15 +236,17 @@ def run_yamnet_inference(
             )
 
             if sound_score > 0:
-                if config.multiclass_stealth_mode:
+                if config.stealth_mode:
                     logging.debug(
                         f"{log_prefix} Specific sound ({sound_to_detect}) score: {sound_score}"
                     )
 
     if len(predictions):
-        if config.multiclass_stealth_mode:
+        if config.stealth_mode:
             logging.debug(f"Batch predictions: {predictions}")
-            logging.debug(f"Specific sound highest scores: {specific_sound_highest_scores}")
+            logging.debug(
+                f"Specific sound highest scores: {specific_sound_highest_scores}"
+            )
 
     # TODO: Right now we will consider detection whenever we detect sounds that are not
     # in the IGNORE_SOUNDS list. It will be good to collect detections we can train
@@ -251,7 +258,7 @@ def run_yamnet_inference(
     # - Switch to use either normal or retrained network
     #   https://github.com/eulersson/taconez/issues/80
     #
-    if config.multiclass_stealth_mode:
+    if config.stealth_mode:
         positive_detection = len(predictions) > 0
     else:
         positive_detection = any(

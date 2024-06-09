@@ -26,6 +26,8 @@ else
   extra_flags=""
 fi
 
+MACHINE_ID=${MACHINE_ID:-rpi}
+MACHINE_ROLE=${MACHINE_ROLE:-slave}
 PULSEAUDIO_COOKIE=${PULSEAUDIO_COOKIE:-$HOME/.config/pulse/cookie}
 
 set -x # Print commands as they run.
@@ -36,6 +38,8 @@ docker run \
   --interactive \
   --env PULSE_SERVER=host.docker.internal \
   --env PLAYBACK_DISTRIBUTOR_HOST=host.docker.internal \
+  --env MACHINE_ID=$MACHINE_ID \
+  --env MACHINE_ROLE=$MACHINE_ROLE \
   --volume $TACONEZ_ROOT/modules/sound-player/src:/app/sound-player/src \
   --volume $TACONEZ_ROOT/modules/sound-player/CMakeLists.txt:/app/sound-player/CMakeLists.txt \
   --volume $TACONEZ_ROOT/modules/sound-player/tests:/app/sound-player/tests \

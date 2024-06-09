@@ -1,15 +1,12 @@
 ---
 # Variables associated with master nodes.
 
+machine_role: slave
+
 nfs_allowed_hosts: 192.168.1.0/24
 
 influx_db_server_docker_image: influxdb:2.7.4-alpine
 
-# If you don't know what the token is, run this on the container running Influx DB:
-#
-#   docker exec influx-db-server influx auth list --user taconez | cut -f 3
-#
-influx_db_token: vsC0Q_nELv6zi1rjkRKjqVnqdwWoRemazl-zfyWiO1bpfK9ET3WdEL3rAPZVAD_9HtPC0ij7qP7uXgkbKkIiXA==
-
-# Since this is the master itself, point to itself.
+# Since this is the master, point to itself.
+influx_db_host: host.docker.internal
 playback_distributor_host: host.docker.internal

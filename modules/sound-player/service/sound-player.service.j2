@@ -9,6 +9,8 @@ Restart=always
 Environment=TACONEZ_VERSION={{ project_version }}
 Environment=PULSEAUDIO_COOKIE=/var/run/pulse/.config/pulse/cookie
 Environment=PLAYBACK_DISTRIBUTOR_HOST={{ playback_distributor_host }}
+Environment=MACHINE_ID={{ ansible_hostname }}
+Environment=MACHINE_ROLE={{ machine_role }}
 ExecStart={{ services_root_remote }}/sound-player/exec-start.sh
 ExecStop={{ services_root_remote }}/sound-player/exec-stop.sh
 TimeoutStartSec=900

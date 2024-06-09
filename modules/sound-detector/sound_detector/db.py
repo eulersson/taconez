@@ -25,6 +25,7 @@ def write_db_entry(detected_class_slug: str, score: float, relative_sound_path: 
     p = (
         influxdb_client.Point("detections")
         .tag("sound", detected_class_slug)
+        .tag("detected_by", config.machine_id)
         .field("score", score)
         .field("audio_file_path", relative_sound_path)
     )
