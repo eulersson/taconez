@@ -94,9 +94,7 @@ def write_audio(
     file_name = now_dt.strftime("%Y-%m-%dT%H-%M-%S") + f"{suffix}.wav"
 
     # E.g. '2023/12/22'
-    year_month_day_folder = os.path.join(
-        str(now_dt.year), str(now_dt.month), str(now_dt.day)
-    )
+    year_month_day_folder = now_dt.strftime("%Y/%m/%d")
 
     # E.g. '2023/12/22/2023-12-10T17:05:52.578411_knock.wav'
     relative_file_path = os.path.join(year_month_day_folder, file_name)
