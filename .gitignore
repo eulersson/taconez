@@ -12,6 +12,8 @@ pyrightconfig.json
 .pytest_cache/
 build/
 
+dataset/to-process
+
 **/mocks/**
 
 */tests/Testing
