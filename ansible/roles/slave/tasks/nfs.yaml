@@ -12,4 +12,9 @@
 
 - name: Mount the NFS share from the master
   become: true
-  command: mount --types nfs --verbose rpi-master.local:/mnt/nfs/taconez /mnt/nfs/taconez
+  ansible.posix.mount:
+    path: /mnt/nfs/taconez
+    src: rpi-master.local:/mnt/nfs/taconez
+    fstype: nfs
+    opts: defaults
+    state: mounted
