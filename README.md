@@ -6,7 +6,7 @@
 
 <p align="center">
   <picture>
-    <img alt="Taconez Logo" src="./design/logos/taconez/png/taconez-logo_full-blue.png">
+    <img alt="Taconez Logo" src="./design/logos/taconez/png/taconez-logo_full-blue.png" />
   </picture>
 </p>
 
@@ -74,8 +74,8 @@ This project is composed of various pieces:
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/taconez.drawio.dark.svg">
-    <img alt="Architecture Diagram" src="./docs/images/taconez.drawio.light.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/taconez.drawio.dark.svg" />
+    <img alt="Architecture Diagram" src="./docs/images/taconez.drawio.light.svg" />
   </picture>
 </p>
 
