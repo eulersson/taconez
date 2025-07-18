@@ -1,0 +1,85 @@
+---
+# Builds and runs the Sound Player module.
+
+- name: Create folder for the Sound Player module and its service scripts
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: taconez
+    group: taconez
+    mode: 0755
+  loop:
+    - "{{ project_root_remote }}/modules/sound-player"
+    - "{{ services_root_remote }}/sound-player"
+
+- name: Synchronize Sound Player project files
+  synchronize:
+    src: "{{ project_root_local }}/modules/sound-player/"
+    dest: "{{ project_root_remote }}/modules/sound-player"
+    delete: true
+    rsync_opts:
+      - "--exclude-from={{ project_root_local }}/modules/sound-player/.rsync-exclude"
+
+- name: Install Sound Player service scripts (ExecStart, ExecStop)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  loop:
+    - src: "{{ project_root_local }}/modules/sound-player/service/exec-start.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-start.sh"
+    - src: "{{ project_root_local }}/modules/sound-player/service/exec-stop.sh"
+      dest: "{{ services_root_remote }}/sound-player/exec-stop.sh"
+  tags: [service, service-sound-player]
+
+- name: Install Sound Player service
+  become: true
+  template:
+    src: "{{ project_root_local}}/modules/sound-player/service/sound-player.service.j2"
+    dest: /etc/systemd/system/taconez-sound-player.service
+  tags: [service, service-sound-player]
+
+- name: Ensure Sound Player service is stopped
+  become: true
+  systemd:
+    name: taconez-sound-player.service
+    state: stopped
+  tags: [service, service-sound-player]
+
+- name: Ensure no Sound Player containers exist
+  become: true
+  docker_container:
+    name: taconez-sound-player
+    state: absent
+  tags: [service, service-sound-player]
+
+- name: Build Sound Player image
+  become: true
+  docker_image:
+    force_source: true
+    build:
+      dockerfile: "{{ project_root_remote }}/modules/sound-player/Dockerfile"
+      path: "{{ project_root_remote }}"
+      target: production
+      args:
+        DEBUG: 0
+    name: taconez/sound-player
+    tag: "{{ project_version }}"
+    source: build
+  when: force_docker_image_rebuild
+
+- name: Clean dangling images
+  become: true
+  docker_prune:
+    images: true
+    images_filters: dangling=true
+
+- name: Restart Sound Player service
+  become: true
+  systemd_service:
+    daemon_reload: true
+    enabled: true
+    state: restarted
+    name: taconez-sound-player.service
+  tags: [service, service-sound-player]

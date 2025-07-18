@@ -1,0 +1,15 @@
+# Tells ALSA to delegate the audio inputs and outputs to PulseAudio.
+#
+# In the README.md there's a "Sound" section dedicated to container sound.
+
+# Output (Speakers).
+pcm.!default {
+    type pulse
+    server "host.docker.internal"
+}
+
+# Input (Microphone).
+ctl.!default {
+    type pulse
+    server "host.docker.internal"
+}

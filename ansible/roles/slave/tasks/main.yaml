@@ -1,0 +1,6 @@
+---
+# Tasks particular to the Raspberry Pi slave nodes.
+
+- name: Configure NFS
+  import_tasks: nfs.yaml
+  tags: [nfs-client]

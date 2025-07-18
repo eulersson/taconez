@@ -1,0 +1,5 @@
+---
+# Builds, installs and configures the journal web app.
+
+- name: TODO Journal Web App to implement
+  command: echo TODO

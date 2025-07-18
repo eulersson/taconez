@@ -1,0 +1,5 @@
+[master]
+rpi-master.home
+
+[slaves]
+rpi-slave-1.home

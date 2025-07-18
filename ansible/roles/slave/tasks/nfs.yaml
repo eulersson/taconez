@@ -1,0 +1,20 @@
+---
+# Configures NFS to be used as a client.
+
+- name: Create app folder to turn into an NFS share
+  become: true
+  file:
+    path: "/mnt/nfs/taconez"
+    state: directory
+    owner: taconez
+    group: taconez
+    mode: 0755
+
+- name: Mount the NFS share from the master
+  become: true
+  ansible.posix.mount:
+    path: /mnt/nfs/taconez
+    src: rpi-master.local:/mnt/nfs/taconez
+    fstype: nfs
+    opts: defaults
+    state: mounted

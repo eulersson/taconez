@@ -1,0 +1,4 @@
+- name: Reexport NFS shares
+  become: true
+  command: /usr/sbin/exportfs -ra
+

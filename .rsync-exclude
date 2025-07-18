@@ -1,0 +1,7 @@
+.git
+*.cache*
+.DS_Store
+*.bkp
+
+docs/
+ansible/

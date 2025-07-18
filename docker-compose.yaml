@@ -1,0 +1,136 @@
+# NOTE: Docker Compose is used only for development. In production the system uses
+# systemd to manage the services. Check the ansible files for more details.
+#
+# WARNING: Linux users will need to apply the `docker-compose.linux.yaml` file too:
+#
+#   docker-compose -f docker-compose.yaml -f docker-compose.linux.yaml up
+#
+version: "3"
+services:
+
+  # --- Sound Detector -----------------------------------------------------------------
+  sound-detector:
+    build:
+      context: .
+      dockerfile: ./modules/sound-detector/Dockerfile
+      args:
+        DEBUG: 1
+        INSTALL_DEV_DEPS: 1
+        USE_TFLITE: 1
+    image: taconez/sound-detector:dev
+    tty: true
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
+    user: root
+    environment:
+      - INFLUX_DB_HOST=influx-db-server
+      - INFLUX_DB_TOKEN=no_token
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
+      - PULSE_SERVER=host.docker.internal
+      - SKIP_DETECTION_NOTIFICATION=False
+      - SKIP_RECORDING=False
+    volumes:
+      - ./prerolls:/app/prerolls
+      - ./recordings:/app/recordings
+      - ./dataset:/app/dataset
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+    depends_on:
+      - influx-db-server
+      - playback-distributor
+    
+
+  # --- Playback Distributor -----------------------------------------------------------
+  playback-distributor:
+    build:
+      context: .
+      dockerfile: ./modules/playback-distributor/Dockerfile
+      target: development
+      args:
+        DEBUG: 1
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1
+    tty: true
+    image: taconez/playback-distributor:dev
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
+    user: root
+    volumes:
+      - ./prerolls:/app/prerolls:ro
+      - ./recordings:/app/recordings:ro
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+
+  # --- Sound Player -------------------------------------------------------------------
+  sound-player:
+    build:
+      context: .
+      dockerfile: ./modules/sound-player/Dockerfile
+      target: development
+      args:
+        DEBUG: 1
+        DEPENDENCIES_COMPILE_FROM_SOURCE: 1
+    image: taconez/sound-player:dev
+    tty: true
+    # TODO: Run containers as non-root https://github.com/eulersson/taconez/issues/72
+    user: root
+    environment:
+      - PULSE_SERVER=host.docker.internal
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
+    volumes:
+      - ./prerolls:/app/prerolls:ro
+      - ./recordings:/app/recordings:ro
+      - $HOME/.config/pulse/cookie:/root/.config/pulse/cookie
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+  
+  # --- Journal ------------------------------------------------------------------------
+  journal:
+    build:
+      context: .
+      dockerfile: ./modules/journal/Dockerfile
+      target: development
+    image: taconez/journal:dev
+    environment:
+      - INFLUX_DB_HOST=influx-db-server
+      - PLAYBACK_DISTRIBUTOR_HOST=playback-distributor
+    volumes:
+      - ./recordings:/app/recordings:ro
+      # To be able to resolve the Raspberry Pi's local hostnames from the container, since
+      # they are resolved through mDNS.
+      # 
+      #   https://www.reddit.com/r/AlpineLinux/comments/14kmoot/comment/jubgt0j/
+      #
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influx-db-server
+
+  # --- InfluxDB Server ----------------------------------------------------------------
+  influx-db-server:
+    image: influxdb:2.7.4-alpine
+    tty: true
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: taconez
+      DOCKER_INFLUXDB_INIT_PASSWORD: ufftQDZNDESRALXi5NbS
+      DOCKER_INFLUXDB_INIT_ORG: taconez
+      DOCKER_INFLUXDB_INIT_BUCKET: taconez
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: no_token
+    ports:
+      - "8086:8086"
