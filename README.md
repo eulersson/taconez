@@ -1,7 +1,7 @@
 
 <div align="center">
   <picture>
-    <img alt="Taconez Logo" style="height: 400px;" src="./design/logos/taconez/png/taconez-logo_square.png" />
+    <img alt="Taconez Logo" style="max-height: 400px;" src="./design/logos/taconez/png/taconez-logo_square.png" />
   </picture>
   <h1>Taconez</h1>
 </div>
